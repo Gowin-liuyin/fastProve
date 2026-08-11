@@ -227,7 +227,11 @@ def run_layer1(
 
     # --- LM Head ---
     plain_logits = plain(input_ids, token_mask=token_mask)
-    obf_logits = obf(input_ids, token_mask=token_mask, request_context=ctx)
+    obf_logits = obf(
+        models.token_codec.encode(input_ids),
+        token_mask=token_mask,
+        request_context=ctx,
+    )
     from .model_factory import inverse_align_logits
 
     aligned = inverse_align_logits(obf_logits, models.vocab_permutation)
@@ -250,8 +254,10 @@ def run_layer1(
     plain_normed = rms_norm_fp32(
         plain_final_norm_in, plain.final_norm_weight, plain.config.rms_epsilon
     )
+    # The obfuscated final norm is fused into deployed_head; reproduce it
+    # with the plaintext formula on the decoded state.
     obf_normed = rms_norm_fp32(
-        oh, obf.final_norm_weight, obf.config.rms_epsilon
+        oh, plain.final_norm_weight, plain.config.rms_epsilon
     )
     modules["rmsnorm"] = infinity_and_relative(
         plain_normed.float(), obf_normed.float()

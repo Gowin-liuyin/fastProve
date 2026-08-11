@@ -1,0 +1,317 @@
+{
+  "protocol": "docs/literature-review/reports/evaluation_protocol_fastProve.md",
+  "ci_level": 0.95,
+  "n_keys": 1,
+  "layers": [
+    4
+  ],
+  "conditions": {
+    "P2": {
+      "condition_id": "P2",
+      "condition": {
+        "condition_id": "P2",
+        "precision": "bf16",
+        "mode": "full",
+        "description": "BF16 full nominal parameters (primary production result)",
+        "stress": false,
+        "hidden_noise_dim": 8,
+        "value_noise_dim_per_head": 2,
+        "ffn_noise_dim": null,
+        "initial_noise_scale": null,
+        "refresh_noise_scale": null,
+        "noise_propagation_gamma": 0.5,
+        "max_condition_number": 10.0,
+        "sequence_length": null,
+        "attention_impl": "reference",
+        "use_kv_cache": true,
+        "model_structure": "dense_gqa"
+      },
+      "sample_identifiers": [
+        "synthetic-20260731-0000",
+        "synthetic-20260731-0001",
+        "synthetic-20260731-0002",
+        "synthetic-20260731-0003",
+        "synthetic-20260731-0004",
+        "synthetic-20260731-0005",
+        "synthetic-20260731-0006",
+        "synthetic-20260731-0007"
+      ],
+      "dataset_cache": null,
+      "model_manifest": null,
+      "n_keys": 1,
+      "elapsed_seconds": 0.03291029200045159,
+      "per_key": [
+        {
+          "condition": {
+            "condition_id": "P2",
+            "precision": "bf16",
+            "mode": "full",
+            "description": "BF16 full nominal parameters (primary production result)",
+            "stress": false,
+            "hidden_noise_dim": 8,
+            "value_noise_dim_per_head": 2,
+            "ffn_noise_dim": null,
+            "initial_noise_scale": null,
+            "refresh_noise_scale": null,
+            "noise_propagation_gamma": 0.5,
+            "max_condition_number": 10.0,
+            "sequence_length": null,
+            "attention_impl": "reference",
+            "use_kv_cache": true,
+            "model_structure": "dense_gqa"
+          },
+          "key": {
+            "key_id": 0,
+            "label": "key-00",
+            "key_fingerprint": "ef16f6e3e2461f3c6fc9ebd2ef7d95cabab787e67b6c03b664ea0d44b0d8028f",
+            "seed_material_recorded": false
+          },
+          "notes": [
+            "using client codec permutation for inverse-align"
+          ],
+          "executed_dtype": "torch.bfloat16",
+          "device": "cpu",
+          "plaintext_embedding_dtype": "torch.bfloat16",
+          "obfuscated_embedding_dtype": "torch.bfloat16",
+          "conversion_time_seconds": 0.004630791998351924,
+          "structural_noise_zeroed": false,
+          "model_manifest": null,
+          "obfuscation_manifest": {
+            "max_condition_number": 10.0,
+            "hidden_basis": {
+              "signal_dim": 32,
+              "noise_dim": 8,
+              "condition_number": 9.218240949431415,
+              "fingerprint": "65fee90c311dc2ab60bab2e211d86052cad45c24ce628847d28cb2bee7292852"
+            },
+            "value_bases": [
+              {
+                "condition_number": 5.54836613796152,
+                "fingerprint": "eab0c07e99e19efcad08d151898c365c72a96fe64b4efa0867e3d37c207af565"
+              },
+              {
+                "condition_number": 3.0629656144603112,
+                "fingerprint": "770347f4dfdd6435056ded63fb2df68080187324057e5e4f43e43c47bbd54c0a"
+              },
+              {
+                "condition_number": 7.4031209481289615,
+                "fingerprint": "eb9cb698cee30ebb9efcd437af16e7ac1c85a2d3eaf32f9ed7d5b3f13d05ee2b"
+              },
+              {
+                "condition_number": 7.3214503499523484,
+                "fingerprint": "34856d51a58efede3bf97354e7d4c499ea73e615a1cf7c23565a84624906da81"
+              }
+            ]
+          },
+          "layer4": {
+            "logit_max_error": 0.05078125,
+            "logit_l2_relative_error": 0.011028608964751791,
+            "prob_kl": 1.9074654032090836e-05,
+            "prob_js": 4.770263227037536e-06,
+            "top1_token_agreement": 0.984375,
+            "top1_token_agreement_ci95": {
+              "estimate": 0.984375,
+              "ci_low": 0.9448190233201829,
+              "ci_high": 0.9957045502898559,
+              "level": 0.95,
+              "method": "wilson",
+              "n": 128
+            },
+            "top5_overlap": 0.9859375,
+            "margin_risk_rate": 0.125,
+            "lm_head_argmax_match": 0.984375,
+            "greedy_sequence_exact_match": 0.875,
+            "greedy_token_exact_match": 0.96875,
+            "first_divergence_position": 19,
+            "common_prefix_length_mean": 3.875,
+            "common_prefix_lengths": [
+              4,
+              4,
+              4,
+              4,
+              3,
+              4,
+              4,
+              4
+            ],
+            "teacher_forced": {
+              "plaintext": {
+                "negative_log_likelihood": 4.27165412902832,
+                "perplexity": 71.64003953352828,
+                "next_token_top1_accuracy": 0.0,
+                "next_token_top5_accuracy": 0.05000000074505806
+              },
+              "obfuscated": {
+                "negative_log_likelihood": 4.271903038024902,
+                "perplexity": 71.6578736033218,
+                "next_token_top1_accuracy": 0.0,
+                "next_token_top5_accuracy": 0.05000000074505806
+              },
+              "agreement": {
+                "next_token_top1_agreement": 0.9833333492279053
+              },
+              "degradation": {
+                "nll_absolute_increase": 0.00024890899658203125,
+                "nll_relative_increase": 5.8269932223808334e-05,
+                "perplexity_absolute_increase": 0.017834069793522644,
+                "perplexity_relative_increase": 0.00024893997699674793,
+                "top1_absolute_drop": 0.0,
+                "top1_relative_drop": null,
+                "top5_absolute_drop": 0.0,
+                "top5_relative_drop": 0.0
+              },
+              "token_count": 120
+            },
+            "free_running": {
+              "greedy_token_exact_match": 0.96875,
+              "greedy_sequence_exact_match": 0.875
+            },
+            "ppl_relative_increase": 0.00024893997699674793,
+            "top1_absolute_drop_pp": 0.0,
+            "cache_vs_nocache_identical": 1.0,
+            "vocab_permutation_applied": true
+          }
+        }
+      ],
+      "aggregated_metrics": {
+        "layer1": {
+          "chain_linear": {
+            "max_absolute_error": null
+          }
+        },
+        "layer2": {
+          "rank_flip_rate": null,
+          "top1_match": null,
+          "topk_overlap": null,
+          "causal_mask_match": null
+        },
+        "layer3": {
+          "expert_set_match": null
+        },
+        "layer4": {
+          "lm_head_argmax_match": 0.984375,
+          "greedy_sequence_exact_match": 0.875,
+          "ppl_relative_increase": 0.00024893997699674793,
+          "top1_absolute_drop_pp": 0.0
+        },
+        "cache": {
+          "cache_vs_nocache_identical": 1.0
+        },
+        "utility": {
+          "accuracy_drop_pp": null,
+          "ppl_relative_increase": null,
+          "accuracy_drop_pp_ci95_upper": null
+        }
+      },
+      "multi_key_stats": {},
+      "terminology": "obfuscated-state relative to plaintext; augmented covariant obfuscation prototype",
+      "gates": {
+        "hard_passed": false,
+        "soft_passed": true,
+        "all_passed": false,
+        "results": [
+          {
+            "name": "FP32 ChainLinear max abs error",
+            "category": "hard",
+            "passed": false,
+            "observed": null,
+            "threshold": 0.0001,
+            "unit": "abs",
+            "detail": "metric missing"
+          },
+          {
+            "name": "Attention rank-flip rate",
+            "category": "hard",
+            "passed": true,
+            "observed": null,
+            "threshold": 0.0,
+            "unit": "fraction",
+            "detail": "skipped when Layer 2 not run"
+          },
+          {
+            "name": "Attention top-1 match",
+            "category": "hard",
+            "passed": true,
+            "observed": null,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": "skipped when Layer 2 not run"
+          },
+          {
+            "name": "Attention top-k overlap",
+            "category": "hard",
+            "passed": true,
+            "observed": null,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": "skipped when Layer 2 not run"
+          },
+          {
+            "name": "MoE expert set match",
+            "category": "hard",
+            "passed": true,
+            "observed": null,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": "N/A when model has no MoE or Layer 3 not run"
+          },
+          {
+            "name": "Causal mask match",
+            "category": "hard",
+            "passed": true,
+            "observed": null,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": "skipped when Layer 2 not run"
+          },
+          {
+            "name": "Cache vs no-cache identical",
+            "category": "hard",
+            "passed": true,
+            "observed": 1.0,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": "skipped when Layer 4 not run"
+          },
+          {
+            "name": "LM Head inverse-permuted argmax",
+            "category": "hard",
+            "passed": false,
+            "observed": 0.984375,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": "skipped when Layer 4 not run"
+          },
+          {
+            "name": "Greedy release-validation sequences",
+            "category": "hard",
+            "passed": false,
+            "observed": 0.875,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": "skipped when Layer 4 not run"
+          },
+          {
+            "name": "Accuracy drop \u2264 0.5 pp",
+            "category": "soft",
+            "passed": true,
+            "observed": 0.0,
+            "threshold": 0.5,
+            "unit": "pp",
+            "detail": ""
+          },
+          {
+            "name": "PPL relative increase \u2264 1%",
+            "category": "soft",
+            "passed": true,
+            "observed": 0.00024893997699674793,
+            "threshold": 0.01,
+            "unit": "relative",
+            "detail": ""
+          }
+        ]
+      }
+    }
+  },
+  "exit_hard_fail": true
+}

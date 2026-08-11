@@ -116,7 +116,7 @@ def run_single_key(
         "device": str(models.device),
         "plaintext_embedding_dtype": str(models.plain.embedding.weight.dtype),
         "obfuscated_embedding_dtype": (
-            str(models.obfuscated.embedding_weight.dtype)
+            str(models.obfuscated.embedding.table.dtype)
             if models.obfuscated is not None
             else None
         ),

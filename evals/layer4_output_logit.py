@@ -124,9 +124,11 @@ def run_layer4(
     ctx = models.request_context("layer4")
 
     # ----- Teacher-forced -----
+    codec = models.token_codec
+    encoded = codec.encode(input_ids)
     plain_logits = plain(input_ids, token_mask=token_mask)
     obf_logits_raw = obf(
-        input_ids, token_mask=token_mask, request_context=ctx
+        encoded, token_mask=token_mask, request_context=ctx
     )
     obf_logits = inverse_align_logits(obf_logits_raw, models.vocab_permutation)
 
@@ -190,8 +192,12 @@ def run_layer4(
 
     # ----- Free-running greedy -----
     plain_gen = plain.generate_greedy(input_ids, max_new_tokens=max_new_tokens)
-    obf_gen = obf.generate_greedy(
-        input_ids, max_new_tokens=max_new_tokens, request_context=ctx
+    obf_gen = codec.decode(
+        obf.generate_greedy(
+            encoded,
+            max_new_tokens=max_new_tokens,
+            request_context=ctx,
+        )
     )
     prompt_len = input_ids.shape[1]
     greedy = greedy_generation_metrics(
@@ -285,18 +291,20 @@ def _obf_cache_check(
     if models.obfuscated is None:
         return 1.0
     obf = models.obfuscated
+    codec = models.token_codec
+    encoded = codec.encode(input_ids)
     ctx = models.request_context("cache-check")
-    full = obf(input_ids, token_mask=token_mask, request_context=ctx)
+    full = obf(encoded, token_mask=token_mask, request_context=ctx)
     mid = max(1, input_ids.shape[1] // 2)
     try:
         logits_prefill, cache = obf(
-            input_ids[:, :mid],
+            encoded[:, :mid],
             token_mask=token_mask[:, :mid],
             request_context=ctx,
             use_cache=True,
         )
         logits_rest, _ = obf(
-            input_ids[:, mid:],
+            encoded[:, mid:],
             token_mask=token_mask[:, mid:],
             request_context=ctx,
             cache=cache,

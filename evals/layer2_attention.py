@@ -57,12 +57,15 @@ def run_layer2(
     plain = models.plain
     obf = models.obfuscated
     ctx = models.request_context("layer2")
+    codec = models.token_codec
 
     # Teacher-forced single forward with debug on both paths.
     plain_hidden = plain.embedding(input_ids)
     # Run obfuscated full LM debug for attention internals.
     _, obf_debugs = obf.forward_debug(
-        input_ids, token_mask=token_mask, request_context=ctx
+        codec.encode(input_ids),
+        token_mask=token_mask,
+        request_context=ctx,
     )
 
     per_layer: List[Dict[str, Any]] = []

@@ -305,10 +305,15 @@ def build_models(
         codec = converted.token_codec
         obfuscated.eval()
 
-        # Optional vocab permutation buffer (identity if absent).
+        # Optional vocab permutation buffer (identity if absent); the codec
+        # permutation tau maps plaintext item k to the obfuscated logit index,
+        # which is exactly the convention inverse_align_logits expects.
         if hasattr(obfuscated, "vocab_permutation"):
             vocab_perm = getattr(obfuscated, "vocab_permutation")
             notes.append("using model vocab_permutation buffer")
+        elif codec is not None:
+            vocab_perm = codec.permutation
+            notes.append("using client codec permutation for inverse-align")
         else:
             notes.append(
                 "LM-head vocab permutation Π_voc not present in prototype; "

@@ -68,9 +68,10 @@ def _teacher_forced_ppl(
         }
 
     ctx = models.request_context("layer5-ppl")
+    encoded = models.token_codec.encode(input_ids)
     obf_logits = inverse_align_logits(
         models.obfuscated(
-            input_ids, token_mask=token_mask, request_context=ctx
+            encoded, token_mask=token_mask, request_context=ctx
         ),
         models.vocab_permutation,
     )
@@ -146,7 +147,9 @@ def _synthetic_multiple_choice(
                 ctx = models.request_context("mcq-%d-%d" % (q, c))
                 logits_o = inverse_align_logits(
                     models.obfuscated(
-                        tokens, token_mask=mask, request_context=ctx
+                        models.token_codec.encode(tokens),
+                        token_mask=mask,
+                        request_context=ctx,
                     ),
                     models.vocab_permutation,
                 )
