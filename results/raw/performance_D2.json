@@ -1,0 +1,67 @@
+{
+  "schema": "fastprove.performance.v1",
+  "implementation": "eager reference, not a fused kernel",
+  "device": "cpu",
+  "activation_dtype": "float32",
+  "torch_version": "2.11.0",
+  "gpu_name": null,
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "threads": 4,
+  "model": {
+    "hidden_size": 1024,
+    "intermediate_size": 2752,
+    "num_layers": 4,
+    "num_attention_heads": 16,
+    "num_key_value_heads": 4,
+    "sequence_length": 128,
+    "decode_tokens": 8
+  },
+  "obfuscation": {
+    "hidden_noise_dim": 16,
+    "value_noise_dim_per_head": 2,
+    "basis_block_size": 16,
+    "lm_head_mode": "untied_deployed"
+  },
+  "conversion_time_seconds": 0.6280109580038697,
+  "plaintext": {
+    "name": "plaintext",
+    "prefill_latency_seconds": 0.02033058399683796,
+    "ttft_seconds": 0.02033058399683796,
+    "decode_latency_seconds": 0.052421207998122554,
+    "tpot_seconds": 0.006552650999765319,
+    "tokens_per_second": 152.6099894585893,
+    "prefill_tokens": 128,
+    "kernel_count_prefill": 2817,
+    "peak_process_rss_bytes": 1054196367360
+  },
+  "obfuscated": {
+    "name": "obfuscated",
+    "prefill_latency_seconds": 0.02712404100020649,
+    "ttft_seconds": 0.02712404100020649,
+    "decode_latency_seconds": 0.07759449999866774,
+    "tpot_seconds": 0.009699312499833468,
+    "tokens_per_second": 103.10009085872524,
+    "prefill_tokens": 128,
+    "kernel_count_prefill": 18556,
+    "peak_process_rss_bytes": 1054196367360
+  },
+  "kv_cache_bytes": {
+    "plaintext": 1053184,
+    "obfuscated": 1069568,
+    "relative_increase": 0.015556635877491454
+  },
+  "prefill_overhead_fraction": 0.33414962425206896,
+  "decode_overhead_fraction": 0.48021197835514884,
+  "tied_embedding_memory": {
+    "plaintext_vocab_side_bytes_formula": "V * d * element_size (one shared table)",
+    "obfuscated_vocab_side_bytes_formula": "V * n * element_size (embedding.table) + n * V * element_size (deployed_head) for untied_deployed",
+    "structural_ratio": 2.03125,
+    "llama_32_3b_bf16_projection_bytes": 1584218112,
+    "llama_32_3b_bf16_plaintext_shared_bytes": 788004864,
+    "note": "3B/BF16 numbers are structural projections with the doc's dimensions (V=128256, d=3072, r=16, 2 bytes), not a measured run: no tied pretrained checkpoint is available locally. The vocabulary-side memory roughly doubles, exceeding the 5% peak-memory target (task B4.2, reported in D4)."
+  },
+  "notes": [
+    "tied-embedding consequence: deployed_head is an independent [n, V] matrix; the vocabulary-side memory roughly doubles vs the shared plaintext table (task B4.2 / D4 records the 5% peak-memory target exceedance for the 3B-class model)",
+    "peak_process_rss_bytes is the max recorded ru_maxrss on this process; the conversion peak is included in the obfuscated value"
+  ]
+}
