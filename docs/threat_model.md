@@ -213,6 +213,12 @@ h = c\,(M^{-1})_{[:,\,:d]}
 第 3.2 节"检查点基材料不进入 `state_dict`"的说法仅适用于混合基
 \(M\) 及其逆，**不适用于**上述三个旋转 buffer。
 
+**状态更新（阶段 A/C）**：`attention_rotation`/`ffn_rotation` 在阶段 B
+被完全删除（其作用已吸收进部署权重，在线是恒等空转）；`common_qk` 在
+任务 C4 中被重新归类为**服务端必须持有的密钥**（RoPE 之后应用，无法
+吸收），在 `runtime_config.json` 中显式标注，见 5bis.8 条目 3。此条
+(a) 对 `common_qk` 的结论仍然成立且是有意为之。
+
 **(b) 辅助状态是信号的确定性仿射像，且 \(C,G,\xi\) 同样在 `state_dict` 中。**
 \(e'=hC+eG+\xi\) 中 \(C,G\) 为固定的密钥派生矩阵。因此 \(e\) 不是独立
 随机量，而是 \(h\) 的确定性函数加一个小扰动（默认配置下
@@ -253,6 +259,71 @@ PYTHONPATH=src python3 scripts/verify_recoverability_bound.py \
 若将来构造改变使 \(h\) 不再可恢复，脚本会失败并提示本节已过时。
 
 这些是**已知上界**，与第 1 节 Non-Claims 一致，不是新发现的缺陷。
+
+### 5bis.8 阶段 A–C 新增的安全后果（任务 D4 记录）
+
+以下五条在阶段 A–C 的实现过程中被证实或引入，全部有复现命令，必须随
+本文件一起维护：
+
+**1. 块对角基降低已知明文攻击的样本代价（任务 A2）。**
+`M = Π₁ D B Π₂` 中 `B` 是块宽 `b` 的块对角正交。混合态每个输出坐标只
+依赖 `b` 个输入坐标，因此恢复每个块内的 `M` 只需要 `O(b)` 个
+已知明文样本（稠密基为 `O(n)`）。`r ≪ d` 时大部分块不含噪声坐标，
+块内信号可独立恢复。代价从 9.5M MAC 降到 49K MAC 的同时，攻击者按块
+分解的代价也成比例下降。
+复现：
+```bash
+python -m pytest -q tests/test_structured_basis.py -v
+```
+
+**2. 噪声读出矩阵 `N` 进入部署权重，观察者可恢复噪声态 `e`（任务 B1.3）。**
+残差项的在线形式是 `(c @ N) @ Wnz`，其中
+`Wnz = (G − I) M_bot`。已验证不可规避：`Z = N(G−I)M_bot` 的秩恒为 `r`，
+且对任意分解 `Z = UV`，`M @ U` 的信号块为 0、噪声块满秩。因此观察部署
+权重（`noise_read` + `deployed_*_noise_out`）者可恢复 `e`
+（up to 一个可逆 `r×r` 映射）。这不额外暴露 `h`，但使 5bis.6(b) 记录的
+`e ≈ hC` 通道直接可利用。唯一替代是令 `G = 0`（放弃链式衰减），本方案
+保留 `G = γP` 并接受此泄漏。
+复现：`tests/test_deployed_weights.py`（17 项，含秩/分解哨兵测试）。
+
+**3. `common_qk` 服务端可见，QK 几何结构不受保护（任务 C4.3）。**
+`common_qk` 在 RoPE 之后应用，无法吸收进任何部署权重，服务端必须在
+运行时持有它。它现在是持久 buffer 并在 `runtime_config.json` 的
+`server_visible_key_material` 字段中显式标注（不允许改名规避检查）。
+后果：`Q'K'^T = QK^T` 的几何（分数多集与排序结构）对服务端可见。
+复现：
+```bash
+PYTHONPATH=src python -m pytest -q tests/test_converter.py -v
+grep server_visible_key_material <server_dir>/runtime_config.json
+```
+
+**4. `ρ` 的 FP32 精度上界：`‖e‖/‖h‖ ≤ 30`（任务 A2.4）。**
+`A_gram = P Pᵀ` 靠抵消消去噪声子空间，FP32 相对误差按 `(‖e‖/‖h‖)²`
+增长（比值 1 → 4e-7；100 → 1e-4；1000 → 2e-2）。`AUXILIARY_MAGNITUDE_BOUND
+= 30` 是实测上界，转换期由 `validate_auxiliary_budget` 强制。想靠加大
+噪声提升混淆强度会**静默污染信号路径**（`ρ` 失准），而不是只污染噪声。
+不得调大该上界；要调必须重新实测并更新 `structured.py` 的 docstring 表。
+复现：
+```bash
+python -m pytest -q \
+  tests/test_structured_basis.py::test_gram_accuracy_degrades_with_noise
+```
+
+**5. tied-embedding 使词表侧峰值内存 +100%，超出手册 §69 的 5% 目标
+（任务 B4.2）。**
+Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重；`untied_deployed`
+模式下 `deployed_head` 是独立的 `[n, V]` 矩阵。词表侧内存从共享的
+`[V, d]` 变为 `[V, n] + [n, V]`，结构比 `2n/d ≈ 2.03`（d=3072, r=16）。
+3B/BF16 投影约 +0.79 GB（未实测：本地无 tied 预训练 checkpoint，
+见 `results/raw/performance_D2.json` 的 `tied_embedding_memory` 节）。
+`fused_norm_head` 模式需要融合 kernel（eager 会物化明文归一化态），
+当前实现直接抛 `NotImplementedError`，不静默回退。
+复现：
+```bash
+PYTHONPATH=src python scripts/record_performance_D2.py \
+    --output results/raw/performance_D2.json
+python -m pytest -q tests/test_secure_lm_head.py::test_fused_norm_head_raises_not_implemented
+```
 
 ## 6. 各模式实际隐藏与保留的信息
 
