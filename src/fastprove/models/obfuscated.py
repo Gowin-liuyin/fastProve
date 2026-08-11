@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 import hashlib
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -156,15 +156,34 @@ def _cache_tensor_digest(*tensors: torch.Tensor) -> str:
     return digest.hexdigest()
 
 
-def _make_rms_scale(basis: StructuredBasis):
-    """Capture a basis for the O(n*b) RMS scale outside persistent state.
+def _rms_scale_from_factors(
+    signal_dim: int,
+    gram_blocks: torch.Tensor,
+    gram_perm: torch.Tensor,
+) -> Any:
+    """Build an ``O(n*b)`` RMS-scale callable from the server-side Gram.
 
-    Returns a callable ``(mixed, eps) -> [..., 1]`` in FP32. Only a scalar per
-    token is produced; the signal is never reconstructed.
+    Only a scalar per token is produced; the signal is never reconstructed.
+    ``gram_blocks`` / ``gram_perm`` are the server-side deployed artifacts
+    (see the converter): the block-diagonal ``A_gram = P P.T`` blocks in
+    ``perm_out`` order.
     """
 
     def rms_scale(mixed: torch.Tensor, eps: float) -> torch.Tensor:
-        return basis.rms_scale(mixed, eps)
+        count, block = int(gram_blocks.shape[0]), int(gram_blocks.shape[1])
+        if mixed.shape[-1] != count * block:
+            raise ValueError("mixed width does not match the Gram artifacts")
+        device = mixed.device
+        perm = gram_perm.to(device=device)
+        gathered = mixed[..., perm].to(dtype=torch.float32)
+        segments = gathered.reshape(*mixed.shape[:-1], count, block)
+        gram = gram_blocks.to(device=device, dtype=torch.float32)
+        contracted = torch.einsum(
+            "...mi,mij,...mj->...", segments, gram, segments
+        )
+        return torch.sqrt(
+            contracted.clamp_min(0.0) / float(signal_dim) + float(eps)
+        ).unsqueeze(-1)
 
     return rms_scale
 
@@ -221,11 +240,12 @@ class ObfuscatedDecoderBlock(nn.Module):
                 for head in range(kv_heads)
             ]
         )
-        # Key material: must not enter the server-side state_dict.
         # ``common_qk`` is applied after RoPE and therefore cannot be absorbed
-        # into a deployed weight; it stays a runtime tensor but is still key
-        # material, so it is excluded from the checkpoint as well.
-        self.register_buffer("common_qk", common_qk, persistent=False)
+        # into a deployed weight. It is reclassified as server-visible key
+        # material (docs/threat_model.md): the server must hold it to run, and
+        # the QK geometry is not protected. It ships in the server bundle and
+        # is explicitly annotated in runtime_config.json (task C4).
+        self.register_buffer("common_qk", common_qk, persistent=True)
 
         self.register_buffer(
             "q_bias",
@@ -486,9 +506,27 @@ class ObfuscatedDecoderBlock(nn.Module):
             hidden_transform.noise_rows().to(dtype=torch.float32),
             persistent=True,
         )
-        # rho is a scalar per token; the basis factors stay in the closure and
-        # out of state_dict, matching the existing checkpoint convention.
-        self._rms_scale = _make_rms_scale(hidden_transform)
+        # Server-side Gram artifacts for the O(n*b) rho statistic. A_gram =
+        # P P.T is block diagonal in perm_out order; the nullspace (noise
+        # subspace) content is already implied by the shipped ``noise_read``
+        # (B1.3), so these add no new recorded leakage.
+        self.register_buffer(
+            "deployed_gram_blocks",
+            hidden_transform.gram_blocks.detach().clone(),
+            persistent=True,
+        )
+        self.register_buffer(
+            "deployed_gram_perm",
+            hidden_transform.perm_out.detach().clone(),
+            persistent=True,
+        )
+        # rho is a scalar per token; the factor tensors live in the deployed
+        # Gram buffers, so the closure is rebuildable from the server bundle.
+        self._rms_scale = _rms_scale_from_factors(
+            self.config.hidden_size,
+            self.deployed_gram_blocks,
+            self.deployed_gram_perm,
+        )
         self._debug_basis_unmix = (
             (lambda tensor: hidden_transform.unmix(tensor))
             if debug_enabled
@@ -1048,7 +1086,23 @@ class ObfuscatedTinyCausalLM(nn.Module):
             deployed_head,
             persistent=True,
         )
-        self._rms_scale = _make_rms_scale(hidden_transform)
+        self.register_buffer(
+            "deployed_gram_blocks",
+            hidden_transform.gram_blocks.detach().clone(),
+            persistent=True,
+        )
+        self.register_buffer(
+            "deployed_gram_perm",
+            hidden_transform.perm_out.detach().clone(),
+            persistent=True,
+        )
+        # rho is a scalar per token; the factor tensors live in the deployed
+        # Gram buffers, so the closure is rebuildable from the server bundle.
+        self._rms_scale = _rms_scale_from_factors(
+            self.config.hidden_size,
+            self.deployed_gram_blocks,
+            self.deployed_gram_perm,
+        )
         # M_bot for the layer-0 per-request refresh ``xi_0 @ M_bot``. B1.3
         # records the recoverability consequence of shipping M_bot-derived
         # material; the block already ships the same rows.

@@ -12,9 +12,13 @@ from fastprove.models.plain import PlainTinyCausalLM
 #: Substrings that indicate conversion/client-side key material. A server
 #: checkpoint containing any of these would let an operator decode the mixed
 #: state directly, which is exactly what the conversion is supposed to withhold.
+#:
+#: ``common_qk`` is deliberately absent from this list: it is applied after
+#: RoPE and cannot be absorbed into a deployed weight, so the server must hold
+#: it (task C4 reclassifies it as server-visible key material and the threat
+#: model records that the QK geometry is not protected).
 _FORBIDDEN_SUBSTRINGS = (
     "rotation",
-    "common_qk",
     "coupling",
     "propagator",
     "refresh",
@@ -111,10 +115,19 @@ def test_saved_and_reloaded_state_dict_round_trips(tmp_path) -> None:
 
 
 def test_reloaded_server_checkpoint_cannot_reconstruct_the_basis() -> None:
-    """A server checkpoint alone must not carry any basis factor."""
+    """A server checkpoint alone must not carry any basis factor.
+
+    ``deployed_gram_blocks`` / ``deployed_gram_perm`` are the block-diagonal
+    ``A_gram = P P.T`` artifacts the server needs for the ``rho`` statistic;
+    their noise-subspace content is already implied by the shipped
+    ``noise_read`` (B1.3), so they are allowed. Anything that would decode
+    the state (M, M^-1, P, N, scales, permutations) stays forbidden.
+    """
 
     state = _converted().state_dict()
     for key, value in state.items():
+        if key.rsplit(".", 1)[-1].startswith("deployed_gram"):
+            continue
         assert "gram" not in key
         assert "perm" not in key or "kv_index" in key
         assert isinstance(value, torch.Tensor)
