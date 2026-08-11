@@ -1,0 +1,131 @@
+% OSNIP-style task metrics: paper vs fastProve measured numbers
+% Compile: xelatex osnip_vs_fastprove_tasks.tex
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1.6cm]{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Times New Roman}
+\setCJKmainfont{PingFang SC}
+\usepackage{booktabs,array,xcolor,colortbl,amsmath,multirow}
+\usepackage{hyperref}
+
+\definecolor{headerbg}{HTML}{F0F0F0}
+\definecolor{note}{HTML}{555555}
+
+\title{\textbf{OSNIP 同协议任务精度：论文 vs fastProve}\\
+\large Llama-3.2-3B-Instruct}
+\author{fastProve evaluation}
+\date{\today}
+
+\begin{document}
+\maketitle
+\vspace{-1.0em}
+
+\noindent
+{\small\color{note}
+\textbf{说明：}
+左列取自 OSNIP 论文 Table~1 / Table~2（Llama-3.2-3B-Instruct）；
+右列为本仓库当前协变混淆方案在 RTX~5090 上实测
+（\texttt{results/raw/osnip\_style\_bench\_n200.json}，每任务 $n{=}200$，1 master key）。
+评分：闭集任务为 continuation 对数似然 MC；WikiText-2 为滑动窗口 teacher-forced PPL。
+\textbf{绝对分}受 prompt / chat 模板 / 子集影响，不可与论文硬对齐；
+\textbf{相对保留率 RP} 与 \textbf{PPL 相对增幅} 才是公平主指标。
+}
+
+\vspace{0.7em}
+
+\subsection*{闭集准确率与 RP}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.18}
+\footnotesize
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\rowcolor{headerbg}
+任务 &
+OSNIP 明文 & OSNIP & OSNIP RP &
+fastProve 明文 & structural & full \\
+\midrule
+ARC-E
+  & 0.712 & 0.707 & 99.3\%
+  & 0.535 & 0.530 & 0.505 \\
+PIQA
+  & 0.768 & 0.766 & 99.7\%
+  & 0.460 & 0.460 & 0.460 \\
+MNLI
+  & 0.542 & 0.535 & 98.7\%
+  & 0.480 & 0.485 & 0.495 \\
+SST-2
+  & 0.867 & 0.825 & 95.2\%
+  & 0.970 & 0.965 & 0.950 \\
+ANLI-R1
+  & 0.440 & 0.431 & 98.0\%
+  & 0.475 & 0.480 & 0.415 \\
+ANLI-R2
+  & 0.401 & 0.407 & 101.5\%
+  & 0.395 & 0.400 & 0.355 \\
+ANLI-R3
+  & 0.425 & 0.410 & 96.5\%
+  & 0.350 & 0.350 & 0.350 \\
+WiC
+  & 0.497 & 0.513 & 103.2\%
+  & 0.505 & 0.505 & 0.505 \\
+HellaSwag
+  & 0.716 & 0.709 & 99.0\%
+  & 0.465 & 0.465 & 0.455 \\
+MMLU
+  & 0.606 & 0.572 & 94.4\%
+  & 0.295 & 0.295 & 0.315 \\
+\midrule
+\textbf{闭集平均}
+  & 0.597 & 0.588 & \textbf{98.49\%}
+  & 0.493 & 0.494 & 0.481 \\
+\textbf{RP（相对各自明文）}
+  & 100\% & 98.49\% & ---
+  & 100\% & \textbf{100.1\%} & \textbf{97.46\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.6em}
+
+\subsection*{WikiText-2 困惑度}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\rowcolor{headerbg}
+指标 & OSNIP 明文$\to$混淆 & fastProve structural & fastProve full \\
+\midrule
+PPL
+  & $9.63\to12.58$
+  & $11.59\to11.61$
+  & $11.59\to11.73$ \\
+相对增幅 $\Delta\%$
+  & \textbf{$+31\%$}
+  & \textbf{$+0.12\%$}
+  & \textbf{$+1.15\%$} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.7em}
+\subsection*{结论}
+\begin{enumerate}
+  \item \textbf{任务保留率：} structural 在 10 项闭集上相对明文 RP $\approx 100\%$；
+    full RP $\approx 97.5\%$，与 OSNIP 论文 $98.5\%$ 同量级。
+  \item \textbf{PPL：} structural $+0.12\%$、full $+1.15\%$，
+    远低于 OSNIP 报告的 $+31\%$（绝对 PPL 因窗口不同不可硬比）。
+  \item \textbf{绝对分：} 本协议未使用 chat template，若干任务（PIQA / HellaSwag / MMLU）
+    绝对准确率低于论文非私有基线；这不改变“混淆相对明文”的保留率结论。
+  \item \textbf{未测：} 隐私 KNN-ASR、CNN/DM 摘要 ROUGE/BERTScore（OSNIP Table~3）。
+\end{enumerate}
+
+\vspace{0.3em}
+{\scriptsize\color{note}
+来源：OSNIP Tables~1--2；fastProve \texttt{osnip\_style\_bench\_n200.json}
+（$n{=}200$/任务，BF16，RTX 5090，current covariant scheme）。
+}
+\end{document}

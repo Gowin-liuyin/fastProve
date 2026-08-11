@@ -1,0 +1,302 @@
+{
+  "schema_version": "fastprove.pretrained_status.v1",
+  "status": "skipped_external_dependency",
+  "timestamp_utc": "2026-08-01T15:52:46.913701+00:00",
+  "network_access_attempted": false,
+  "weights_allocated": false,
+  "requested": {
+    "model_path": "/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+    "dataset_paths": [
+      "/Users/yin/code/fastProve/results/raw/flickr30k_caption_eval_inputs.pt"
+    ],
+    "calibration_sample_count": 8,
+    "full_sample_count": 64,
+    "sequence_length": 24,
+    "generation_tokens": 4,
+    "accept_nonstandard_caption": false
+  },
+  "model": {
+    "present": true,
+    "path": "/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+    "architecture": "Qwen2ForCausalLM",
+    "upstream_revision": "revision_unavailable",
+    "checkpoint_manifest": {
+      "root": "/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+      "architecture": "Qwen2ForCausalLM",
+      "model_config": {
+        "vocab_size": 151936,
+        "hidden_size": 1536,
+        "intermediate_size": 8960,
+        "num_layers": 28,
+        "num_attention_heads": 12,
+        "num_key_value_heads": 2,
+        "max_sequence_length": 2048,
+        "rms_epsilon": 1e-06,
+        "rope_theta": 10000.0,
+        "qkv_bias": true
+      },
+      "config_sha256": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+      "tokenizer_sha256": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+      "tokenizer_config_sha256": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+      "weights_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+      "weights_bytes": 3554214621,
+      "upstream_revision": "revision_unavailable",
+      "max_position_embeddings": 131072
+    },
+    "tokenizer_files": {
+      "tokenizer_json": true,
+      "tokenizer_config_json": true
+    }
+  },
+  "evaluation_data": {
+    "requested_cache_entries": [
+      {
+        "path": "/Users/yin/code/fastProve/results/raw/flickr30k_caption_eval_inputs.pt",
+        "present": true,
+        "file_sha256": "bd199c728bc193aa614fb241f7a4fa8b4a3037f00d73423f7d6a60bb64da30d7",
+        "valid_aligned_token_cache": true,
+        "content_sha256": "6d0a751be4a77ad6d6e943a04c339bad2a29276563c1df41b12b6959c91b33d2",
+        "sample_count": 405,
+        "sequence_length": 24,
+        "metadata": {
+          "model_root": "/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+          "model_config_sha256": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+          "tokenizer_sha256": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+          "tokenizer_config_sha256": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+          "vocab_size": 151936,
+          "sequence_length": 24,
+          "source_path": "/private/tmp/fastprove_flickr30k_test_captions.jsonl",
+          "source_sha256": "2e37efae26ed224c0d6c7848588312adf2f89f3dd0b5686b26abc4114c4addec",
+          "source_format": "jsonl",
+          "short_examples_dropped": 4595,
+          "add_special_tokens": true,
+          "padding_token_id": 151643,
+          "evidence_scope": "tokenized_local_corpus; not yet evaluated"
+        },
+        "evidence_scope": "caption_only_nonstandard_lm_candidate",
+        "provenance_issues": [],
+        "provenance_valid": true,
+        "nonstandard_caption_candidate": true,
+        "model_identity_match": true,
+        "tokenizer_identity_match": true
+      }
+    ],
+    "discovered_candidates": [
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00000-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00001-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00002-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00003-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00004-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00005-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00006-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00007-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00008-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets/mscoco_karpathy/dataset_coco.json",
+        "suffix": ".json",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets/mscoco_karpathy/annotations/instances_train2014.json",
+        "suffix": ".json",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets/mscoco_karpathy/annotations/instances_val2014.json",
+        "suffix": ".json",
+        "kind": "candidate_local_data"
+      },
+      {
+        "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets/flickr30k/karpathy_split/dataset_flickr30k.json",
+        "suffix": ".json",
+        "kind": "candidate_local_data"
+      }
+    ],
+    "not_accepted_candidates": [
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00000-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00001-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00002-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00003-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00004-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00005-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00006-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00007-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/.cache/huggingface/datasets/lmms-lab___flickr30k/default/0.0.0/765d117f3eec816f2bfdc2d73ebb50a6f77b86a4/flickr30k-test-00008-of-00009.arrow",
+        "suffix": ".arrow",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets/mscoco_karpathy/dataset_coco.json",
+        "suffix": ".json",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets/mscoco_karpathy/annotations/instances_train2014.json",
+        "suffix": ".json",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets/mscoco_karpathy/annotations/instances_val2014.json",
+        "suffix": ".json",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      },
+      {
+        "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets/flickr30k/karpathy_split/dataset_flickr30k.json",
+        "suffix": ".json",
+        "kind": "candidate_local_data",
+        "suitability": "present_but_nonstandard_caption_corpus"
+      }
+    ]
+  },
+  "searched_cache_roots": [
+    {
+      "path": "/Users/yin/.cache/huggingface/hub",
+      "exists": true,
+      "is_directory": true
+    },
+    {
+      "path": "/Users/yin/.cache/huggingface/datasets",
+      "exists": true,
+      "is_directory": true
+    },
+    {
+      "path": "/Users/yin/dr-claw/FL_unlearning/Experiment/datasets",
+      "exists": true,
+      "is_directory": true
+    },
+    {
+      "path": "/Users/yin/code/fastProve/data",
+      "exists": false,
+      "is_directory": false
+    },
+    {
+      "path": "/Users/yin/code/fastProve/datasets",
+      "exists": false,
+      "is_directory": false
+    }
+  ],
+  "missing": [
+    "approved_public_causal_lm_evaluation_data_and_aligned_token_cache"
+  ],
+  "proposed_external_run": {
+    "model": {
+      "identifier": "local-qwen2-1.5b",
+      "path": "/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+      "architecture": "Qwen2ForCausalLM"
+    },
+    "dataset": {
+      "recommendation": "approved public WikiText-2 test split or an explicitly authorized local causal-LM corpus",
+      "required_provenance": [
+        "dataset name/config/split/revision",
+        "source and license/authorization",
+        "source SHA-256",
+        "token-cache SHA-256"
+      ]
+    },
+    "evaluation": {
+      "calibration_sample_count": 8,
+      "full_sample_count": 64,
+      "sequence_length": 24,
+      "generation_tokens": 4,
+      "dtype_order": [
+        "float32_exact_gate_first",
+        "bfloat16_separate"
+      ],
+      "device_policy": "prefer CUDA with sufficient memory; never silently fallback",
+      "sweep_points": 72
+    },
+    "resource_estimate": {
+      "checkpoint_bytes": 3554214621,
+      "estimated_fp32_working_set_bytes": 17060230180,
+      "estimated_fp32_working_set_gib": 15.89,
+      "estimate_kind": "conservative_preflight_lower_bound_plus_conversion_overhead"
+    },
+    "permission_gate": "only the approved dataset/token-cache (and suitable compute if needed) remains external"
+  },
+  "authorization_required": [
+    "provide or authorize an evaluation corpus and aligned token cache",
+    "authorize suitable compute if the 16-GiB host cannot complete FP32 conversion"
+  ],
+  "evaluation_scope": "standard_causal_lm_evidence_required"
+}

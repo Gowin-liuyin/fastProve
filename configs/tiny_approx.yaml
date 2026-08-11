@@ -1,0 +1,37 @@
+model:
+  vocab_size: 64
+  hidden_size: 32
+  intermediate_size: 64
+  num_layers: 2
+  num_attention_heads: 4
+  num_key_value_heads: 2
+  max_sequence_length: 32
+  rms_epsilon: 0.00001
+  rope_theta: 10000.0
+obfuscation:
+  hidden_noise_dim: 8
+  value_noise_dim_per_head: 2
+  max_condition_number: 10.0
+  noise_propagation_gamma: 0.5
+  refresh_mode: per_request
+  basis_block_size: 8
+attention:
+  mode: topk_preserving
+  tau_max: 0.03
+  tau_error: 0.10
+  alpha: 0.8
+  preserve_top_k: 4
+runtime:
+  seed: 20260731
+  request_id: tiny-approx
+  device: cpu
+  activation_dtype: float32
+  debug_enabled: false
+evaluation:
+  batch_size: 2
+  sequence_length: 16
+  sample_count: 8
+  generation_tokens: 4
+  warmup_runs: 1
+  timed_runs: 3
+

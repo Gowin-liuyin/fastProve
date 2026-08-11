@@ -1,0 +1,119 @@
+% Two-column comparison table: OSNIP vs fastProve
+% Compile: xelatex osnip_vs_fastprove_table.tex
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.0cm]{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Times New Roman}
+\setCJKmainfont{PingFang SC}
+\usepackage{booktabs,array,xcolor,colortbl,amsmath}
+\usepackage{hyperref}
+
+\definecolor{headerbg}{HTML}{F0F0F0}
+\definecolor{note}{HTML}{555555}
+
+\title{\textbf{OSNIP vs fastProve：精度损失对照表}\\
+\large 聚焦 Llama-3.2-3B-Instruct}
+\author{fastProve evaluation}
+\date{\today}
+
+\begin{document}
+\maketitle
+\vspace{-1.2em}
+
+\noindent
+{\small\color{note}
+\textbf{说明：} 左列取自 OSNIP 论文（Cao et al.，Tables 1--3）；
+右列取自本仓库大规模实测
+\texttt{results/raw/llama\_compare\_large.json}
+（1500 条真实场景 prompt $\times$ 3 master keys，BF16，RTX 5090）。
+两侧指标定义不同，已分行写清，避免混读。
+}
+
+\vspace{1.0em}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.4cm}
+  >{\raggedright\arraybackslash}p{5.6cm}
+  >{\raggedright\arraybackslash}p{5.6cm}@{}}
+\toprule
+\rowcolor{headerbg}
+\textbf{对比项} &
+\textbf{OSNIP（论文）} &
+\textbf{fastProve（本工作）} \\
+\midrule
+方案定位
+  & 客户端 embedding 混淆语义零空间注入
+  & 全层增广状态协变混淆（structural / full） \\
+\addlinespace
+同模型
+  & Llama-3.2-3B-Instruct
+  & Llama-3.2-3B-Instruct \\
+\addlinespace
+主要精度定义
+  & 相对非私有基线的\textbf{任务准确率保留}
+  & 相对明文路径的\textbf{轨迹一致率} \\
+\addlinespace
+任务平均保留 RP
+  & \textbf{98.49\%}
+    （10 项任务 Avg Acc：$0.597\to0.588$）
+  & structural \textbf{100.1\%}
+    \newline full \textbf{97.46\%}
+    （同 10 项 $n{=}200$，\texttt{osnip\_style\_bench\_n200.json}） \\
+\addlinespace
+MMLU（3B）
+  & $0.606\to0.572$（约 $-3.4$\,pp）
+  & plain $0.295$ / struct $0.295$ / full $0.315$
+    （$n{=}200$ 子集，绝对分协议不同） \\
+\addlinespace
+与明文 token 一致率
+  & ---
+    （论文不以此为主指标）
+  & structural \textbf{96.26\%}
+    \newline full \textbf{89.39\%}
+    （3 keys 平均） \\
+\addlinespace
+生成整段一致
+  & 摘要 BERTScore RP $\approx$ \textbf{100\%}
+    （相对非私有任务分，非轨迹对齐）
+  & structural \textbf{84.51\%}
+    \newline full \textbf{63.13\%}
+    （与明文 greedy 后缀 exact match） \\
+\addlinespace
+PPL 相对增幅 $\Delta\%$
+  & WikiText-2：\textbf{$+31\%$}
+    （$9.63\to12.58$）
+  & structural \textbf{$\approx 0\%$}
+    \newline full \textbf{$+5.79\%$}
+    （1500 prompts 上 mean） \\
+\addlinespace
+同论文其他基线（3B PPL）
+  & Cape $+913\%$，DynText $+1066\%$，
+    InferDPT $+29699\%$
+  & 远低于上述量级 \\
+\addlinespace
+数据规模（精度侧）
+  & 标准基准 + WikiText-2 + 1000 摘要样本等
+  & 1500 真实场景 prompt $\times$ 3 keys \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1.2em}
+\subsection*{对照结论}
+\begin{enumerate}
+  \item \textbf{PPL：} 在 Llama-3.2-3B 上，fastProve（struct.\ $\approx0\%$，full $+5.8\%$）
+    的困惑度膨胀\textbf{小于} OSNIP 论文的 $+31\%$。
+  \item \textbf{任务准确率：} OSNIP 给出近无损任务 RP（$98.5\%$）；
+    fastProve \textbf{尚无}同协议任务榜，不能据此声称全面更优。
+  \item \textbf{轨迹对齐：} 仅 fastProve 直接报告与明文 token/greedy 一致率
+    （struct.\ $\sim96\%/85\%$；full $\sim89\%/63\%$）。
+\end{enumerate}
+
+\vspace{0.5em}
+{\scriptsize\color{note}
+来源：OSNIP Tables 1--3（Llama-3.2-3B-Instruct）；
+fastProve \texttt{llama\_compare\_large.json}（3 keys 平均）。
+}
+\end{document}

@@ -1,0 +1,89 @@
+{
+  "schema_version": "fastprove.readiness.v1",
+  "generated_utc": "2026-08-01T20:53:14Z",
+  "status": "ready_for_calibration_candidate",
+  "formal_evaluation_status": "not_run",
+  "execution_authorized": false,
+  "implementation": {
+    "modes": [
+      "plaintext",
+      "exact",
+      "topk_preserving",
+      "free_bounded"
+    ],
+    "configured_sweep_points": 72,
+    "production_attention_hides_probabilities": true,
+    "forward_inverse_or_solve": false
+  },
+  "verification": {
+    "pytest_command": "python3 -m pytest -q",
+    "pytest_passed": 209,
+    "pytest_failed": 0,
+    "compileall_command": "PYTHONPATH=src python3 -m compileall -q src evals scripts",
+    "compileall_passed": true,
+    "package_install": {
+      "command": "python3 -m pip install --user --no-build-isolation '.[test,pretrained-lite]' --no-index",
+      "status": "regular_user_install_and_import_passed",
+      "editable_install": "not_supported_by_stock_pip_21_2_with_system_xcode_python"
+    },
+    "noise_bound_regression": "strict Python-float infinity-norm bound covered for attention and router on CPU; MPS smoke also passed",
+    "exact_gate_execution_order_regression": "candidate specs are normalized to plaintext, exact, then approximate",
+    "preflight_zero_generation_regression": "zero generation-token requests rejected before asset access",
+    "preflight_caption_scope_opt_in": "caption-only token caches require explicit --accept-nonstandard-caption in both preflight and sweep",
+    "staged_checkpoint_execution": "plaintext and obfuscated performance phases run with independent model lifetimes; phase peaks are retained in the merged schema"
+  },
+  "local_assets": {
+    "pretrained_checkpoint": "local Qwen2 1.5B checkpoint present and hashed",
+    "standard_causal_lm_dataset": false,
+    "standard_dataset_scan": {
+      "status": "not_found",
+      "searched_local_roots": ["/Users/yin/code", "/Users/yin/dr-claw"],
+      "patterns": ["WikiText", "PTB", "Pile", "OpenWebText", "C4", "TinyStories"]
+    },
+    "caption_candidate_cache": {
+      "path": "results/raw/flickr30k_caption_eval_inputs.pt",
+      "sample_count": 405,
+      "sequence_length": 24,
+      "evidence_scope": "caption_only_nonstandard_lm_candidate",
+      "accepted_only_with_explicit_flag": true
+    }
+  },
+  "runtime": {
+    "cpu_fp32": "ready_for_experiment_with_memory_warning",
+    "mps_fp32": "ready_for_experiment_with_memory_warning",
+    "mps_bf16": "resource_calibration_only; exact gate failed in diagnostic smoke",
+    "cuda": "unavailable"
+  },
+  "remaining_blockers": [
+    {
+      "id": "standard_causal_lm_dataset",
+      "severity": "external_scope",
+      "detail": "No approved standard causal-LM corpus is present locally; caption-only runs must not be reported as standard LM evidence."
+    },
+    {
+      "id": "memory_and_throughput",
+      "severity": "resource_warning",
+      "detail": "The conservative FP32 working-set estimate is about 17.1 GB on this 16-GiB host. Staged execution removes avoidable post-conversion residency, but conversion still needs source and deployed weights together; use batch size 1 and an isolated calibration attempt, or move to a larger-memory host."
+    },
+    {
+      "id": "formal_sweep_not_run",
+      "severity": "execution_scope",
+      "detail": "No 72-point raw JSONL has been produced yet; this manifest deliberately records readiness, not accuracy."
+    }
+  ],
+  "recommended_first_attempt": {
+    "scope": "explicit nonstandard caption-only calibration",
+    "device": "cpu",
+    "activation_dtype": "fp32",
+    "sample_count": 8,
+    "batch_size": 1,
+    "command": "PYTHONPATH=src python3 scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --model-path '/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model' --dataset-cache results/raw/flickr30k_caption_eval_inputs.pt --output results/raw/attempt_20260802_caption_calibration.jsonl --accept-nonstandard-caption --calibration-only --sample-count 8 --batch-size 1 --device cpu --activation-dtype fp32 --warmup-runs 1 --timed-runs 3 --bootstrap-replicates 0 --execute-deferred"
+  },
+  "traceability": {
+    "preflight_cpu_fp32": "results/raw/flickr30k_caption_preflight_cpu_fp32.json",
+    "preflight_mps_fp32": "results/raw/flickr30k_caption_preflight_mps_fp32.json",
+    "preflight_mps_bf16": "results/raw/flickr30k_caption_preflight_mps_bf16.json",
+    "plan_document": "docs/experiment_plan.md",
+    "report": "results/REPORT.md"
+  }
+}

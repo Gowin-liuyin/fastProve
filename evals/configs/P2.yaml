@@ -1,0 +1,15 @@
+# Protocol §3.1 — P2: BF16 full nominal (PRIMARY production result)
+# Primary command:
+#   PYTHONPATH=src:. python -m evals.report --config evals/configs/P2.yaml \
+#       --keys 5 --ci 0.95 --check-gates
+condition_id: P2
+precision: bf16
+mode: full
+description: BF16 full nominal parameters (primary production result)
+stress: false
+overrides:
+  # Nominal (match project defaults / AGENTS.md guidance)
+  hidden_noise_dim: 8
+  value_noise_dim_per_head: 2
+  max_condition_number: 10.0
+  noise_propagation_gamma: 0.5

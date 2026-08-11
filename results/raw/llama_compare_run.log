@@ -1,0 +1,46 @@
+Plaintext verification OK: ['tie_word_embeddings=true; lm_head shares embed_tokens', 'standard LlamaForCausalLM weight map; no legacy markers', 'NOT a legacy ModelSplit obfuscation artifact; safe as plaintext base']
+Loading plaintext Llama into fastProve reference module...
+Loaded in 1.0s
+Converting current-scheme mode=structural key=key-00 ...
+  structural: zeroed 255 noise-injection buffers
+  conversion 24.3s
+  top1_agree=0.925926 greedy_seq=1 ppl_rel=0.005781370813690566
+Converting current-scheme mode=structural key=key-01 ...
+  structural: zeroed 255 noise-injection buffers
+  conversion 24.4s
+  top1_agree=0.925926 greedy_seq=1 ppl_rel=0.000325017330006045
+Converting current-scheme mode=structural key=key-02 ...
+  structural: zeroed 255 noise-injection buffers
+  conversion 24.2s
+  top1_agree=0.925926 greedy_seq=1 ppl_rel=-0.004691528292902714
+Converting current-scheme mode=full key=key-00 ...
+  conversion 24.3s
+  top1_agree=0.962963 greedy_seq=0.75 ppl_rel=0.020058551643361722
+Converting current-scheme mode=full key=key-01 ...
+  conversion 24.1s
+  top1_agree=0.925926 greedy_seq=1 ppl_rel=-0.020252240569865396
+Converting current-scheme mode=full key=key-02 ...
+  conversion 24.2s
+  top1_agree=0.925926 greedy_seq=0.75 ppl_rel=0.08105571744810214
+
+=== Metric sources (do not confuse) ===
+ChainLinear FP32 unit max|err| = 8.9407e-07  (hard gate source)
+E2E logit max|err| (primary pair) = 1.32422  (diagnostic only)
+
+Gate                                      | Cat  | Status | Observed | Threshold
+------------------------------------------------------------------------------------------
+FP32 ChainLinear max abs error             | hard | PASS   | 8.9407e-07 | 0.0001
+Attention rank-flip rate                   | hard | PASS   | n/a | 0
+Attention top-1 match                      | hard | PASS   | n/a | 1
+Attention top-k overlap                    | hard | PASS   | n/a | 1
+MoE expert set match                       | hard | PASS   | n/a | 1
+Causal mask match                          | hard | PASS   | n/a | 1
+Cache vs no-cache identical                | hard | PASS   | n/a | 1
+LM Head inverse-permuted argmax            | hard | FAIL   | 0.962963 | 1
+Greedy release-validation sequences        | hard | FAIL   | 0.75 | 1
+Accuracy drop ≤ 0.5 pp                     | soft | PASS   | 0 | 0.5
+PPL relative increase ≤ 1%                 | soft | FAIL   | 0.0200586 | 0.01
+------------------------------------------------------------------------------------------
+HARD: FAIL   SOFT: FAIL   ALL: FAIL
+Wrote /home/nss-d/yhr/code/fastProve/results/raw/llama_compare_P.json
+Wrote /home/nss-d/yhr/code/fastProve/results/raw/llama_compare_P.md

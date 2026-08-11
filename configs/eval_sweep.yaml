@@ -1,0 +1,51 @@
+base_config: configs/tiny_approx.yaml
+experiment:
+  name: required-softmax-noise-sweep
+  seed: 20260731
+  model_id: fastprove-random-tiny-correctness-only
+  dataset_id: deterministic-synthetic-token-sequences
+  source_revision: revision_unavailable
+  output_jsonl: results/raw/eval_sweep.jsonl
+  cached_inputs: results/raw/eval_inputs.pt
+  calibration_sample_count: 8
+  full_sample_count: 64
+  selection_rule: >-
+    Retain every required point in raw output. If a later full pretrained run is
+    resource constrained, calibrate all points first and select the Pareto frontier
+    plus tau endpoints; record non-selected points explicitly as calibration_only.
+evaluation_override:
+  sequence_length: 24
+  generation_tokens: 4
+  warmup_runs: 3
+  timed_runs: 10
+  bootstrap_replicates: 1000
+evaluation_notes: >-
+  Length 24 provides at least k+1 valid logits for later causal positions when
+  preserve_top_k is 16. Earlier rows with valid_count <= k deliberately receive
+  zero Top-k-preserving noise and are counted by the zero-noise metric.
+sweep:
+  modes:
+    - plaintext
+    - exact
+    - topk_preserving
+    - free_bounded
+  tau_max:
+    - 0.0
+    - 0.001
+    - 0.003
+    - 0.01
+    - 0.03
+    - 0.05
+    - 0.10
+  alpha:
+    - 0.50
+    - 0.80
+    - 0.95
+  preserve_top_k:
+    - 4
+    - 8
+    - 16
+  tau_error: 0.10
+execution:
+  run_in_current_prototype_pass: false
+  reason: user_requested_implementation_and_plan_before_experiments

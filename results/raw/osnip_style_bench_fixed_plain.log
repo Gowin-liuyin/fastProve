@@ -1,0 +1,113 @@
+Plaintext verification OK: ['tie_word_embeddings=true; lm_head shares embed_tokens', 'standard LlamaForCausalLM weight map; no legacy markers', 'NOT a legacy ModelSplit obfuscation artifact; safe as plaintext base']
+Loading plaintext Llama...
+Loaded in 1.0s
+=== Run plain ===
+  [arc_easy] n=500
+    arc_easy 50/500 acc=0.4600 (raw=0.5000 norm=0.4600)
+    arc_easy 100/500 acc=0.5600 (raw=0.5200 norm=0.5600)
+    arc_easy 150/500 acc=0.5200 (raw=0.4800 norm=0.5200)
+    arc_easy 200/500 acc=0.5200 (raw=0.4750 norm=0.5200)
+    arc_easy 250/500 acc=0.5040 (raw=0.4600 norm=0.5040)
+    arc_easy 300/500 acc=0.5100 (raw=0.4667 norm=0.5100)
+    arc_easy 350/500 acc=0.5286 (raw=0.4914 norm=0.5286)
+    arc_easy 400/500 acc=0.5400 (raw=0.4925 norm=0.5400)
+    arc_easy 450/500 acc=0.5422 (raw=0.5067 norm=0.5422)
+    arc_easy 500/500 acc=0.5460 (raw=0.5240 norm=0.5460)
+  [mnli] n=500
+    mnli 50/500 acc=0.4200 (raw=0.4200 norm=0.4200)
+    mnli 100/500 acc=0.4500 (raw=0.4500 norm=0.4500)
+    mnli 150/500 acc=0.4133 (raw=0.4133 norm=0.4133)
+    mnli 200/500 acc=0.4350 (raw=0.4350 norm=0.4350)
+    mnli 250/500 acc=0.4360 (raw=0.4360 norm=0.4360)
+    mnli 300/500 acc=0.4333 (raw=0.4333 norm=0.4333)
+    mnli 350/500 acc=0.4371 (raw=0.4371 norm=0.4371)
+    mnli 400/500 acc=0.4350 (raw=0.4350 norm=0.4350)
+    mnli 450/500 acc=0.4422 (raw=0.4422 norm=0.4422)
+    mnli 500/500 acc=0.4520 (raw=0.4520 norm=0.4520)
+  [sst2] n=500
+    sst2 50/500 acc=0.9400 (raw=0.9400 norm=0.9400)
+    sst2 100/500 acc=0.9700 (raw=0.9700 norm=0.9700)
+    sst2 150/500 acc=0.9667 (raw=0.9667 norm=0.9667)
+    sst2 200/500 acc=0.9450 (raw=0.9450 norm=0.9450)
+    sst2 250/500 acc=0.9480 (raw=0.9480 norm=0.9480)
+    sst2 300/500 acc=0.9300 (raw=0.9300 norm=0.9300)
+    sst2 350/500 acc=0.9343 (raw=0.9343 norm=0.9343)
+    sst2 400/500 acc=0.9225 (raw=0.9225 norm=0.9225)
+    sst2 450/500 acc=0.9244 (raw=0.9244 norm=0.9244)
+    sst2 500/500 acc=0.9200 (raw=0.9200 norm=0.9200)
+  [anli_r1] n=500
+    anli_r1 50/500 acc=0.4400 (raw=0.4400 norm=0.4400)
+    anli_r1 100/500 acc=0.4300 (raw=0.4300 norm=0.4300)
+    anli_r1 150/500 acc=0.4600 (raw=0.4600 norm=0.4600)
+    anli_r1 200/500 acc=0.4450 (raw=0.4450 norm=0.4450)
+    anli_r1 250/500 acc=0.4640 (raw=0.4640 norm=0.4640)
+    anli_r1 300/500 acc=0.4500 (raw=0.4500 norm=0.4500)
+    anli_r1 350/500 acc=0.4371 (raw=0.4371 norm=0.4371)
+    anli_r1 400/500 acc=0.4350 (raw=0.4350 norm=0.4350)
+    anli_r1 450/500 acc=0.4222 (raw=0.4222 norm=0.4222)
+    anli_r1 500/500 acc=0.4200 (raw=0.4200 norm=0.4200)
+  [anli_r2] n=500
+    anli_r2 50/500 acc=0.5000 (raw=0.5000 norm=0.5000)
+    anli_r2 100/500 acc=0.4600 (raw=0.4600 norm=0.4600)
+    anli_r2 150/500 acc=0.3933 (raw=0.3933 norm=0.3933)
+    anli_r2 200/500 acc=0.3850 (raw=0.3850 norm=0.3850)
+    anli_r2 250/500 acc=0.3720 (raw=0.3720 norm=0.3720)
+    anli_r2 300/500 acc=0.3800 (raw=0.3800 norm=0.3800)
+    anli_r2 350/500 acc=0.3943 (raw=0.3943 norm=0.3943)
+    anli_r2 400/500 acc=0.3900 (raw=0.3900 norm=0.3900)
+    anli_r2 450/500 acc=0.4044 (raw=0.4044 norm=0.4044)
+    anli_r2 500/500 acc=0.4060 (raw=0.4060 norm=0.4060)
+  [anli_r3] n=500
+    anli_r3 50/500 acc=0.3800 (raw=0.3800 norm=0.3800)
+    anli_r3 100/500 acc=0.4400 (raw=0.4400 norm=0.4400)
+    anli_r3 150/500 acc=0.3467 (raw=0.3467 norm=0.3467)
+    anli_r3 200/500 acc=0.3400 (raw=0.3400 norm=0.3400)
+    anli_r3 250/500 acc=0.3400 (raw=0.3400 norm=0.3400)
+    anli_r3 300/500 acc=0.3600 (raw=0.3600 norm=0.3600)
+    anli_r3 350/500 acc=0.3486 (raw=0.3486 norm=0.3486)
+    anli_r3 400/500 acc=0.3525 (raw=0.3525 norm=0.3525)
+    anli_r3 450/500 acc=0.3556 (raw=0.3556 norm=0.3556)
+    anli_r3 500/500 acc=0.3500 (raw=0.3500 norm=0.3500)
+  [wic] n=500
+    wic 50/500 acc=0.5600 (raw=0.5600 norm=0.5600)
+    wic 100/500 acc=0.5100 (raw=0.5100 norm=0.5100)
+    wic 150/500 acc=0.5333 (raw=0.5333 norm=0.5333)
+    wic 200/500 acc=0.5450 (raw=0.5450 norm=0.5450)
+    wic 250/500 acc=0.5280 (raw=0.5280 norm=0.5280)
+    wic 300/500 acc=0.5133 (raw=0.5133 norm=0.5133)
+    wic 350/500 acc=0.5086 (raw=0.5086 norm=0.5086)
+    wic 400/500 acc=0.5225 (raw=0.5225 norm=0.5225)
+    wic 450/500 acc=0.5244 (raw=0.5244 norm=0.5244)
+    wic 500/500 acc=0.5140 (raw=0.5140 norm=0.5140)
+  [hellaswag] n=500
+    hellaswag 50/500 acc=0.7000 (raw=0.5400 norm=0.7000)
+    hellaswag 100/500 acc=0.5900 (raw=0.4300 norm=0.5900)
+    hellaswag 150/500 acc=0.6200 (raw=0.4733 norm=0.6200)
+    hellaswag 200/500 acc=0.6350 (raw=0.5050 norm=0.6350)
+    hellaswag 250/500 acc=0.6680 (raw=0.5200 norm=0.6680)
+    hellaswag 300/500 acc=0.6800 (raw=0.5333 norm=0.6800)
+    hellaswag 350/500 acc=0.7000 (raw=0.5457 norm=0.7000)
+    hellaswag 400/500 acc=0.7125 (raw=0.5475 norm=0.7125)
+    hellaswag 450/500 acc=0.7178 (raw=0.5422 norm=0.7178)
+    hellaswag 500/500 acc=0.7220 (raw=0.5380 norm=0.7220)
+  [mmlu] n=500
+    mmlu 50/500 acc=0.3000 (raw=0.2600 norm=0.3000)
+    mmlu 100/500 acc=0.2800 (raw=0.2800 norm=0.2800)
+    mmlu 150/500 acc=0.2867 (raw=0.2667 norm=0.2867)
+    mmlu 200/500 acc=0.2950 (raw=0.2750 norm=0.2950)
+    mmlu 250/500 acc=0.3000 (raw=0.2680 norm=0.3000)
+    mmlu 300/500 acc=0.3200 (raw=0.2767 norm=0.3200)
+    mmlu 350/500 acc=0.3229 (raw=0.2686 norm=0.3229)
+    mmlu 400/500 acc=0.3100 (raw=0.2600 norm=0.3100)
+    mmlu 450/500 acc=0.3111 (raw=0.2600 norm=0.3111)
+    mmlu 500/500 acc=0.3200 (raw=0.2740 norm=0.3200)
+  [wikitext2]
+    wikitext tokens_scored=511 running_ppl=8.344
+    wikitext tokens_scored=5611 running_ppl=15.043
+    wikitext tokens_scored=10711 running_ppl=13.156
+    wikitext tokens_scored=15811 running_ppl=11.554
+  avg_closed_ended=0.5166666666666667
+
+=== Summary ===
+mode=plain key=None avg=0.5167 rp=100.00% ppl=11.592
+Wrote /home/nss-d/yhr/code/fastProve/results/raw/osnip_style_bench_fixed_plain.json

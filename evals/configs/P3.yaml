@@ -1,0 +1,13 @@
+# Protocol §3.1 — P3: BF16 full stress (numerical stability boundary)
+condition_id: P3
+precision: bf16
+mode: full
+description: BF16 full stress parameters (numerical stability boundary)
+stress: true
+overrides:
+  hidden_noise_dim: 16
+  value_noise_dim_per_head: 4
+  max_condition_number: 50.0
+  noise_propagation_gamma: 0.9
+  initial_noise_scale: 2.0
+  refresh_noise_scale: 2.0

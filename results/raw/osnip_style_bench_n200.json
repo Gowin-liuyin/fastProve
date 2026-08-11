@@ -1,0 +1,583 @@
+{
+  "superseded": {
+    "status": "superseded",
+    "date": "2026-08-06",
+    "reason": "produced by a defective evaluation harness; task accuracy and retention figures must not be quoted",
+    "defects": [
+      "example selection was corpus head-truncation; mmlu_test.jsonl is sorted by subject (first 200 rows = abstract_algebra + anatomy only, 2 of 57) and anli_r3_test.jsonl is sorted by label",
+      "piqa_val.jsonl gold labels are degenerate (all 1838 rows label==0), so its score is the sol1-pick rate and contributes a hard-coded 100% retention",
+      "multiple-choice scoring was not length-normalized (summed logprob favours short candidates)",
+      "plaintext baseline never reconciled with a public reference: local avg 0.493 vs OSNIP paper non-private 0.597 for the same checkpoint (-10.4pp)"
+    ],
+    "fixed_in": "scripts/run_osnip_style_benchmarks.py",
+    "privacy_note": "accuracy/retention measure utility only; see docs/threat_model.md section 5bis for the quantified recoverability upper bound"
+  },
+  "protocol_note": "OSNIP-style utility metrics on plain vs current fastProve (structural / full). Not a privacy ASR evaluation. MC scoring = sum logprob of choice continuation tokens.",
+  "osnip_paper_reference_llama3b": {
+    "non_private": {
+      "arc_easy": 0.712,
+      "piqa": 0.768,
+      "mnli": 0.542,
+      "sst2": 0.867,
+      "anli_r1": 0.44,
+      "anli_r2": 0.401,
+      "anli_r3": 0.425,
+      "wic": 0.497,
+      "hellaswag": 0.716,
+      "mmlu": 0.606,
+      "avg": 0.597,
+      "rp": 100.0
+    },
+    "osnip": {
+      "arc_easy": 0.707,
+      "piqa": 0.766,
+      "mnli": 0.535,
+      "sst2": 0.825,
+      "anli_r1": 0.431,
+      "anli_r2": 0.407,
+      "anli_r3": 0.41,
+      "wic": 0.513,
+      "hellaswag": 0.709,
+      "mmlu": 0.572,
+      "avg": 0.588,
+      "rp": 98.49
+    }
+  },
+  "environment": {
+    "python_version": "3.12.13",
+    "torch_version": "2.12.0+cu130",
+    "platform": "Linux-6.17.0-29-generic-x86_64-with-glibc2.43",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "device": "cuda",
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "gpu_memory_total_bytes": 33668857856
+  },
+  "plaintext_base": {
+    "root": "/home/nss-d/dcy/codes/ModelSplit/models/Llama-3.2-3B-Instruct",
+    "architecture": "LlamaForCausalLM",
+    "model_config": {
+      "vocab_size": 128256,
+      "hidden_size": 3072,
+      "intermediate_size": 8192,
+      "num_layers": 28,
+      "num_attention_heads": 24,
+      "num_key_value_heads": 8,
+      "max_sequence_length": 2048,
+      "rms_epsilon": 1e-05,
+      "rope_theta": 500000.0,
+      "qkv_bias": false
+    },
+    "config_sha256": "not_computed",
+    "tokenizer_sha256": "not_computed",
+    "tokenizer_config_sha256": "not_computed",
+    "weights_sha256": "not_computed",
+    "shard_sha256": {
+      "model-00001-of-00002.safetensors": "not_computed",
+      "model-00002-of-00002.safetensors": "not_computed"
+    },
+    "weights_bytes": 6425529048,
+    "upstream_revision": "revision_unavailable",
+    "max_position_embeddings": 131072,
+    "tie_word_embeddings": true,
+    "is_plaintext_verified": true,
+    "verification_notes": [
+      "tie_word_embeddings=true; lm_head shares embed_tokens",
+      "standard LlamaForCausalLM weight map; no legacy markers",
+      "NOT a legacy ModelSplit obfuscation artifact; safe as plaintext base"
+    ],
+    "scheme": "plaintext_llama_base",
+    "legacy_modelsplit_obfuscation": false
+  },
+  "load_seconds": 0.968360543018207,
+  "config": {
+    "model_path": "/home/nss-d/dcy/codes/ModelSplit/models/Llama-3.2-3B-Instruct",
+    "data_dir": "/home/nss-d/yhr/code/fastProve/results/raw/osnip_bench_data",
+    "modes": [
+      "plain",
+      "structural",
+      "full"
+    ],
+    "tasks": [
+      "arc_easy",
+      "piqa",
+      "mnli",
+      "sst2",
+      "anli_r1",
+      "anli_r2",
+      "anli_r3",
+      "wic",
+      "hellaswag",
+      "mmlu",
+      "wikitext2"
+    ],
+    "max_examples": 200,
+    "max_length": 512,
+    "dtype": "bfloat16",
+    "device": "cuda",
+    "seed": 20260802,
+    "n_keys": 1,
+    "obfuscation": {
+      "hidden_noise_dim": 8,
+      "value_noise_dim_per_head": 2,
+      "max_condition_number": 10.0,
+      "noise_propagation_gamma": 0.5,
+      "refresh_mode": "fixed_debug"
+    },
+    "wikitext_max_tokens": 16384,
+    "wikitext_stride": 256
+  },
+  "runs": [
+    {
+      "mode": "plain",
+      "key": null,
+      "structural_noise_zeroed": false,
+      "conversion_seconds": 0.0,
+      "suite": {
+        "tasks": {
+          "arc_easy": {
+            "task": "arc_easy",
+            "n": 200,
+            "correct": 107,
+            "accuracy": 0.535,
+            "seconds": 14.735166070982814,
+            "skipped": false
+          },
+          "piqa": {
+            "task": "piqa",
+            "n": 200,
+            "correct": 92,
+            "accuracy": 0.46,
+            "seconds": 7.295683454023674,
+            "skipped": false
+          },
+          "mnli": {
+            "task": "mnli",
+            "n": 200,
+            "correct": 96,
+            "accuracy": 0.48,
+            "seconds": 10.977278609061614,
+            "skipped": false
+          },
+          "sst2": {
+            "task": "sst2",
+            "n": 200,
+            "correct": 194,
+            "accuracy": 0.97,
+            "seconds": 7.219624077901244,
+            "skipped": false
+          },
+          "anli_r1": {
+            "task": "anli_r1",
+            "n": 200,
+            "correct": 95,
+            "accuracy": 0.475,
+            "seconds": 11.440687207970768,
+            "skipped": false
+          },
+          "anli_r2": {
+            "task": "anli_r2",
+            "n": 200,
+            "correct": 79,
+            "accuracy": 0.395,
+            "seconds": 11.443277911981568,
+            "skipped": false
+          },
+          "anli_r3": {
+            "task": "anli_r3",
+            "n": 200,
+            "correct": 70,
+            "accuracy": 0.35,
+            "seconds": 11.83772372500971,
+            "skipped": false
+          },
+          "wic": {
+            "task": "wic",
+            "n": 200,
+            "correct": 101,
+            "accuracy": 0.505,
+            "seconds": 7.247330605052412,
+            "skipped": false
+          },
+          "hellaswag": {
+            "task": "hellaswag",
+            "n": 200,
+            "correct": 93,
+            "accuracy": 0.465,
+            "seconds": 14.55738701717928,
+            "skipped": false
+          },
+          "mmlu": {
+            "task": "mmlu",
+            "n": 200,
+            "correct": 59,
+            "accuracy": 0.295,
+            "seconds": 14.628496256889775,
+            "skipped": false
+          },
+          "wikitext2": {
+            "task": "wikitext2",
+            "n_tokens": 16321,
+            "negative_log_likelihood": 2.450314437465747,
+            "perplexity": 11.591991102533276,
+            "max_length": 512,
+            "stride": 256,
+            "seconds": 2.422802360029891,
+            "skipped": false
+          }
+        },
+        "closed_ended": {
+          "arc_easy": 0.535,
+          "piqa": 0.46,
+          "mnli": 0.48,
+          "sst2": 0.97,
+          "anli_r1": 0.475,
+          "anli_r2": 0.395,
+          "anli_r3": 0.35,
+          "wic": 0.505,
+          "hellaswag": 0.465,
+          "mmlu": 0.295
+        },
+        "avg_closed_ended": 0.493,
+        "n_closed_ended_tasks": 10
+      },
+      "retention_vs_plain_pct": {
+        "arc_easy": 100.0,
+        "piqa": 100.0,
+        "mnli": 100.0,
+        "sst2": 100.0,
+        "anli_r1": 100.0,
+        "anli_r2": 100.0,
+        "anli_r3": 100.0,
+        "wic": 100.0,
+        "hellaswag": 100.0,
+        "mmlu": 100.0
+      },
+      "avg_rp_vs_plain_pct": 100.0,
+      "ppl_relative_increase_vs_plain": 0.0
+    },
+    {
+      "mode": "structural",
+      "key": {
+        "key_id": 0,
+        "label": "key-00",
+        "key_fingerprint": "53e675399c68f1c00ebad2581bf2f2e5d81ea0098e7efa04e0f5e36d4eecff10",
+        "seed_material_recorded": false
+      },
+      "structural_noise_zeroed": true,
+      "conversion_seconds": 24.879502241965383,
+      "suite": {
+        "tasks": {
+          "arc_easy": {
+            "task": "arc_easy",
+            "n": 200,
+            "correct": 106,
+            "accuracy": 0.53,
+            "seconds": 261.40230300300755,
+            "skipped": false
+          },
+          "piqa": {
+            "task": "piqa",
+            "n": 200,
+            "correct": 92,
+            "accuracy": 0.46,
+            "seconds": 130.49291655002162,
+            "skipped": false
+          },
+          "mnli": {
+            "task": "mnli",
+            "n": 200,
+            "correct": 97,
+            "accuracy": 0.485,
+            "seconds": 195.7176073740702,
+            "skipped": false
+          },
+          "sst2": {
+            "task": "sst2",
+            "n": 200,
+            "correct": 193,
+            "accuracy": 0.965,
+            "seconds": 130.119716913905,
+            "skipped": false
+          },
+          "anli_r1": {
+            "task": "anli_r1",
+            "n": 200,
+            "correct": 96,
+            "accuracy": 0.48,
+            "seconds": 196.786317093065,
+            "skipped": false
+          },
+          "anli_r2": {
+            "task": "anli_r2",
+            "n": 200,
+            "correct": 80,
+            "accuracy": 0.4,
+            "seconds": 197.43414776702411,
+            "skipped": false
+          },
+          "anli_r3": {
+            "task": "anli_r3",
+            "n": 200,
+            "correct": 70,
+            "accuracy": 0.35,
+            "seconds": 197.8912914530374,
+            "skipped": false
+          },
+          "wic": {
+            "task": "wic",
+            "n": 200,
+            "correct": 101,
+            "accuracy": 0.505,
+            "seconds": 130.5280570720788,
+            "skipped": false
+          },
+          "hellaswag": {
+            "task": "hellaswag",
+            "n": 200,
+            "correct": 93,
+            "accuracy": 0.465,
+            "seconds": 260.95837002107874,
+            "skipped": false
+          },
+          "mmlu": {
+            "task": "mmlu",
+            "n": 200,
+            "correct": 59,
+            "accuracy": 0.295,
+            "seconds": 261.5097613001708,
+            "skipped": false
+          },
+          "wikitext2": {
+            "task": "wikitext2",
+            "n_tokens": 16321,
+            "negative_log_likelihood": 2.4514796577376123,
+            "perplexity": 11.605506198059711,
+            "max_length": 512,
+            "stride": 256,
+            "seconds": 22.63596341898665,
+            "skipped": false
+          }
+        },
+        "closed_ended": {
+          "arc_easy": 0.53,
+          "piqa": 0.46,
+          "mnli": 0.485,
+          "sst2": 0.965,
+          "anli_r1": 0.48,
+          "anli_r2": 0.4,
+          "anli_r3": 0.35,
+          "wic": 0.505,
+          "hellaswag": 0.465,
+          "mmlu": 0.295
+        },
+        "avg_closed_ended": 0.49349999999999994,
+        "n_closed_ended_tasks": 10
+      },
+      "retention_vs_plain_pct": {
+        "arc_easy": 99.06542056074765,
+        "piqa": 100.0,
+        "mnli": 101.04166666666667,
+        "sst2": 99.48453608247424,
+        "anli_r1": 101.05263157894737,
+        "anli_r2": 101.26582278481013,
+        "anli_r3": 100.0,
+        "wic": 100.0,
+        "hellaswag": 100.0,
+        "mmlu": 100.0
+      },
+      "avg_rp_vs_plain_pct": 100.10141987829614,
+      "ppl_relative_increase_vs_plain": 0.0011658994047607507
+    },
+    {
+      "mode": "full",
+      "key": {
+        "key_id": 0,
+        "label": "key-00",
+        "key_fingerprint": "53e675399c68f1c00ebad2581bf2f2e5d81ea0098e7efa04e0f5e36d4eecff10",
+        "seed_material_recorded": false
+      },
+      "structural_noise_zeroed": false,
+      "conversion_seconds": 24.302177478093654,
+      "suite": {
+        "tasks": {
+          "arc_easy": {
+            "task": "arc_easy",
+            "n": 200,
+            "correct": 101,
+            "accuracy": 0.505,
+            "seconds": 259.81725601595826,
+            "skipped": false
+          },
+          "piqa": {
+            "task": "piqa",
+            "n": 200,
+            "correct": 92,
+            "accuracy": 0.46,
+            "seconds": 130.19752089306712,
+            "skipped": false
+          },
+          "mnli": {
+            "task": "mnli",
+            "n": 200,
+            "correct": 99,
+            "accuracy": 0.495,
+            "seconds": 195.24576830817387,
+            "skipped": false
+          },
+          "sst2": {
+            "task": "sst2",
+            "n": 200,
+            "correct": 190,
+            "accuracy": 0.95,
+            "seconds": 130.1445874532219,
+            "skipped": false
+          },
+          "anli_r1": {
+            "task": "anli_r1",
+            "n": 200,
+            "correct": 83,
+            "accuracy": 0.415,
+            "seconds": 196.33510039001703,
+            "skipped": false
+          },
+          "anli_r2": {
+            "task": "anli_r2",
+            "n": 200,
+            "correct": 71,
+            "accuracy": 0.355,
+            "seconds": 196.47158505092375,
+            "skipped": false
+          },
+          "anli_r3": {
+            "task": "anli_r3",
+            "n": 200,
+            "correct": 70,
+            "accuracy": 0.35,
+            "seconds": 197.6991360350512,
+            "skipped": false
+          },
+          "wic": {
+            "task": "wic",
+            "n": 200,
+            "correct": 101,
+            "accuracy": 0.505,
+            "seconds": 129.98126595001668,
+            "skipped": false
+          },
+          "hellaswag": {
+            "task": "hellaswag",
+            "n": 200,
+            "correct": 91,
+            "accuracy": 0.455,
+            "seconds": 260.050918397028,
+            "skipped": false
+          },
+          "mmlu": {
+            "task": "mmlu",
+            "n": 200,
+            "correct": 63,
+            "accuracy": 0.315,
+            "seconds": 260.4479758029338,
+            "skipped": false
+          },
+          "wikitext2": {
+            "task": "wikitext2",
+            "n_tokens": 16321,
+            "negative_log_likelihood": 2.461777928135796,
+            "perplexity": 11.72564036433169,
+            "max_length": 512,
+            "stride": 256,
+            "seconds": 22.67537617101334,
+            "skipped": false
+          }
+        },
+        "closed_ended": {
+          "arc_easy": 0.505,
+          "piqa": 0.46,
+          "mnli": 0.495,
+          "sst2": 0.95,
+          "anli_r1": 0.415,
+          "anli_r2": 0.355,
+          "anli_r3": 0.35,
+          "wic": 0.505,
+          "hellaswag": 0.455,
+          "mmlu": 0.315
+        },
+        "avg_closed_ended": 0.4805,
+        "n_closed_ended_tasks": 10
+      },
+      "retention_vs_plain_pct": {
+        "arc_easy": 94.39252336448598,
+        "piqa": 100.0,
+        "mnli": 103.125,
+        "sst2": 97.93814432989691,
+        "anli_r1": 87.36842105263159,
+        "anli_r2": 89.87341772151899,
+        "anli_r3": 100.0,
+        "wic": 100.0,
+        "hellaswag": 97.84946236559139,
+        "mmlu": 106.77966101694916
+      },
+      "avg_rp_vs_plain_pct": 97.46450304259635,
+      "ppl_relative_increase_vs_plain": 0.011529448273058795
+    }
+  ],
+  "status": "complete",
+  "summary": [
+    {
+      "mode": "plain",
+      "key_label": null,
+      "avg_closed_ended": 0.493,
+      "avg_rp_vs_plain_pct": 100.0,
+      "ppl": 11.591991102533276,
+      "ppl_rel_inc": 0.0,
+      "arc_easy": 0.535,
+      "piqa": 0.46,
+      "mnli": 0.48,
+      "sst2": 0.97,
+      "anli_r1": 0.475,
+      "anli_r2": 0.395,
+      "anli_r3": 0.35,
+      "wic": 0.505,
+      "hellaswag": 0.465,
+      "mmlu": 0.295
+    },
+    {
+      "mode": "structural",
+      "key_label": "key-00",
+      "avg_closed_ended": 0.49349999999999994,
+      "avg_rp_vs_plain_pct": 100.10141987829614,
+      "ppl": 11.605506198059711,
+      "ppl_rel_inc": 0.0011658994047607507,
+      "arc_easy": 0.53,
+      "piqa": 0.46,
+      "mnli": 0.485,
+      "sst2": 0.965,
+      "anli_r1": 0.48,
+      "anli_r2": 0.4,
+      "anli_r3": 0.35,
+      "wic": 0.505,
+      "hellaswag": 0.465,
+      "mmlu": 0.295
+    },
+    {
+      "mode": "full",
+      "key_label": "key-00",
+      "avg_closed_ended": 0.4805,
+      "avg_rp_vs_plain_pct": 97.46450304259635,
+      "ppl": 11.72564036433169,
+      "ppl_rel_inc": 0.011529448273058795,
+      "arc_easy": 0.505,
+      "piqa": 0.46,
+      "mnli": 0.495,
+      "sst2": 0.95,
+      "anli_r1": 0.415,
+      "anli_r2": 0.355,
+      "anli_r3": 0.35,
+      "wic": 0.505,
+      "hellaswag": 0.455,
+      "mmlu": 0.315
+    }
+  ]
+}

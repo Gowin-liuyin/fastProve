@@ -1,0 +1,575 @@
+{
+  "protocol": "docs/literature-review/reports/evaluation_protocol_fastProve.md",
+  "ci_level": 0.95,
+  "n_keys": 1,
+  "layers": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "conditions": {
+    "F1": {
+      "condition_id": "F1",
+      "condition": {
+        "condition_id": "F1",
+        "precision": "fp32",
+        "mode": "structural",
+        "description": "FP32 structural-only: full obfuscation graph (augmented D+R, mixed weights, Q/K transform, value mixing, KV cache format, FFN permutation/scaling), noise injection terms zeroed.\n",
+        "stress": false,
+        "hidden_noise_dim": null,
+        "value_noise_dim_per_head": null,
+        "ffn_noise_dim": null,
+        "initial_noise_scale": null,
+        "refresh_noise_scale": null,
+        "noise_propagation_gamma": null,
+        "max_condition_number": null,
+        "sequence_length": null,
+        "attention_impl": "reference",
+        "use_kv_cache": true,
+        "model_structure": "dense_gqa"
+      },
+      "sample_identifiers": [
+        "synthetic-20260731-0000",
+        "synthetic-20260731-0001",
+        "synthetic-20260731-0002",
+        "synthetic-20260731-0003"
+      ],
+      "n_keys": 1,
+      "elapsed_seconds": 0.10184850000223378,
+      "per_key": [
+        {
+          "condition": {
+            "condition_id": "F1",
+            "precision": "fp32",
+            "mode": "structural",
+            "description": "FP32 structural-only: full obfuscation graph (augmented D+R, mixed weights, Q/K transform, value mixing, KV cache format, FFN permutation/scaling), noise injection terms zeroed.\n",
+            "stress": false,
+            "hidden_noise_dim": null,
+            "value_noise_dim_per_head": null,
+            "ffn_noise_dim": null,
+            "initial_noise_scale": null,
+            "refresh_noise_scale": null,
+            "noise_propagation_gamma": null,
+            "max_condition_number": null,
+            "sequence_length": null,
+            "attention_impl": "reference",
+            "use_kv_cache": true,
+            "model_structure": "dense_gqa"
+          },
+          "key": {
+            "key_id": 0,
+            "label": "key-00",
+            "seed_material_recorded": false
+          },
+          "notes": [
+            "LM-head vocab permutation \u03a0_voc not present in prototype; identity used for inverse-align",
+            "structural mode: zeroed 20 noise-injection buffers; full obfuscation graph retained"
+          ],
+          "conversion_time_seconds": 0.02786079099678318,
+          "structural_noise_zeroed": true,
+          "layer1": {
+            "modules": {
+              "chain_linear": {
+                "max_absolute_error": 7.152557373046875e-07,
+                "relative_l2_error": 3.0535236554740253e-07,
+                "noise_max_absolute_error": 2.384185791015625e-07,
+                "signal_metrics": {
+                  "max_absolute_error": 7.152557373046875e-07,
+                  "relative_l2_error": 3.0535236554740253e-07,
+                  "mean_absolute_error": 9.841492606533898e-08,
+                  "cosine_similarity": 0.9999999999999537,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "noise_metrics": {
+                  "max_absolute_error": 2.384185791015625e-07,
+                  "relative_l2_error": 2.4883817650887987e-07,
+                  "mean_absolute_error": 8.129411273532444e-08,
+                  "cosine_similarity": 0.999999999999969,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "gate_threshold": 0.0001,
+                "gate_passed": true
+              },
+              "embedding": {
+                "max_absolute_error": 1.0728836059570312e-06,
+                "relative_l2_error": 2.3156306652442694e-07,
+                "mean_absolute_error": 1.6232618094136342e-07,
+                "cosine_similarity": 0.9999999999999739,
+                "nan_count": 0,
+                "inf_count": 0
+              },
+              "attention_output": {
+                "max_absolute_error": 5.885958671569824e-07,
+                "relative_l2_error": 4.909092418037845e-07,
+                "mean_absolute_error": 5.405557298998609e-08
+              },
+              "down_projection": {
+                "max_absolute_error": 3.1888484954833984e-06,
+                "relative_l2_error": 5.847815629810333e-07,
+                "mean_absolute_error": 3.7516203121867875e-07
+              },
+              "qk": {
+                "max_absolute_error": 2.384185791015625e-07,
+                "mean_absolute_error": 2.528355658171222e-08,
+                "relative_l2_error": 1.1409228866499896e-07,
+                "cosine_similarity": 0.9999999999999943,
+                "nan_count": 0,
+                "inf_count": 0
+              },
+              "value_attention_path": {
+                "max_absolute_error": 5.885958671569824e-07,
+                "relative_l2_error": 4.909092418037845e-07,
+                "mean_absolute_error": 6.271743835384314e-08,
+                "cosine_similarity": 0.9999999999998803,
+                "nan_count": 0,
+                "inf_count": 0
+              },
+              "swiglu_via_final": {
+                "max_absolute_error": 3.1888484954833984e-06,
+                "relative_l2_error": 5.847815629810333e-07,
+                "mean_absolute_error": 4.4256029241296346e-07,
+                "cosine_similarity": 0.9999999999998305,
+                "nan_count": 0,
+                "inf_count": 0
+              },
+              "lm_head": {
+                "max_absolute_error": 1.5497207641601562e-06,
+                "relative_l2_error": 5.765177456113197e-07,
+                "mean_absolute_error": 2.6144501052982605e-07,
+                "cosine_similarity": 0.9999999999998341,
+                "nan_count": 0,
+                "inf_count": 0
+              },
+              "rmsnorm_input": {
+                "max_absolute_error": 3.1888484954833984e-06,
+                "relative_l2_error": 5.847815629810333e-07,
+                "mean_absolute_error": 4.4256029241296346e-07,
+                "cosine_similarity": 0.9999999999998305,
+                "nan_count": 0,
+                "inf_count": 0
+              },
+              "rmsnorm": {
+                "max_absolute_error": 2.7865171432495117e-06,
+                "relative_l2_error": 5.695929094431253e-07,
+                "mean_absolute_error": 4.245433160576795e-07,
+                "cosine_similarity": 0.9999999999998396,
+                "nan_count": 0,
+                "inf_count": 0
+              }
+            },
+            "per_layer": [
+              {
+                "layer_index": 0,
+                "attention_output": {
+                  "max_absolute_error": 3.5762786865234375e-07,
+                  "relative_l2_error": 2.9720295746162297e-07,
+                  "mean_absolute_error": 4.539370762612904e-08,
+                  "cosine_similarity": 0.9999999999999576,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "post_attention": {
+                  "max_absolute_error": 1.0728836059570312e-06,
+                  "relative_l2_error": 2.3627170889734936e-07,
+                  "mean_absolute_error": 1.7076217773137614e-07,
+                  "cosine_similarity": 0.9999999999999748,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "final_output": {
+                  "max_absolute_error": 3.0100345611572266e-06,
+                  "relative_l2_error": 4.225252166956081e-07,
+                  "mean_absolute_error": 3.0776377002439403e-07,
+                  "cosine_similarity": 0.9999999999999124,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "qk_score": {
+                  "max_absolute_error": 2.384185791015625e-07,
+                  "mean_absolute_error": 2.486896022446672e-08,
+                  "relative_l2_error": 1.1434868625078198e-07,
+                  "cosine_similarity": 0.9999999999999934,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "softmax": {
+                  "max_absolute_error": 5.960464477539063e-08,
+                  "mean_absolute_error": 2.224169293185696e-09,
+                  "relative_l2_error": 5.134994715993958e-08,
+                  "cosine_similarity": 0.9999999999999981,
+                  "nan_count": 0,
+                  "inf_count": 0
+                }
+              },
+              {
+                "layer_index": 1,
+                "attention_output": {
+                  "max_absolute_error": 5.885958671569824e-07,
+                  "relative_l2_error": 4.909092418037845e-07,
+                  "mean_absolute_error": 6.271743835384314e-08,
+                  "cosine_similarity": 0.9999999999998803,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "post_attention": {
+                  "max_absolute_error": 3.039836883544922e-06,
+                  "relative_l2_error": 4.2106862625848935e-07,
+                  "mean_absolute_error": 3.173645382048562e-07,
+                  "cosine_similarity": 0.9999999999999127,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "final_output": {
+                  "max_absolute_error": 3.1888484954833984e-06,
+                  "relative_l2_error": 5.847815629810333e-07,
+                  "mean_absolute_error": 4.4256029241296346e-07,
+                  "cosine_similarity": 0.9999999999998305,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "qk_score": {
+                  "max_absolute_error": 2.384185791015625e-07,
+                  "mean_absolute_error": 2.528355658171222e-08,
+                  "relative_l2_error": 1.1409228866499896e-07,
+                  "cosine_similarity": 0.9999999999999943,
+                  "nan_count": 0,
+                  "inf_count": 0
+                },
+                "softmax": {
+                  "max_absolute_error": 5.960464477539063e-08,
+                  "mean_absolute_error": 2.243723429273814e-09,
+                  "relative_l2_error": 5.2322664711759645e-08,
+                  "cosine_similarity": 0.9999999999999977,
+                  "nan_count": 0,
+                  "inf_count": 0
+                }
+              }
+            ],
+            "aggregate_max_absolute_error": 3.1888484954833984e-06,
+            "chain_linear": {
+              "max_absolute_error": 7.152557373046875e-07,
+              "relative_l2_error": 3.0535236554740253e-07,
+              "noise_max_absolute_error": 2.384185791015625e-07,
+              "signal_metrics": {
+                "max_absolute_error": 7.152557373046875e-07,
+                "relative_l2_error": 3.0535236554740253e-07,
+                "mean_absolute_error": 9.841492606533898e-08,
+                "cosine_similarity": 0.9999999999999537,
+                "nan_count": 0,
+                "inf_count": 0
+              },
+              "noise_metrics": {
+                "max_absolute_error": 2.384185791015625e-07,
+                "relative_l2_error": 2.4883817650887987e-07,
+                "mean_absolute_error": 8.129411273532444e-08,
+                "cosine_similarity": 0.999999999999969,
+                "nan_count": 0,
+                "inf_count": 0
+              },
+              "gate_threshold": 0.0001,
+              "gate_passed": true
+            },
+            "gate_threshold": 0.0001,
+            "gate_passed_fp32_chainlinear": true,
+            "notes": [
+              "LM-head vocab permutation \u03a0_voc not present in prototype; identity used for inverse-align",
+              "structural mode: zeroed 20 noise-injection buffers; full obfuscation graph retained"
+            ]
+          },
+          "layer2": {
+            "score_max_absolute_error": 1.0728836059570312e-06,
+            "score_relative_error": 5.665951357751023e-07,
+            "softmax_kl": -1.4133377468765438e-09,
+            "softmax_js": 4.254744704601787e-15,
+            "total_variation": 6.725804269080982e-08,
+            "top1_match": 1.0,
+            "topk_overlap": 1.0,
+            "rank_flip_rate": 0.0,
+            "margin_risk_rate_m_le_2eps": 0.0,
+            "av_relative_error": 3.940560996327037e-07,
+            "causal_mask_match": 1.0,
+            "per_layer": [
+              {
+                "layer_index": 0,
+                "score_max_absolute_error": 5.960464477539062e-07,
+                "score_relative_error": 4.5326490253438564e-07,
+                "softmax_kl": -5.071331255591495e-09,
+                "softmax_js": 2.8027943527854e-15,
+                "total_variation": 5.396941560320556e-08,
+                "top1_match": 1.0,
+                "topk_overlap": 1.0,
+                "rank_flip_rate": 0.0,
+                "margin_risk_rate_m_le_2eps": 0.0,
+                "av_relative_error": 2.9720295746162297e-07,
+                "mean_margin": Infinity,
+                "mean_eps_s": 2.503420546418056e-07,
+                "note": "plaintext vs obfuscated exact clean scores",
+                "qk_score_error_internal": {
+                  "max_absolute_error": 2.384185791015625e-07,
+                  "mean_absolute_error": 2.486896022446672e-08,
+                  "relative_l2_error": 1.1434868625078198e-07,
+                  "cosine_similarity": 0.9999999999999934,
+                  "nan_count": 0,
+                  "inf_count": 0
+                }
+              },
+              {
+                "layer_index": 1,
+                "score_max_absolute_error": 1.0728836059570312e-06,
+                "score_relative_error": 6.799253690158189e-07,
+                "softmax_kl": 2.2446557618384078e-09,
+                "softmax_js": 5.706695056418174e-15,
+                "total_variation": 8.054666977841407e-08,
+                "top1_match": 1.0,
+                "topk_overlap": 1.0,
+                "rank_flip_rate": 0.0,
+                "margin_risk_rate_m_le_2eps": 0.0,
+                "av_relative_error": 4.909092418037845e-07,
+                "mean_margin": Infinity,
+                "mean_eps_s": 3.792104052990908e-07,
+                "note": "plaintext vs obfuscated exact clean scores",
+                "qk_score_error_internal": {
+                  "max_absolute_error": 2.384185791015625e-07,
+                  "mean_absolute_error": 2.528355658171222e-08,
+                  "relative_l2_error": 1.1409228866499896e-07,
+                  "cosine_similarity": 0.9999999999999943,
+                  "nan_count": 0,
+                  "inf_count": 0
+                }
+              }
+            ],
+            "top_k": 4,
+            "hard_gate_rank_flip_zero": true
+          },
+          "layer3": {
+            "moe_present": false,
+            "skipped": true,
+            "skip_reason": "model has no MoE router; standalone StableRouter metrics only",
+            "expert_set_match": null,
+            "standalone_router": {
+              "expert_set_match": 0.041666666666666664,
+              "expert_order_match": 0.041666666666666664,
+              "gate_weight_l1": 0.0,
+              "gate_weight_kl": 0.0,
+              "delta_k_mean": 0.25882670283317566,
+              "delta_k_min": 0.012318015098571777,
+              "delta_k_p10": 0.02201918326318264,
+              "two_tau_lt_delta_k_violation_rate": 0.0,
+              "low_margin_fallback_rate": 0.0,
+              "token_count": 24,
+              "mode": "exact",
+              "standalone": true,
+              "first_divergence_layer": 0
+            },
+            "first_divergence_layer": null
+          },
+          "layer4": {
+            "logit_max_error": 1.5497207641601562e-06,
+            "logit_l2_relative_error": 5.765177456113197e-07,
+            "prob_kl": 1.2333343746800065e-09,
+            "prob_js": 1.4887343143442383e-14,
+            "top1_token_agreement": 1.0,
+            "top1_token_agreement_ci95": {
+              "estimate": 1.0,
+              "ci_low": 0.9433759402071946,
+              "ci_high": 1.0,
+              "level": 0.95,
+              "method": "wilson",
+              "n": 64
+            },
+            "top5_overlap": 1.0,
+            "margin_risk_rate": 0.0,
+            "lm_head_argmax_match": 1.0,
+            "greedy_sequence_exact_match": 1.0,
+            "greedy_token_exact_match": 1.0,
+            "first_divergence_position": null,
+            "common_prefix_length_mean": 4.0,
+            "common_prefix_lengths": [
+              4,
+              4,
+              4,
+              4
+            ],
+            "teacher_forced": {
+              "plaintext": {
+                "negative_log_likelihood": 4.1795172691345215,
+                "perplexity": 65.33430671396242,
+                "next_token_top1_accuracy": 0.03333333507180214,
+                "next_token_top5_accuracy": 0.13333334028720856
+              },
+              "obfuscated": {
+                "negative_log_likelihood": 4.179516792297363,
+                "perplexity": 65.3342755601447,
+                "next_token_top1_accuracy": 0.03333333507180214,
+                "next_token_top5_accuracy": 0.13333334028720856
+              },
+              "agreement": {
+                "next_token_top1_agreement": 1.0
+              },
+              "degradation": {
+                "nll_absolute_increase": -4.76837158203125e-07,
+                "nll_relative_increase": -1.1408905083956421e-07,
+                "perplexity_absolute_increase": -3.1153817715789955e-05,
+                "perplexity_relative_increase": -4.768370444670557e-07,
+                "top1_absolute_drop": 0.0,
+                "top1_relative_drop": 0.0,
+                "top5_absolute_drop": 0.0,
+                "top5_relative_drop": 0.0
+              },
+              "token_count": 60
+            },
+            "free_running": {
+              "greedy_token_exact_match": 1.0,
+              "greedy_sequence_exact_match": 1.0
+            },
+            "ppl_relative_increase": -4.768370444670557e-07,
+            "top1_absolute_drop_pp": 0.0,
+            "cache_vs_nocache_identical": 1.0,
+            "vocab_permutation_applied": false
+          }
+        }
+      ],
+      "aggregated_metrics": {
+        "layer1": {
+          "chain_linear": {
+            "max_absolute_error": 7.152557373046875e-07
+          }
+        },
+        "layer2": {
+          "rank_flip_rate": 0.0,
+          "top1_match": 1.0,
+          "topk_overlap": 1.0,
+          "causal_mask_match": 1.0
+        },
+        "layer3": {
+          "expert_set_match": null
+        },
+        "layer4": {
+          "lm_head_argmax_match": 1.0,
+          "greedy_sequence_exact_match": 1.0,
+          "ppl_relative_increase": -4.768370444670557e-07,
+          "top1_absolute_drop_pp": 0.0
+        },
+        "cache": {
+          "cache_vs_nocache_identical": 1.0
+        },
+        "utility": {
+          "accuracy_drop_pp": null,
+          "ppl_relative_increase": null,
+          "accuracy_drop_pp_ci95_upper": null
+        }
+      },
+      "multi_key_stats": {},
+      "terminology": "obfuscated-state relative to plaintext; augmented covariant obfuscation prototype",
+      "gates": {
+        "hard_passed": true,
+        "soft_passed": true,
+        "all_passed": true,
+        "results": [
+          {
+            "name": "FP32 ChainLinear max abs error",
+            "category": "hard",
+            "passed": true,
+            "observed": 7.152557373046875e-07,
+            "threshold": 0.0001,
+            "unit": "abs",
+            "detail": ""
+          },
+          {
+            "name": "Attention rank-flip rate",
+            "category": "hard",
+            "passed": true,
+            "observed": 0.0,
+            "threshold": 0.0,
+            "unit": "fraction",
+            "detail": ""
+          },
+          {
+            "name": "Attention top-1 match",
+            "category": "hard",
+            "passed": true,
+            "observed": 1.0,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": ""
+          },
+          {
+            "name": "Attention top-k overlap",
+            "category": "hard",
+            "passed": true,
+            "observed": 1.0,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": ""
+          },
+          {
+            "name": "MoE expert set match",
+            "category": "hard",
+            "passed": true,
+            "observed": null,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": "N/A when model has no MoE"
+          },
+          {
+            "name": "Causal mask match",
+            "category": "hard",
+            "passed": true,
+            "observed": 1.0,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": ""
+          },
+          {
+            "name": "Cache vs no-cache identical",
+            "category": "hard",
+            "passed": true,
+            "observed": 1.0,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": ""
+          },
+          {
+            "name": "LM Head inverse-permuted argmax",
+            "category": "hard",
+            "passed": true,
+            "observed": 1.0,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": ""
+          },
+          {
+            "name": "Greedy release-validation sequences",
+            "category": "hard",
+            "passed": true,
+            "observed": 1.0,
+            "threshold": 1.0,
+            "unit": "fraction",
+            "detail": ""
+          },
+          {
+            "name": "Accuracy drop \u2264 0.5 pp",
+            "category": "soft",
+            "passed": true,
+            "observed": 0.0,
+            "threshold": 0.5,
+            "unit": "pp",
+            "detail": ""
+          },
+          {
+            "name": "PPL relative increase \u2264 1%",
+            "category": "soft",
+            "passed": true,
+            "observed": -4.768370444670557e-07,
+            "threshold": 0.01,
+            "unit": "relative",
+            "detail": ""
+          }
+        ]
+      }
+    }
+  }
+}

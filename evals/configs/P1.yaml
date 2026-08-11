@@ -1,0 +1,8 @@
+# Protocol §3.1 — P1: BF16 structural-only
+condition_id: P1
+precision: bf16
+mode: structural
+description: >
+  BF16 structural-only: measures transform-induced numerical amplification
+  with full obfuscation graph and zeroed noise injection.
+stress: false

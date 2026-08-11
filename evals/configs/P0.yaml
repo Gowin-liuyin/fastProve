@@ -1,0 +1,6 @@
+# Protocol §3.1 — P0: BF16 plaintext production baseline
+condition_id: P0
+precision: bf16
+mode: plaintext
+description: BF16 plaintext production baseline
+stress: false

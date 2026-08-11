@@ -1,0 +1,28 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+build/
+dist/
+*.egg-info/
+.DS_Store
+
+# Never commit checkpoints, datasets, caches, secrets, or generated raw runs.
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.arrow
+.env
+results/raw/*.jsonl
+results/raw/*.pt
+results/raw/**/*.jsonl
+results/raw/**/*.pt
+results/tables/*.csv
+results/figures/*.png
+results/tables/**/*.csv
+results/figures/**/*.png
+
+# Downloaded benchmark datasets: never commit.
+results/raw/osnip_bench_data/

@@ -1,0 +1,128 @@
+{
+  "status": "ready_for_experiment",
+  "checks": [
+    {
+      "name": "requested_runtime",
+      "status": "pass"
+    },
+    {
+      "name": "qwen2_artifact",
+      "status": "pass"
+    },
+    {
+      "name": "tokenizer_vocab",
+      "status": "pass",
+      "tokenizer_base_vocab_size": 151643,
+      "tokenizer_length_with_added_tokens": 151665,
+      "model_vocab_size": 151936,
+      "padded_embedding_rows": 271
+    },
+    {
+      "name": "aligned_token_cache",
+      "status": "pass",
+      "calibration_count": 8,
+      "full_count": 64
+    },
+    {
+      "name": "model_tokenizer_cache_identity",
+      "status": "pass"
+    }
+  ],
+  "environment": {
+    "python_version": "3.9.6",
+    "torch_version": "2.8.0",
+    "numpy_version": "2.0.2",
+    "transformers_version": "4.57.6",
+    "safetensors_version": "0.7.0",
+    "fastprove_version": "0.1.0",
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "cpu_count": 10,
+    "physical_memory_bytes": 17179869184,
+    "disk_total_bytes": 994610155520,
+    "disk_free_bytes": 444707123200,
+    "cuda_available": false,
+    "cuda_version": null,
+    "nvidia_smi_available": false,
+    "mps_available": true,
+    "mps_fallback_env": null,
+    "device_names": {
+      "cuda": null,
+      "mps": "Apple Metal Performance Shaders"
+    }
+  },
+  "requested": {
+    "model_path": "/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+    "dataset_cache": "/Users/yin/code/fastProve/results/raw/flickr30k_caption_eval_inputs.pt",
+    "generation_tokens": 4,
+    "device": "cpu",
+    "activation_dtype": "fp32",
+    "calibration_count": 8,
+    "full_count": 64,
+    "accept_nonstandard_caption": true
+  },
+  "runtime": {
+    "requested_device": "cpu",
+    "requested_activation_dtype": "fp32",
+    "actual_device": "cpu",
+    "actual_activation_dtype": "float32",
+    "checkpoint_compute_dtype": "float64",
+    "mps_fallback_env": null,
+    "matmul_and_softmax": "pass"
+  },
+  "model": {
+    "root": "/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+    "architecture": "Qwen2ForCausalLM",
+    "model_config": {
+      "vocab_size": 151936,
+      "hidden_size": 1536,
+      "intermediate_size": 8960,
+      "num_layers": 28,
+      "num_attention_heads": 12,
+      "num_key_value_heads": 2,
+      "max_sequence_length": 2048,
+      "rms_epsilon": 1e-06,
+      "rope_theta": 10000.0,
+      "qkv_bias": true
+    },
+    "config_sha256": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+    "tokenizer_sha256": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+    "tokenizer_config_sha256": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+    "weights_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "weights_bytes": 3554214621,
+    "upstream_revision": "revision_unavailable",
+    "max_position_embeddings": 131072
+  },
+  "dataset": {
+    "path": "/Users/yin/code/fastProve/results/raw/flickr30k_caption_eval_inputs.pt",
+    "content_sha256": "6d0a751be4a77ad6d6e943a04c339bad2a29276563c1df41b12b6959c91b33d2",
+    "sample_count": 405,
+    "sequence_length": 24,
+    "evaluation_scope": "caption_only_nonstandard_lm_candidate",
+    "scope_acceptance": "explicit_nonstandard_caption",
+    "metadata": {
+      "model_root": "/Users/yin/dr-claw/基于协变混淆的边云协同推理/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+      "model_config_sha256": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+      "tokenizer_sha256": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+      "tokenizer_config_sha256": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+      "vocab_size": 151936,
+      "sequence_length": 24,
+      "source_path": "/private/tmp/fastprove_flickr30k_test_captions.jsonl",
+      "source_sha256": "2e37efae26ed224c0d6c7848588312adf2f89f3dd0b5686b26abc4114c4addec",
+      "source_format": "jsonl",
+      "short_examples_dropped": 4595,
+      "add_special_tokens": true,
+      "padding_token_id": 151643,
+      "evidence_scope": "tokenized_local_corpus; not yet evaluated"
+    }
+  },
+  "memory_estimate": {
+    "checkpoint_bytes": 3554214621,
+    "estimated_plain_activation_bytes": 7108429242,
+    "estimated_plain_plus_obfuscated_activation_bytes": 13648184144,
+    "estimated_working_set_activation_bytes": 17060230180,
+    "activation_dtype": "fp32"
+  },
+  "resource_warning": "estimated working set is near/above physical RAM; reduce batch or run on CUDA"
+}

@@ -1,0 +1,6 @@
+# Protocol §3.1 — F0: FP32 plaintext high-precision reference
+condition_id: F0
+precision: fp32
+mode: plaintext
+description: FP32 plaintext high-precision reference
+stress: false

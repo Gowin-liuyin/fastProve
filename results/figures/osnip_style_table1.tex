@@ -1,0 +1,106 @@
+% OSNIP Table-1 style utility comparison for Llama-3.2-3B-Instruct
+% Compile: xelatex osnip_style_table1.tex
+\documentclass[10pt]{article}
+\usepackage[margin=1.0cm,landscape,a4paper]{geometry}
+\usepackage{fontspec}
+\usepackage{booktabs,array,multirow,xcolor,colortbl,amsmath}
+\usepackage{siunitx}
+\sisetup{round-mode=places,round-precision=3,table-format=1.3,detect-weight=true,detect-inline-weight=math}
+
+\definecolor{headerbg}{HTML}{E8E8E8}
+\definecolor{rowalt}{HTML}{F7F7F7}
+\definecolor{sectionbg}{HTML}{F0F4F8}
+
+\pagestyle{empty}
+\begin{document}
+\begin{center}
+{\large\bfseries Table~1. Main Results on Utility Metrics (Llama-3.2-3B-Instruct)}\\[0.35em]
+{\footnotesize
+Utility is accuracy on 10 closed-ended benchmarks ($\uparrow$).
+Avg is the mean across the 10 tasks.
+RP (Retained Performance) is utility preserved relative to the Non-private / plaintext baseline.
+$\dagger$: continuation-style scoring.
+fastProve rows: $n{=}200$ per task, BF16, RTX~5090; ASR not evaluated.
+}\\[0.8em]
+
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.22}
+\footnotesize
+\begin{tabular}{@{}ll c c *{10}{c} c c@{}}
+\toprule
+\rowcolor{headerbg}
+\multirow{2}{*}{\textbf{Model}} &
+\multirow{2}{*}{\textbf{Method}} &
+\multirow{2}{*}{\textbf{Conf.}} &
+\multicolumn{1}{c}{\textbf{Priv.}} &
+\multicolumn{10}{c}{\textbf{Utility Metrics (Accuracy $\uparrow$)}} &
+\multirow{2}{*}{\textbf{Avg}} &
+\multirow{2}{*}{\textbf{RP}} \\
+\cmidrule(lr){4-4}\cmidrule(lr){5-14}
+\rowcolor{headerbg}
+ & & & ASR$\downarrow$ &
+ARC-E & PIQA & MNLI & SST2 & ANLI1 & ANLI2 & ANLI3 & WiC & HellaS$^\dagger$ & MMLU$^\dagger$ & & \\
+\midrule
+% --- OSNIP paper numbers (Table 1) ---
+\rowcolor{sectionbg}
+\multicolumn{16}{@{}l}{\textit{OSNIP paper (Cao et al.), full evaluation protocol}} \\
+\multirow{5}{*}{\shortstack[l]{Llama-3.2-3B-\\Instruct}}
+ & Non-private & / & 1.000
+ & 0.712 & 0.768 & 0.542 & 0.867 & 0.440 & 0.401 & 0.425 & 0.497 & 0.716 & 0.606
+ & 0.597 & 100\% \\
+ & Cape & $\epsilon{=}14$ & 0.404
+ & 0.490 & 0.613 & 0.461 & 0.642 & 0.366 & 0.345 & 0.365 & 0.486 & 0.324 & 0.245
+ & 0.434 & 72.70\% \\
+ & DynText & $\epsilon{=}2.5$ & 0.807
+ & 0.266 & 0.517 & 0.321 & 0.511 & 0.349 & 0.339 & 0.348 & 0.480 & 0.275 & 0.243
+ & 0.365 & 61.14\% \\
+ & InferDPT & $\epsilon{=}6$ & 0.667
+ & 0.269 & 0.509 & 0.331 & 0.508 & 0.352 & 0.320 & 0.333 & 0.491 & 0.271 & 0.239
+ & 0.362 & 60.65\% \\
+ & OSNIP (Ours) & / & 0.021
+ & 0.707 & 0.766 & 0.535 & 0.825 & 0.431 & 0.407 & 0.410 & 0.513 & 0.709 & 0.572
+ & 0.588 & \textbf{98.49\%} \\
+\midrule
+% --- fastProve measured ---
+\rowcolor{sectionbg}
+\multicolumn{16}{@{}l}{\textit{fastProve (this work), same 10 tasks, $n{=}200$, likelihood MC; RP vs our plaintext}} \\
+\multirow{3}{*}{\shortstack[l]{Llama-3.2-3B-\\Instruct}}
+ & Plaintext & / & ---
+ & 0.535 & 0.460 & 0.480 & 0.970 & 0.475 & 0.395 & 0.350 & 0.505 & 0.465 & 0.295
+ & 0.493 & 100\% \\
+ & Structural & / & ---
+ & 0.530 & 0.460 & 0.485 & 0.965 & 0.480 & 0.400 & 0.350 & 0.505 & 0.465 & 0.295
+ & 0.494 & \textbf{100.1\%} \\
+ & Full noise & / & ---
+ & 0.505 & 0.460 & 0.495 & 0.950 & 0.415 & 0.355 & 0.350 & 0.505 & 0.455 & 0.315
+ & 0.481 & \textbf{97.46\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.7em}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\rowcolor{headerbg}
+\textbf{WikiText-2 PPL} & Non-private / Plain & Obfuscated & Relative $\Delta$ \\
+\midrule
+OSNIP paper & 9.63 & 12.58 & $+31\%$ \\
+fastProve structural & 11.59 & 11.61 & $+0.12\%$ \\
+fastProve full & 11.59 & 11.73 & $+1.15\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+{\scriptsize\noindent
+\textit{Notes.}
+Absolute accuracies of fastProve plaintext may differ from OSNIP Non-private due to prompt template,
+scoring harness, and sample size ($n{=}200$).
+RP compares each method to its own plaintext baseline under the same protocol.
+Privacy ASR is reported only for OSNIP paper methods; fastProve privacy attack is out of this table's scope.
+Source: OSNIP Tables~1--2; \texttt{results/raw/osnip\_style\_bench\_n200.json}.
+}
+\end{document}

@@ -1,0 +1,17 @@
+Gate                                      | Cat  | Status | Observed | Threshold
+------------------------------------------------------------------------------------------
+FP32 ChainLinear max abs error             | hard | PASS   | 8.9407e-07 | 0.0001
+Attention rank-flip rate                   | hard | PASS   | n/a | 0
+Attention top-1 match                      | hard | PASS   | n/a | 1
+Attention top-k overlap                    | hard | PASS   | n/a | 1
+MoE expert set match                       | hard | PASS   | n/a | 1
+Causal mask match                          | hard | PASS   | n/a | 1
+Cache vs no-cache identical                | hard | PASS   | n/a | 1
+LM Head inverse-permuted argmax            | hard | FAIL   | 0.962963 | 1
+Greedy release-validation sequences        | hard | FAIL   | 0.75 | 1
+Accuracy drop ≤ 0.5 pp                     | soft | PASS   | 0 | 0.5
+PPL relative increase ≤ 1%                 | soft | FAIL   | 0.0200586 | 0.01
+------------------------------------------------------------------------------------------
+HARD: FAIL   SOFT: FAIL   ALL: FAIL
+wrote results/REPORT.md
+SANITY_OK greedy_n=4, dual metrics, no legacy

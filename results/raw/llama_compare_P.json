@@ -1,0 +1,834 @@
+{
+  "superseded": {
+    "status": "superseded",
+    "date": "2026-08-06",
+    "reason": "produced by a defective evaluation harness; task accuracy and retention figures must not be quoted",
+    "defects": [
+      "example selection was corpus head-truncation; mmlu_test.jsonl is sorted by subject (first 200 rows = abstract_algebra + anatomy only, 2 of 57) and anli_r3_test.jsonl is sorted by label",
+      "piqa_val.jsonl gold labels are degenerate (all 1838 rows label==0), so its score is the sol1-pick rate and contributes a hard-coded 100% retention",
+      "multiple-choice scoring was not length-normalized (summed logprob favours short candidates)",
+      "plaintext baseline never reconciled with a public reference: local avg 0.493 vs OSNIP paper non-private 0.597 for the same checkpoint (-10.4pp)"
+    ],
+    "fixed_in": "scripts/run_osnip_style_benchmarks.py",
+    "privacy_note": "accuracy/retention measure utility only; see docs/threat_model.md section 5bis for the quantified recoverability upper bound"
+  },
+  "protocol_note": "plaintext vs current fastProve only; legacy ModelSplit obfuscation was NOT used as baseline or result",
+  "terminology": "obfuscated-state relative to plaintext; LWE-keyed / LWE-inspired low-overhead covariant obfuscation",
+  "environment": {
+    "python_version": "3.12.13",
+    "torch_version": "2.12.0+cu130",
+    "platform": "Linux-6.17.0-29-generic-x86_64-with-glibc2.43",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "device": "cuda",
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "gpu_memory_total_bytes": 33668857856
+  },
+  "plaintext_base": {
+    "root": "/home/nss-d/dcy/codes/ModelSplit/models/Llama-3.2-3B-Instruct",
+    "architecture": "LlamaForCausalLM",
+    "model_config": {
+      "vocab_size": 128256,
+      "hidden_size": 3072,
+      "intermediate_size": 8192,
+      "num_layers": 28,
+      "num_attention_heads": 24,
+      "num_key_value_heads": 8,
+      "max_sequence_length": 36,
+      "rms_epsilon": 1e-05,
+      "rope_theta": 500000.0,
+      "qkv_bias": false
+    },
+    "config_sha256": "39fb36dc5416f445ebc4e71cb71fbcf6727e80a35836d8ba1a1474c318467b7a",
+    "tokenizer_sha256": "79e3e522635f3171300913bb421464a87de6222182a0570b9b2ccba2a964b2b4",
+    "tokenizer_config_sha256": "9823dcfdc1121869029da45192238e85cf44f0b232a6d9dc20e4fe6f4242a14e",
+    "weights_sha256": "963e552937a68f2166e65810a13ccc5b9d3a173517ff58ed9ebd2b36a5fe557e",
+    "shard_sha256": {
+      "model-00001-of-00002.safetensors": "13cbd6d16e927a0c5bad54102514e6e18b4a47b3a6eb911e39d678d328d19f55",
+      "model-00002-of-00002.safetensors": "7b770216613ac5c34d7c54bdff1fa616bc4e338a9d0b20af6303e48c295ee23c"
+    },
+    "weights_bytes": 6425529048,
+    "upstream_revision": "revision_unavailable",
+    "max_position_embeddings": 131072,
+    "tie_word_embeddings": true,
+    "is_plaintext_verified": true,
+    "verification_notes": [
+      "tie_word_embeddings=true; lm_head shares embed_tokens",
+      "standard LlamaForCausalLM weight map; no legacy markers",
+      "NOT a legacy ModelSplit obfuscation artifact; safe as plaintext base"
+    ],
+    "scheme": "plaintext_llama_base",
+    "legacy_modelsplit_obfuscation": false
+  },
+  "load_seconds": 0.97365926601924,
+  "evaluation": {
+    "sample_count": 4,
+    "sequence_length": 32,
+    "generation_tokens": 4,
+    "sample_ids": [
+      "prompt-0000",
+      "prompt-0001",
+      "prompt-0002",
+      "prompt-0003"
+    ],
+    "dtype": "bfloat16",
+    "device": "cuda",
+    "batch_size": 1,
+    "obfuscation": {
+      "hidden_noise_dim": 8,
+      "value_noise_dim_per_head": 2,
+      "max_condition_number": 10.0,
+      "noise_propagation_gamma": 0.5,
+      "refresh_mode": "fixed_debug"
+    }
+  },
+  "pairs": [
+    {
+      "mode": "structural",
+      "legacy_modelsplit_obfuscation": false,
+      "scheme": "current_fastprove_covariant",
+      "structural_noise_zeroed": true,
+      "key": {
+        "key_id": 0,
+        "label": "key-00",
+        "key_fingerprint": "53e675399c68f1c00ebad2581bf2f2e5d81ea0098e7efa04e0f5e36d4eecff10",
+        "seed_material_recorded": false
+      },
+      "conversion_time_seconds": 24.307947112014517,
+      "sample_ids": [
+        "prompt-0000",
+        "prompt-0001",
+        "prompt-0002",
+        "prompt-0003"
+      ],
+      "teacher_forced": {
+        "plaintext": {
+          "negative_log_likelihood": 3.114285469055176,
+          "perplexity": 22.517335271116025,
+          "next_token_top1_accuracy": 0.4444444477558136,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "obfuscated": {
+          "negative_log_likelihood": 3.1200501918792725,
+          "perplexity": 22.64751633605454,
+          "next_token_top1_accuracy": 0.48148149251937866,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "agreement": {
+          "next_token_top1_agreement": 0.9259259104728699
+        },
+        "degradation": {
+          "nll_absolute_increase": 0.00576472282409668,
+          "nll_relative_increase": 0.0018510579333132246,
+          "perplexity_absolute_increase": 0.13018106493851533,
+          "perplexity_relative_increase": 0.005781370813690566,
+          "top1_absolute_drop": -0.037037044763565063,
+          "top1_relative_drop": -0.08333335009713955,
+          "top5_absolute_drop": 0.0,
+          "top5_relative_drop": 0.0
+        },
+        "token_count": 27
+      },
+      "greedy": {
+        "greedy_sequence_exact_match": 1.0,
+        "greedy_token_exact_match": 1.0,
+        "greedy_n_samples": 4,
+        "greedy_sample_ids": [
+          "prompt-0000",
+          "prompt-0001",
+          "prompt-0002",
+          "prompt-0003"
+        ],
+        "greedy_prompt_lengths": [
+          6,
+          10,
+          5,
+          10
+        ],
+        "greedy_first_divergence_step": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "greedy_padding_stripped": true
+      },
+      "logits_e2e": {
+        "max_absolute_error": 1.0546875,
+        "mean_absolute_error": 0.15372449986798864,
+        "relative_l2_error": 0.10304889731605538,
+        "cosine_similarity": 0.9953722522617854,
+        "nan_count": 0,
+        "inf_count": 0
+      },
+      "e2e_logit_max_absolute_error": 1.0546875,
+      "top1_token_agreement": 0.9259259259259259,
+      "top1_token_agreement_ci95": {
+        "estimate": 0.9259259259259259,
+        "ci_low": 0.7663040731697686,
+        "ci_high": 0.9794453459390113,
+        "level": 0.95,
+        "method": "wilson",
+        "n": 27
+      },
+      "lm_head_argmax_match": 0.9259259259259259,
+      "greedy_sequence_exact_match": 1.0,
+      "greedy_n_samples": 4,
+      "ppl_relative_increase": 0.005781370813690566,
+      "top1_absolute_drop_pp": -3.7037044763565063,
+      "n_valid_token_decisions": 27
+    },
+    {
+      "mode": "structural",
+      "legacy_modelsplit_obfuscation": false,
+      "scheme": "current_fastprove_covariant",
+      "structural_noise_zeroed": true,
+      "key": {
+        "key_id": 1,
+        "label": "key-01",
+        "key_fingerprint": "53bb360c4f404b9a9196ea55b8ca41a52fd06954555ef12e5cc10414b3c7c230",
+        "seed_material_recorded": false
+      },
+      "conversion_time_seconds": 24.41207855916582,
+      "sample_ids": [
+        "prompt-0000",
+        "prompt-0001",
+        "prompt-0002",
+        "prompt-0003"
+      ],
+      "teacher_forced": {
+        "plaintext": {
+          "negative_log_likelihood": 3.114285469055176,
+          "perplexity": 22.517335271116025,
+          "next_token_top1_accuracy": 0.4444444477558136,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "obfuscated": {
+          "negative_log_likelihood": 3.114610433578491,
+          "perplexity": 22.524653795304694,
+          "next_token_top1_accuracy": 0.48148149251937866,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "agreement": {
+          "next_token_top1_agreement": 0.9259259104728699
+        },
+        "degradation": {
+          "nll_absolute_increase": 0.0003249645233154297,
+          "nll_relative_increase": 0.00010434641478580276,
+          "perplexity_absolute_increase": 0.007318524188669073,
+          "perplexity_relative_increase": 0.000325017330006045,
+          "top1_absolute_drop": -0.037037044763565063,
+          "top1_relative_drop": -0.08333335009713955,
+          "top5_absolute_drop": 0.0,
+          "top5_relative_drop": 0.0
+        },
+        "token_count": 27
+      },
+      "greedy": {
+        "greedy_sequence_exact_match": 1.0,
+        "greedy_token_exact_match": 1.0,
+        "greedy_n_samples": 4,
+        "greedy_sample_ids": [
+          "prompt-0000",
+          "prompt-0001",
+          "prompt-0002",
+          "prompt-0003"
+        ],
+        "greedy_prompt_lengths": [
+          6,
+          10,
+          5,
+          10
+        ],
+        "greedy_first_divergence_step": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "greedy_padding_stripped": true
+      },
+      "logits_e2e": {
+        "max_absolute_error": 0.546875,
+        "mean_absolute_error": 0.08190548885238741,
+        "relative_l2_error": 0.04917700990353349,
+        "cosine_similarity": 0.9990183864259621,
+        "nan_count": 0,
+        "inf_count": 0
+      },
+      "e2e_logit_max_absolute_error": 0.546875,
+      "top1_token_agreement": 0.9259259259259259,
+      "top1_token_agreement_ci95": {
+        "estimate": 0.9259259259259259,
+        "ci_low": 0.7663040731697686,
+        "ci_high": 0.9794453459390113,
+        "level": 0.95,
+        "method": "wilson",
+        "n": 27
+      },
+      "lm_head_argmax_match": 0.9259259259259259,
+      "greedy_sequence_exact_match": 1.0,
+      "greedy_n_samples": 4,
+      "ppl_relative_increase": 0.000325017330006045,
+      "top1_absolute_drop_pp": -3.7037044763565063,
+      "n_valid_token_decisions": 27
+    },
+    {
+      "mode": "structural",
+      "legacy_modelsplit_obfuscation": false,
+      "scheme": "current_fastprove_covariant",
+      "structural_noise_zeroed": true,
+      "key": {
+        "key_id": 2,
+        "label": "key-02",
+        "key_fingerprint": "32228827c3f0b811dbe0a924b9a565184652c1d9bd1316753b7d78bffe434579",
+        "seed_material_recorded": false
+      },
+      "conversion_time_seconds": 24.22975023696199,
+      "sample_ids": [
+        "prompt-0000",
+        "prompt-0001",
+        "prompt-0002",
+        "prompt-0003"
+      ],
+      "teacher_forced": {
+        "plaintext": {
+          "negative_log_likelihood": 3.114285469055176,
+          "perplexity": 22.517335271116025,
+          "next_token_top1_accuracy": 0.4444444477558136,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "obfuscated": {
+          "negative_log_likelihood": 3.1095829010009766,
+          "perplexity": 22.411694555610808,
+          "next_token_top1_accuracy": 0.48148149251937866,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "agreement": {
+          "next_token_top1_agreement": 0.9259259104728699
+        },
+        "degradation": {
+          "nll_absolute_increase": -0.004702568054199219,
+          "nll_relative_increase": -0.0015099990353889755,
+          "perplexity_absolute_increase": -0.10564071550521703,
+          "perplexity_relative_increase": -0.004691528292902714,
+          "top1_absolute_drop": -0.037037044763565063,
+          "top1_relative_drop": -0.08333335009713955,
+          "top5_absolute_drop": 0.0,
+          "top5_relative_drop": 0.0
+        },
+        "token_count": 27
+      },
+      "greedy": {
+        "greedy_sequence_exact_match": 1.0,
+        "greedy_token_exact_match": 1.0,
+        "greedy_n_samples": 4,
+        "greedy_sample_ids": [
+          "prompt-0000",
+          "prompt-0001",
+          "prompt-0002",
+          "prompt-0003"
+        ],
+        "greedy_prompt_lengths": [
+          6,
+          10,
+          5,
+          10
+        ],
+        "greedy_first_divergence_step": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "greedy_padding_stripped": true
+      },
+      "logits_e2e": {
+        "max_absolute_error": 1.3671875,
+        "mean_absolute_error": 0.13992203392113406,
+        "relative_l2_error": 0.0876781242522555,
+        "cosine_similarity": 0.9966284284538165,
+        "nan_count": 0,
+        "inf_count": 0
+      },
+      "e2e_logit_max_absolute_error": 1.3671875,
+      "top1_token_agreement": 0.9259259259259259,
+      "top1_token_agreement_ci95": {
+        "estimate": 0.9259259259259259,
+        "ci_low": 0.7663040731697686,
+        "ci_high": 0.9794453459390113,
+        "level": 0.95,
+        "method": "wilson",
+        "n": 27
+      },
+      "lm_head_argmax_match": 0.9259259259259259,
+      "greedy_sequence_exact_match": 1.0,
+      "greedy_n_samples": 4,
+      "ppl_relative_increase": -0.004691528292902714,
+      "top1_absolute_drop_pp": -3.7037044763565063,
+      "n_valid_token_decisions": 27
+    },
+    {
+      "mode": "full",
+      "legacy_modelsplit_obfuscation": false,
+      "scheme": "current_fastprove_covariant",
+      "structural_noise_zeroed": false,
+      "key": {
+        "key_id": 0,
+        "label": "key-00",
+        "key_fingerprint": "53e675399c68f1c00ebad2581bf2f2e5d81ea0098e7efa04e0f5e36d4eecff10",
+        "seed_material_recorded": false
+      },
+      "conversion_time_seconds": 24.312315004877746,
+      "sample_ids": [
+        "prompt-0000",
+        "prompt-0001",
+        "prompt-0002",
+        "prompt-0003"
+      ],
+      "teacher_forced": {
+        "plaintext": {
+          "negative_log_likelihood": 3.114285469055176,
+          "perplexity": 22.517335271116025,
+          "next_token_top1_accuracy": 0.4444444477558136,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "obfuscated": {
+          "negative_log_likelihood": 3.134145498275757,
+          "perplexity": 22.969000403522596,
+          "next_token_top1_accuracy": 0.4444444477558136,
+          "next_token_top5_accuracy": 0.6666666865348816
+        },
+        "agreement": {
+          "next_token_top1_agreement": 0.9629629850387573
+        },
+        "degradation": {
+          "nll_absolute_increase": 0.019860029220581055,
+          "nll_relative_increase": 0.006377074105093606,
+          "perplexity_absolute_increase": 0.45166513240657125,
+          "perplexity_relative_increase": 0.020058551643361722,
+          "top1_absolute_drop": 0.0,
+          "top1_relative_drop": 0.0,
+          "top5_absolute_drop": 0.037037014961242676,
+          "top5_relative_drop": 0.052631547741612474
+        },
+        "token_count": 27
+      },
+      "greedy": {
+        "greedy_sequence_exact_match": 0.75,
+        "greedy_token_exact_match": 0.875,
+        "greedy_n_samples": 4,
+        "greedy_sample_ids": [
+          "prompt-0000",
+          "prompt-0001",
+          "prompt-0002",
+          "prompt-0003"
+        ],
+        "greedy_prompt_lengths": [
+          6,
+          10,
+          5,
+          10
+        ],
+        "greedy_first_divergence_step": [
+          null,
+          null,
+          2,
+          null
+        ],
+        "greedy_padding_stripped": true
+      },
+      "logits_e2e": {
+        "max_absolute_error": 1.32421875,
+        "mean_absolute_error": 0.11988273937171817,
+        "relative_l2_error": 0.0735655205740149,
+        "cosine_similarity": 0.9976563445542045,
+        "nan_count": 0,
+        "inf_count": 0
+      },
+      "e2e_logit_max_absolute_error": 1.32421875,
+      "top1_token_agreement": 0.9629629629629629,
+      "top1_token_agreement_ci95": {
+        "estimate": 0.9629629629629629,
+        "ci_low": 0.8171653406642414,
+        "ci_high": 0.9934318540192149,
+        "level": 0.95,
+        "method": "wilson",
+        "n": 27
+      },
+      "lm_head_argmax_match": 0.9629629629629629,
+      "greedy_sequence_exact_match": 0.75,
+      "greedy_n_samples": 4,
+      "ppl_relative_increase": 0.020058551643361722,
+      "top1_absolute_drop_pp": 0.0,
+      "n_valid_token_decisions": 27
+    },
+    {
+      "mode": "full",
+      "legacy_modelsplit_obfuscation": false,
+      "scheme": "current_fastprove_covariant",
+      "structural_noise_zeroed": false,
+      "key": {
+        "key_id": 1,
+        "label": "key-01",
+        "key_fingerprint": "53bb360c4f404b9a9196ea55b8ca41a52fd06954555ef12e5cc10414b3c7c230",
+        "seed_material_recorded": false
+      },
+      "conversion_time_seconds": 24.109686420066282,
+      "sample_ids": [
+        "prompt-0000",
+        "prompt-0001",
+        "prompt-0002",
+        "prompt-0003"
+      ],
+      "teacher_forced": {
+        "plaintext": {
+          "negative_log_likelihood": 3.114285469055176,
+          "perplexity": 22.517335271116025,
+          "next_token_top1_accuracy": 0.4444444477558136,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "obfuscated": {
+          "negative_log_likelihood": 3.093825340270996,
+          "perplexity": 22.061308780213068,
+          "next_token_top1_accuracy": 0.48148149251937866,
+          "next_token_top5_accuracy": 0.6666666865348816
+        },
+        "agreement": {
+          "next_token_top1_agreement": 0.9259259104728699
+        },
+        "degradation": {
+          "nll_absolute_increase": -0.020460128784179688,
+          "nll_relative_increase": -0.006569766640688518,
+          "perplexity_absolute_increase": -0.456026490902957,
+          "perplexity_relative_increase": -0.020252240569865396,
+          "top1_absolute_drop": -0.037037044763565063,
+          "top1_relative_drop": -0.08333335009713955,
+          "top5_absolute_drop": 0.037037014961242676,
+          "top5_relative_drop": 0.052631547741612474
+        },
+        "token_count": 27
+      },
+      "greedy": {
+        "greedy_sequence_exact_match": 1.0,
+        "greedy_token_exact_match": 1.0,
+        "greedy_n_samples": 4,
+        "greedy_sample_ids": [
+          "prompt-0000",
+          "prompt-0001",
+          "prompt-0002",
+          "prompt-0003"
+        ],
+        "greedy_prompt_lengths": [
+          6,
+          10,
+          5,
+          10
+        ],
+        "greedy_first_divergence_step": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "greedy_padding_stripped": true
+      },
+      "logits_e2e": {
+        "max_absolute_error": 2.3046875,
+        "mean_absolute_error": 0.14415392016996226,
+        "relative_l2_error": 0.09013746453989992,
+        "cosine_similarity": 0.9961593051262908,
+        "nan_count": 0,
+        "inf_count": 0
+      },
+      "e2e_logit_max_absolute_error": 2.3046875,
+      "top1_token_agreement": 0.9259259259259259,
+      "top1_token_agreement_ci95": {
+        "estimate": 0.9259259259259259,
+        "ci_low": 0.7663040731697686,
+        "ci_high": 0.9794453459390113,
+        "level": 0.95,
+        "method": "wilson",
+        "n": 27
+      },
+      "lm_head_argmax_match": 0.9259259259259259,
+      "greedy_sequence_exact_match": 1.0,
+      "greedy_n_samples": 4,
+      "ppl_relative_increase": -0.020252240569865396,
+      "top1_absolute_drop_pp": -3.7037044763565063,
+      "n_valid_token_decisions": 27
+    },
+    {
+      "mode": "full",
+      "legacy_modelsplit_obfuscation": false,
+      "scheme": "current_fastprove_covariant",
+      "structural_noise_zeroed": false,
+      "key": {
+        "key_id": 2,
+        "label": "key-02",
+        "key_fingerprint": "32228827c3f0b811dbe0a924b9a565184652c1d9bd1316753b7d78bffe434579",
+        "seed_material_recorded": false
+      },
+      "conversion_time_seconds": 24.167521613882855,
+      "sample_ids": [
+        "prompt-0000",
+        "prompt-0001",
+        "prompt-0002",
+        "prompt-0003"
+      ],
+      "teacher_forced": {
+        "plaintext": {
+          "negative_log_likelihood": 3.114285469055176,
+          "perplexity": 22.517335271116025,
+          "next_token_top1_accuracy": 0.4444444477558136,
+          "next_token_top5_accuracy": 0.7037037014961243
+        },
+        "obfuscated": {
+          "negative_log_likelihood": 3.19222354888916,
+          "perplexity": 24.34249403653579,
+          "next_token_top1_accuracy": 0.48148149251937866,
+          "next_token_top5_accuracy": 0.6666666865348816
+        },
+        "agreement": {
+          "next_token_top1_agreement": 0.9259259104728699
+        },
+        "degradation": {
+          "nll_absolute_increase": 0.07793807983398438,
+          "nll_relative_increase": 0.025025990908158314,
+          "perplexity_absolute_increase": 1.825158765419765,
+          "perplexity_relative_increase": 0.08105571744810214,
+          "top1_absolute_drop": -0.037037044763565063,
+          "top1_relative_drop": -0.08333335009713955,
+          "top5_absolute_drop": 0.037037014961242676,
+          "top5_relative_drop": 0.052631547741612474
+        },
+        "token_count": 27
+      },
+      "greedy": {
+        "greedy_sequence_exact_match": 0.75,
+        "greedy_token_exact_match": 0.875,
+        "greedy_n_samples": 4,
+        "greedy_sample_ids": [
+          "prompt-0000",
+          "prompt-0001",
+          "prompt-0002",
+          "prompt-0003"
+        ],
+        "greedy_prompt_lengths": [
+          6,
+          10,
+          5,
+          10
+        ],
+        "greedy_first_divergence_step": [
+          null,
+          null,
+          2,
+          null
+        ],
+        "greedy_padding_stripped": true
+      },
+      "logits_e2e": {
+        "max_absolute_error": 1.625,
+        "mean_absolute_error": 0.1530430198036387,
+        "relative_l2_error": 0.09858093651320707,
+        "cosine_similarity": 0.9957249153692931,
+        "nan_count": 0,
+        "inf_count": 0
+      },
+      "e2e_logit_max_absolute_error": 1.625,
+      "top1_token_agreement": 0.9259259259259259,
+      "top1_token_agreement_ci95": {
+        "estimate": 0.9259259259259259,
+        "ci_low": 0.7663040731697686,
+        "ci_high": 0.9794453459390113,
+        "level": 0.95,
+        "method": "wilson",
+        "n": 27
+      },
+      "lm_head_argmax_match": 0.9259259259259259,
+      "greedy_sequence_exact_match": 0.75,
+      "greedy_n_samples": 4,
+      "ppl_relative_increase": 0.08105571744810214,
+      "top1_absolute_drop_pp": -3.7037044763565063,
+      "n_valid_token_decisions": 27
+    }
+  ],
+  "legacy_comparison_arm": false,
+  "chain_linear_unit_gate": {
+    "max_absolute_error": 8.940696716308594e-07,
+    "relative_l2_error": 3.032525409363628e-07,
+    "noise_max_absolute_error": 4.172325134277344e-07,
+    "signal_metrics": {
+      "max_absolute_error": 8.940696716308594e-07,
+      "relative_l2_error": 3.032525409363628e-07,
+      "mean_absolute_error": 1.0304696237047513e-07,
+      "cosine_similarity": 0.9999999999999543,
+      "nan_count": 0,
+      "inf_count": 0
+    },
+    "noise_metrics": {
+      "max_absolute_error": 4.172325134277344e-07,
+      "relative_l2_error": 3.71241016721329e-07,
+      "mean_absolute_error": 1.356936991214752e-07,
+      "cosine_similarity": 0.999999999999942,
+      "nan_count": 0,
+      "inf_count": 0
+    },
+    "gate_threshold": 0.0001,
+    "gate_passed": true
+  },
+  "e2e_logit_max_absolute_error_primary": 1.32421875,
+  "primary_pair_mode": "full",
+  "aggregated_metrics": {
+    "layer1": {
+      "chain_linear": {
+        "max_absolute_error": 8.940696716308594e-07,
+        "gate_passed": true,
+        "source": "fp32_unit_identity_test"
+      }
+    },
+    "layer2": {
+      "rank_flip_rate": null,
+      "top1_match": null,
+      "topk_overlap": null,
+      "causal_mask_match": null
+    },
+    "layer3": {
+      "expert_set_match": null
+    },
+    "layer4": {
+      "lm_head_argmax_match": 0.9629629629629629,
+      "greedy_sequence_exact_match": 0.75,
+      "ppl_relative_increase": 0.020058551643361722,
+      "top1_absolute_drop_pp": 0.0,
+      "greedy_n_samples": 4
+    },
+    "cache": {
+      "cache_vs_nocache_identical": null
+    },
+    "utility": {
+      "accuracy_drop_pp": 0.0,
+      "ppl_relative_increase": 0.020058551643361722
+    },
+    "diagnostics": {
+      "e2e_logit_max_absolute_error": 1.32421875,
+      "e2e_logit_note": "BF16/activation end-to-end logit max|obf-plain|; NOT used as ChainLinear hard gate",
+      "chain_linear_unit_max_absolute_error": 8.940696716308594e-07,
+      "chain_linear_unit_source": "fp32_unit_identity_test"
+    }
+  },
+  "metric_source_notes": {
+    "hard_gate_chain_linear": "FP32 unit identity only (evals.layer1_operator_equiv._chain_linear_identity_test); never BF16 e2e logits",
+    "e2e_logit_max_absolute_error": "diagnostic from teacher-forced plain vs obf logits on the eval set",
+    "greedy": "all sample_ids; pad stripped so generate_greedy last index is last real token"
+  },
+  "gates": {
+    "hard_passed": false,
+    "soft_passed": false,
+    "all_passed": false,
+    "results": [
+      {
+        "name": "FP32 ChainLinear max abs error",
+        "category": "hard",
+        "passed": true,
+        "observed": 8.940696716308594e-07,
+        "threshold": 0.0001,
+        "unit": "abs",
+        "detail": ""
+      },
+      {
+        "name": "Attention rank-flip rate",
+        "category": "hard",
+        "passed": true,
+        "observed": null,
+        "threshold": 0.0,
+        "unit": "fraction",
+        "detail": "skipped when Layer 2 not run"
+      },
+      {
+        "name": "Attention top-1 match",
+        "category": "hard",
+        "passed": true,
+        "observed": null,
+        "threshold": 1.0,
+        "unit": "fraction",
+        "detail": "skipped when Layer 2 not run"
+      },
+      {
+        "name": "Attention top-k overlap",
+        "category": "hard",
+        "passed": true,
+        "observed": null,
+        "threshold": 1.0,
+        "unit": "fraction",
+        "detail": "skipped when Layer 2 not run"
+      },
+      {
+        "name": "MoE expert set match",
+        "category": "hard",
+        "passed": true,
+        "observed": null,
+        "threshold": 1.0,
+        "unit": "fraction",
+        "detail": "N/A when model has no MoE or Layer 3 not run"
+      },
+      {
+        "name": "Causal mask match",
+        "category": "hard",
+        "passed": true,
+        "observed": null,
+        "threshold": 1.0,
+        "unit": "fraction",
+        "detail": "skipped when Layer 2 not run"
+      },
+      {
+        "name": "Cache vs no-cache identical",
+        "category": "hard",
+        "passed": true,
+        "observed": null,
+        "threshold": 1.0,
+        "unit": "fraction",
+        "detail": "skipped when Layer 4 not run"
+      },
+      {
+        "name": "LM Head inverse-permuted argmax",
+        "category": "hard",
+        "passed": false,
+        "observed": 0.9629629629629629,
+        "threshold": 1.0,
+        "unit": "fraction",
+        "detail": "skipped when Layer 4 not run"
+      },
+      {
+        "name": "Greedy release-validation sequences",
+        "category": "hard",
+        "passed": false,
+        "observed": 0.75,
+        "threshold": 1.0,
+        "unit": "fraction",
+        "detail": "skipped when Layer 4 not run"
+      },
+      {
+        "name": "Accuracy drop \u2264 0.5 pp",
+        "category": "soft",
+        "passed": true,
+        "observed": 0.0,
+        "threshold": 0.5,
+        "unit": "pp",
+        "detail": ""
+      },
+      {
+        "name": "PPL relative increase \u2264 1%",
+        "category": "soft",
+        "passed": false,
+        "observed": 0.020058551643361722,
+        "threshold": 0.01,
+        "unit": "relative",
+        "detail": ""
+      }
+    ]
+  },
+  "exit_hard_fail": true,
+  "report_markdown": "# Llama plaintext vs current fastProve\n\nplaintext vs current fastProve only; legacy ModelSplit obfuscation was NOT used as baseline or result\n\n## Environment\n```json\n{\n  \"python_version\": \"3.12.13\",\n  \"torch_version\": \"2.12.0+cu130\",\n  \"platform\": \"Linux-6.17.0-29-generic-x86_64-with-glibc2.43\",\n  \"cuda_available\": true,\n  \"cuda_version\": \"13.0\",\n  \"device\": \"cuda\",\n  \"gpu_name\": \"NVIDIA GeForce RTX 5090\",\n  \"gpu_memory_total_bytes\": 33668857856\n}\n```\n\n## Plaintext base\n- path: `/home/nss-d/dcy/codes/ModelSplit/models/Llama-3.2-3B-Instruct`\n- weights_sha256: `not_computed`\n- config_sha256: `not_computed`\n- is_plaintext_verified: True\n- legacy ModelSplit baseline: **not used**\n\n## Metric sources\n- ChainLinear hard gate: FP32 unit identity only (not e2e BF16 logit max).\n- E2E logit max abs (primary): 1.32422\n- Greedy: all sample_ids; padding stripped before generate_greedy.\n\n## Pairs (current scheme only)\n- mode=`structural` key=`key-00`: top1_agree=0.925926, greedy_seq=1 (n=4), \u0394PPL_rel=0.005781370813690566, top1_drop_pp=-3.704, e2e_logit_max=1.05469\n- mode=`structural` key=`key-01`: top1_agree=0.925926, greedy_seq=1 (n=4), \u0394PPL_rel=0.000325017330006045, top1_drop_pp=-3.704, e2e_logit_max=0.546875\n- mode=`structural` key=`key-02`: top1_agree=0.925926, greedy_seq=1 (n=4), \u0394PPL_rel=-0.004691528292902714, top1_drop_pp=-3.704, e2e_logit_max=1.36719\n- mode=`full` key=`key-00`: top1_agree=0.962963, greedy_seq=0.75 (n=4), \u0394PPL_rel=0.020058551643361722, top1_drop_pp=0, e2e_logit_max=1.32422\n- mode=`full` key=`key-01`: top1_agree=0.925926, greedy_seq=1 (n=4), \u0394PPL_rel=-0.020252240569865396, top1_drop_pp=-3.704, e2e_logit_max=2.30469\n- mode=`full` key=`key-02`: top1_agree=0.925926, greedy_seq=0.75 (n=4), \u0394PPL_rel=0.08105571744810214, top1_drop_pp=-3.704, e2e_logit_max=1.625\n"
+}

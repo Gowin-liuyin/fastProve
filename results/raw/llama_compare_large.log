@@ -1,0 +1,228 @@
+Plaintext verification OK: ['tie_word_embeddings=true; lm_head shares embed_tokens', 'standard LlamaForCausalLM weight map; no legacy markers', 'NOT a legacy ModelSplit obfuscation artifact; safe as plaintext base']
+Loading plaintext Llama into fastProve reference module...
+Loaded in 2.0s
+Prompts ready: count=1500 real_scenario=True prompt_file=/home/nss-d/yhr/code/fastProve/results/raw/real_scenario_prompts_1500.jsonl
+Tokenized batch: shape=(1500, 64) valid_frac=0.5200
+Converting current-scheme mode=structural key=key-00 ...
+  structural: zeroed 255 noise-injection buffers
+  conversion 24.7s
+    teacher-forced batch 75/750  running_agree=0.9720
+    teacher-forced batch 150/750  running_agree=0.9708
+    teacher-forced batch 225/750  running_agree=0.9716
+    teacher-forced batch 300/750  running_agree=0.9712
+    teacher-forced batch 375/750  running_agree=0.9713
+    teacher-forced batch 450/750  running_agree=0.9710
+    teacher-forced batch 525/750  running_agree=0.9711
+    teacher-forced batch 600/750  running_agree=0.9710
+    teacher-forced batch 675/750  running_agree=0.9710
+    teacher-forced batch 750/750  running_agree=0.9707
+    greedy progress 75/1500  running_seq_match=0.8800
+    greedy progress 150/1500  running_seq_match=0.8533
+    greedy progress 225/1500  running_seq_match=0.8578
+    greedy progress 300/1500  running_seq_match=0.8533
+    greedy progress 375/1500  running_seq_match=0.8560
+    greedy progress 450/1500  running_seq_match=0.8578
+    greedy progress 525/1500  running_seq_match=0.8552
+    greedy progress 600/1500  running_seq_match=0.8583
+    greedy progress 675/1500  running_seq_match=0.8578
+    greedy progress 750/1500  running_seq_match=0.8573
+    greedy progress 825/1500  running_seq_match=0.8521
+    greedy progress 900/1500  running_seq_match=0.8544
+    greedy progress 975/1500  running_seq_match=0.8544
+    greedy progress 1050/1500  running_seq_match=0.8524
+    greedy progress 1125/1500  running_seq_match=0.8516
+    greedy progress 1200/1500  running_seq_match=0.8492
+    greedy progress 1275/1500  running_seq_match=0.8510
+    greedy progress 1350/1500  running_seq_match=0.8526
+    greedy progress 1425/1500  running_seq_match=0.8540
+    greedy progress 1500/1500  running_seq_match=0.8553
+  top1_agree=0.970671 greedy_seq=0.855333 greedy_n=1500 ppl_rel=0.006067929230821001
+Converting current-scheme mode=structural key=key-01 ...
+  structural: zeroed 255 noise-injection buffers
+  conversion 24.5s
+    teacher-forced batch 75/750  running_agree=0.9741
+    teacher-forced batch 150/750  running_agree=0.9737
+    teacher-forced batch 225/750  running_agree=0.9745
+    teacher-forced batch 300/750  running_agree=0.9737
+    teacher-forced batch 375/750  running_agree=0.9739
+    teacher-forced batch 450/750  running_agree=0.9741
+    teacher-forced batch 525/750  running_agree=0.9742
+    teacher-forced batch 600/750  running_agree=0.9743
+    teacher-forced batch 675/750  running_agree=0.9741
+    teacher-forced batch 750/750  running_agree=0.9741
+    greedy progress 75/1500  running_seq_match=0.8533
+    greedy progress 150/1500  running_seq_match=0.8200
+    greedy progress 225/1500  running_seq_match=0.8267
+    greedy progress 300/1500  running_seq_match=0.8267
+    greedy progress 375/1500  running_seq_match=0.8347
+    greedy progress 450/1500  running_seq_match=0.8467
+    greedy progress 525/1500  running_seq_match=0.8476
+    greedy progress 600/1500  running_seq_match=0.8483
+    greedy progress 675/1500  running_seq_match=0.8489
+    greedy progress 750/1500  running_seq_match=0.8453
+    greedy progress 825/1500  running_seq_match=0.8412
+    greedy progress 900/1500  running_seq_match=0.8433
+    greedy progress 975/1500  running_seq_match=0.8451
+    greedy progress 1050/1500  running_seq_match=0.8419
+    greedy progress 1125/1500  running_seq_match=0.8462
+    greedy progress 1200/1500  running_seq_match=0.8458
+    greedy progress 1275/1500  running_seq_match=0.8486
+    greedy progress 1350/1500  running_seq_match=0.8489
+    greedy progress 1425/1500  running_seq_match=0.8484
+    greedy progress 1500/1500  running_seq_match=0.8473
+  top1_agree=0.974079 greedy_seq=0.847333 greedy_n=1500 ppl_rel=0.0012624926806361625
+Converting current-scheme mode=structural key=key-02 ...
+  structural: zeroed 255 noise-injection buffers
+  conversion 24.8s
+    teacher-forced batch 75/750  running_agree=0.9436
+    teacher-forced batch 150/750  running_agree=0.9431
+    teacher-forced batch 225/750  running_agree=0.9435
+    teacher-forced batch 300/750  running_agree=0.9432
+    teacher-forced batch 375/750  running_agree=0.9435
+    teacher-forced batch 450/750  running_agree=0.9434
+    teacher-forced batch 525/750  running_agree=0.9433
+    teacher-forced batch 600/750  running_agree=0.9435
+    teacher-forced batch 675/750  running_agree=0.9433
+    teacher-forced batch 750/750  running_agree=0.9431
+    greedy progress 75/1500  running_seq_match=0.8267
+    greedy progress 150/1500  running_seq_match=0.8200
+    greedy progress 225/1500  running_seq_match=0.8133
+    greedy progress 300/1500  running_seq_match=0.8233
+    greedy progress 375/1500  running_seq_match=0.8320
+    greedy progress 450/1500  running_seq_match=0.8378
+    greedy progress 525/1500  running_seq_match=0.8419
+    greedy progress 600/1500  running_seq_match=0.8533
+    greedy progress 675/1500  running_seq_match=0.8489
+    greedy progress 750/1500  running_seq_match=0.8507
+    greedy progress 825/1500  running_seq_match=0.8436
+    greedy progress 900/1500  running_seq_match=0.8389
+    greedy progress 975/1500  running_seq_match=0.8390
+    greedy progress 1050/1500  running_seq_match=0.8343
+    greedy progress 1125/1500  running_seq_match=0.8302
+    greedy progress 1200/1500  running_seq_match=0.8300
+    greedy progress 1275/1500  running_seq_match=0.8306
+    greedy progress 1350/1500  running_seq_match=0.8333
+    greedy progress 1425/1500  running_seq_match=0.8330
+    greedy progress 1500/1500  running_seq_match=0.8327
+  top1_agree=0.943057 greedy_seq=0.832667 greedy_n=1500 ppl_rel=-0.0068578286888060225
+Converting current-scheme mode=full key=key-00 ...
+  conversion 24.6s
+    teacher-forced batch 75/750  running_agree=0.9069
+    teacher-forced batch 150/750  running_agree=0.9069
+    teacher-forced batch 225/750  running_agree=0.9078
+    teacher-forced batch 300/750  running_agree=0.9070
+    teacher-forced batch 375/750  running_agree=0.9072
+    teacher-forced batch 450/750  running_agree=0.9072
+    teacher-forced batch 525/750  running_agree=0.9073
+    teacher-forced batch 600/750  running_agree=0.9071
+    teacher-forced batch 675/750  running_agree=0.9069
+    teacher-forced batch 750/750  running_agree=0.9069
+    greedy progress 75/1500  running_seq_match=0.6133
+    greedy progress 150/1500  running_seq_match=0.5667
+    greedy progress 225/1500  running_seq_match=0.5556
+    greedy progress 300/1500  running_seq_match=0.5633
+    greedy progress 375/1500  running_seq_match=0.5707
+    greedy progress 450/1500  running_seq_match=0.5756
+    greedy progress 525/1500  running_seq_match=0.5867
+    greedy progress 600/1500  running_seq_match=0.5933
+    greedy progress 675/1500  running_seq_match=0.5926
+    greedy progress 750/1500  running_seq_match=0.5853
+    greedy progress 825/1500  running_seq_match=0.5915
+    greedy progress 900/1500  running_seq_match=0.5944
+    greedy progress 975/1500  running_seq_match=0.5928
+    greedy progress 1050/1500  running_seq_match=0.5924
+    greedy progress 1125/1500  running_seq_match=0.5964
+    greedy progress 1200/1500  running_seq_match=0.5925
+    greedy progress 1275/1500  running_seq_match=0.5992
+    greedy progress 1350/1500  running_seq_match=0.6015
+    greedy progress 1425/1500  running_seq_match=0.6042
+    greedy progress 1500/1500  running_seq_match=0.6047
+  top1_agree=0.906913 greedy_seq=0.604667 greedy_n=1500 ppl_rel=0.04920313008082933
+Converting current-scheme mode=full key=key-01 ...
+  conversion 24.5s
+    teacher-forced batch 75/750  running_agree=0.9079
+    teacher-forced batch 150/750  running_agree=0.9045
+    teacher-forced batch 225/750  running_agree=0.9058
+    teacher-forced batch 300/750  running_agree=0.9042
+    teacher-forced batch 375/750  running_agree=0.9053
+    teacher-forced batch 450/750  running_agree=0.9044
+    teacher-forced batch 525/750  running_agree=0.9047
+    teacher-forced batch 600/750  running_agree=0.9041
+    teacher-forced batch 675/750  running_agree=0.9042
+    teacher-forced batch 750/750  running_agree=0.9036
+    greedy progress 75/1500  running_seq_match=0.6933
+    greedy progress 150/1500  running_seq_match=0.6600
+    greedy progress 225/1500  running_seq_match=0.6533
+    greedy progress 300/1500  running_seq_match=0.6300
+    greedy progress 375/1500  running_seq_match=0.6373
+    greedy progress 450/1500  running_seq_match=0.6333
+    greedy progress 525/1500  running_seq_match=0.6343
+    greedy progress 600/1500  running_seq_match=0.6367
+    greedy progress 675/1500  running_seq_match=0.6356
+    greedy progress 750/1500  running_seq_match=0.6307
+    greedy progress 825/1500  running_seq_match=0.6291
+    greedy progress 900/1500  running_seq_match=0.6222
+    greedy progress 975/1500  running_seq_match=0.6236
+    greedy progress 1050/1500  running_seq_match=0.6219
+    greedy progress 1125/1500  running_seq_match=0.6267
+    greedy progress 1200/1500  running_seq_match=0.6267
+    greedy progress 1275/1500  running_seq_match=0.6314
+    greedy progress 1350/1500  running_seq_match=0.6341
+    greedy progress 1425/1500  running_seq_match=0.6365
+    greedy progress 1500/1500  running_seq_match=0.6393
+  top1_agree=0.903567 greedy_seq=0.639333 greedy_n=1500 ppl_rel=0.04971319006541819
+Converting current-scheme mode=full key=key-02 ...
+  conversion 25.0s
+    teacher-forced batch 75/750  running_agree=0.8743
+    teacher-forced batch 150/750  running_agree=0.8711
+    teacher-forced batch 225/750  running_agree=0.8726
+    teacher-forced batch 300/750  running_agree=0.8713
+    teacher-forced batch 375/750  running_agree=0.8725
+    teacher-forced batch 450/750  running_agree=0.8716
+    teacher-forced batch 525/750  running_agree=0.8718
+    teacher-forced batch 600/750  running_agree=0.8713
+    teacher-forced batch 675/750  running_agree=0.8714
+    teacher-forced batch 750/750  running_agree=0.8711
+    greedy progress 75/1500  running_seq_match=0.6933
+    greedy progress 150/1500  running_seq_match=0.6533
+    greedy progress 225/1500  running_seq_match=0.6311
+    greedy progress 300/1500  running_seq_match=0.6333
+    greedy progress 375/1500  running_seq_match=0.6480
+    greedy progress 450/1500  running_seq_match=0.6511
+    greedy progress 525/1500  running_seq_match=0.6648
+    greedy progress 600/1500  running_seq_match=0.6700
+    greedy progress 675/1500  running_seq_match=0.6622
+    greedy progress 750/1500  running_seq_match=0.6653
+    greedy progress 825/1500  running_seq_match=0.6618
+    greedy progress 900/1500  running_seq_match=0.6700
+    greedy progress 975/1500  running_seq_match=0.6667
+    greedy progress 1050/1500  running_seq_match=0.6629
+    greedy progress 1125/1500  running_seq_match=0.6569
+    greedy progress 1200/1500  running_seq_match=0.6550
+    greedy progress 1275/1500  running_seq_match=0.6565
+    greedy progress 1350/1500  running_seq_match=0.6511
+    greedy progress 1425/1500  running_seq_match=0.6505
+    greedy progress 1500/1500  running_seq_match=0.6500
+  top1_agree=0.871099 greedy_seq=0.65 greedy_n=1500 ppl_rel=0.07484665925156309
+
+=== Metric sources (do not confuse) ===
+ChainLinear FP32 unit max|err| = 8.9407e-07  (hard gate source)
+E2E logit max|err| (primary pair) = 15.5625  (diagnostic only)
+
+Gate                                      | Cat  | Status | Observed | Threshold
+------------------------------------------------------------------------------------------
+FP32 ChainLinear max abs error             | hard | PASS   | 8.9407e-07 | 0.0001
+Attention rank-flip rate                   | hard | PASS   | n/a | 0
+Attention top-1 match                      | hard | PASS   | n/a | 1
+Attention top-k overlap                    | hard | PASS   | n/a | 1
+MoE expert set match                       | hard | PASS   | n/a | 1
+Causal mask match                          | hard | PASS   | n/a | 1
+Cache vs no-cache identical                | hard | PASS   | n/a | 1
+LM Head inverse-permuted argmax            | hard | FAIL   | 0.906913 | 1
+Greedy release-validation sequences        | hard | FAIL   | 0.604667 | 1
+Accuracy drop ≤ 0.5 pp                     | soft | FAIL   | 0.749737 | 0.5
+PPL relative increase ≤ 1%                 | soft | FAIL   | 0.0492031 | 0.01
+------------------------------------------------------------------------------------------
+HARD: FAIL   SOFT: FAIL   ALL: FAIL
+Wrote /home/nss-d/yhr/code/fastProve/results/raw/llama_compare_large.json
+Wrote /home/nss-d/yhr/code/fastProve/results/raw/llama_compare_large.md

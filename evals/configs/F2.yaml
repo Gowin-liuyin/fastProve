@@ -1,0 +1,6 @@
+# Protocol §3.1 — F2: FP32 full chained noise
+condition_id: F2
+precision: fp32
+mode: full
+description: FP32 full chained noise (signal/noise decoupling check)
+stress: false

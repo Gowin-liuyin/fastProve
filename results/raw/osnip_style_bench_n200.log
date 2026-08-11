@@ -1,0 +1,181 @@
+Plaintext verification OK: ['tie_word_embeddings=true; lm_head shares embed_tokens', 'standard LlamaForCausalLM weight map; no legacy markers', 'NOT a legacy ModelSplit obfuscation artifact; safe as plaintext base']
+Loading plaintext Llama...
+Loaded in 1.0s
+=== Run plain ===
+  [arc_easy] n=200
+    arc_easy 50/200 acc=0.6000
+    arc_easy 100/200 acc=0.5500
+    arc_easy 150/200 acc=0.5400
+    arc_easy 200/200 acc=0.5350
+  [piqa] n=200
+    piqa 50/200 acc=0.4800
+    piqa 100/200 acc=0.4700
+    piqa 150/200 acc=0.4400
+    piqa 200/200 acc=0.4600
+  [mnli] n=200
+    mnli 50/200 acc=0.4200
+    mnli 100/200 acc=0.4700
+    mnli 150/200 acc=0.4800
+    mnli 200/200 acc=0.4800
+  [sst2] n=200
+    sst2 50/200 acc=0.9600
+    sst2 100/200 acc=0.9600
+    sst2 150/200 acc=0.9667
+    sst2 200/200 acc=0.9700
+  [anli_r1] n=200
+    anli_r1 50/200 acc=0.5000
+    anli_r1 100/200 acc=0.5400
+    anli_r1 150/200 acc=0.4933
+    anli_r1 200/200 acc=0.4750
+  [anli_r2] n=200
+    anli_r2 50/200 acc=0.4200
+    anli_r2 100/200 acc=0.4500
+    anli_r2 150/200 acc=0.4200
+    anli_r2 200/200 acc=0.3950
+  [anli_r3] n=200
+    anli_r3 50/200 acc=0.8000
+    anli_r3 100/200 acc=0.4000
+    anli_r3 150/200 acc=0.3667
+    anli_r3 200/200 acc=0.3500
+  [wic] n=200
+    wic 50/200 acc=0.5200
+    wic 100/200 acc=0.5200
+    wic 150/200 acc=0.4667
+    wic 200/200 acc=0.5050
+  [hellaswag] n=200
+    hellaswag 50/200 acc=0.4200
+    hellaswag 100/200 acc=0.4700
+    hellaswag 150/200 acc=0.4400
+    hellaswag 200/200 acc=0.4650
+  [mmlu] n=200
+    mmlu 50/200 acc=0.1600
+    mmlu 100/200 acc=0.2100
+    mmlu 150/200 acc=0.2733
+    mmlu 200/200 acc=0.2950
+  [wikitext2]
+    wikitext tokens_scored=511 running_ppl=8.344
+    wikitext tokens_scored=5611 running_ppl=15.043
+    wikitext tokens_scored=10711 running_ppl=13.156
+    wikitext tokens_scored=15811 running_ppl=11.554
+  avg_closed_ended=0.493
+=== Run structural/key-00 ===
+  structural: zeroed 255 noise-injection buffers
+  [arc_easy] n=200
+    arc_easy 50/200 acc=0.6000
+    arc_easy 100/200 acc=0.5500
+    arc_easy 150/200 acc=0.5333
+    arc_easy 200/200 acc=0.5300
+  [piqa] n=200
+    piqa 50/200 acc=0.4800
+    piqa 100/200 acc=0.4800
+    piqa 150/200 acc=0.4467
+    piqa 200/200 acc=0.4600
+  [mnli] n=200
+    mnli 50/200 acc=0.4400
+    mnli 100/200 acc=0.4900
+    mnli 150/200 acc=0.4867
+    mnli 200/200 acc=0.4850
+  [sst2] n=200
+    sst2 50/200 acc=0.9600
+    sst2 100/200 acc=0.9600
+    sst2 150/200 acc=0.9600
+    sst2 200/200 acc=0.9650
+  [anli_r1] n=200
+    anli_r1 50/200 acc=0.5000
+    anli_r1 100/200 acc=0.5400
+    anli_r1 150/200 acc=0.4933
+    anli_r1 200/200 acc=0.4800
+  [anli_r2] n=200
+    anli_r2 50/200 acc=0.4000
+    anli_r2 100/200 acc=0.4500
+    anli_r2 150/200 acc=0.4200
+    anli_r2 200/200 acc=0.4000
+  [anli_r3] n=200
+    anli_r3 50/200 acc=0.8000
+    anli_r3 100/200 acc=0.4000
+    anli_r3 150/200 acc=0.3667
+    anli_r3 200/200 acc=0.3500
+  [wic] n=200
+    wic 50/200 acc=0.5200
+    wic 100/200 acc=0.5200
+    wic 150/200 acc=0.4667
+    wic 200/200 acc=0.5050
+  [hellaswag] n=200
+    hellaswag 50/200 acc=0.4200
+    hellaswag 100/200 acc=0.4600
+    hellaswag 150/200 acc=0.4400
+    hellaswag 200/200 acc=0.4650
+  [mmlu] n=200
+    mmlu 50/200 acc=0.1400
+    mmlu 100/200 acc=0.2200
+    mmlu 150/200 acc=0.2800
+    mmlu 200/200 acc=0.2950
+  [wikitext2]
+    wikitext tokens_scored=511 running_ppl=8.375
+    wikitext tokens_scored=5611 running_ppl=15.071
+    wikitext tokens_scored=10711 running_ppl=13.180
+    wikitext tokens_scored=15811 running_ppl=11.568
+  avg_closed_ended=0.49349999999999994
+=== Run full/key-00 ===
+  [arc_easy] n=200
+    arc_easy 50/200 acc=0.5600
+    arc_easy 100/200 acc=0.5300
+    arc_easy 150/200 acc=0.5200
+    arc_easy 200/200 acc=0.5050
+  [piqa] n=200
+    piqa 50/200 acc=0.4800
+    piqa 100/200 acc=0.4800
+    piqa 150/200 acc=0.4400
+    piqa 200/200 acc=0.4600
+  [mnli] n=200
+    mnli 50/200 acc=0.4600
+    mnli 100/200 acc=0.5100
+    mnli 150/200 acc=0.5067
+    mnli 200/200 acc=0.4950
+  [sst2] n=200
+    sst2 50/200 acc=0.9600
+    sst2 100/200 acc=0.9500
+    sst2 150/200 acc=0.9533
+    sst2 200/200 acc=0.9500
+  [anli_r1] n=200
+    anli_r1 50/200 acc=0.4400
+    anli_r1 100/200 acc=0.4900
+    anli_r1 150/200 acc=0.4467
+    anli_r1 200/200 acc=0.4150
+  [anli_r2] n=200
+    anli_r2 50/200 acc=0.4200
+    anli_r2 100/200 acc=0.4000
+    anli_r2 150/200 acc=0.3733
+    anli_r2 200/200 acc=0.3550
+  [anli_r3] n=200
+    anli_r3 50/200 acc=0.8400
+    anli_r3 100/200 acc=0.4200
+    anli_r3 150/200 acc=0.3867
+    anli_r3 200/200 acc=0.3500
+  [wic] n=200
+    wic 50/200 acc=0.5200
+    wic 100/200 acc=0.5200
+    wic 150/200 acc=0.4667
+    wic 200/200 acc=0.5050
+  [hellaswag] n=200
+    hellaswag 50/200 acc=0.4200
+    hellaswag 100/200 acc=0.4500
+    hellaswag 150/200 acc=0.4333
+    hellaswag 200/200 acc=0.4550
+  [mmlu] n=200
+    mmlu 50/200 acc=0.1600
+    mmlu 100/200 acc=0.2500
+    mmlu 150/200 acc=0.3067
+    mmlu 200/200 acc=0.3150
+  [wikitext2]
+    wikitext tokens_scored=511 running_ppl=8.640
+    wikitext tokens_scored=5611 running_ppl=15.141
+    wikitext tokens_scored=10711 running_ppl=13.299
+    wikitext tokens_scored=15811 running_ppl=11.679
+  avg_closed_ended=0.4805
+
+=== Summary ===
+mode=plain key=None avg=0.4930 rp=100.00% ppl=11.592
+mode=structural key=key-00 avg=0.4935 rp=100.10% ppl=11.606
+mode=full key=key-00 avg=0.4805 rp=97.46% ppl=11.726
+Wrote /home/nss-d/yhr/code/fastProve/results/raw/osnip_style_bench_n200.json
