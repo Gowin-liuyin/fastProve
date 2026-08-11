@@ -67,7 +67,7 @@ def _require_math_layout(
             "weight was probably passed without transposing"
             % (name, weight.shape[0], rows)
         )
-    return weight.detach().to(dtype=_FP64)
+    return weight.detach().cpu().to(dtype=_FP64)
 
 
 @dataclass(frozen=True)
@@ -178,11 +178,11 @@ def build_deployed_attention(
     projection = basis.signal_projection()
     top = basis.signal_rows()
     bottom = basis.noise_rows()
-    gamma = gamma_attention.detach().to(dtype=_FP64)
-    coupling_v = value_signal_coupling.detach().to(dtype=_FP64)
-    coupling_o = signal_noise_coupling.detach().to(dtype=_FP64)
-    propagator = noise_propagator.detach().to(dtype=_FP64)
-    auxiliary = auxiliary_to_hidden.detach().to(dtype=_FP64)
+    gamma = gamma_attention.detach().cpu().to(dtype=_FP64)
+    coupling_v = value_signal_coupling.detach().cpu().to(dtype=_FP64)
+    coupling_o = signal_noise_coupling.detach().cpu().to(dtype=_FP64)
+    propagator = noise_propagator.detach().cpu().to(dtype=_FP64)
+    auxiliary = auxiliary_to_hidden.detach().cpu().to(dtype=_FP64)
 
     # ``P @ diag(gamma)`` == ``P * gamma[None, :]`` because P is [n, d].
     absorbed = projection * gamma[None, :]
@@ -228,17 +228,17 @@ def build_deployed_attention(
         if fixed_refresh.shape != (noise_dim,):
             raise ValueError("fixed_refresh shape must be [r]")
         refresh_out = torch.diag(
-            fixed_refresh.detach().to(dtype=_FP64)
+            fixed_refresh.detach().cpu().to(dtype=_FP64)
         ) @ bottom
 
     zero_q = torch.zeros(q_math.shape[1], dtype=_FP64)
     zero_k = torch.zeros(k_math.shape[1], dtype=_FP64)
-    bias_q = zero_q if q_bias is None else q_bias.detach().to(dtype=_FP64)
-    bias_k = zero_k if k_bias is None else k_bias.detach().to(dtype=_FP64)
+    bias_q = zero_q if q_bias is None else q_bias.detach().cpu().to(dtype=_FP64)
+    bias_k = zero_k if k_bias is None else k_bias.detach().cpu().to(dtype=_FP64)
     if v_bias is None:
         bias_v = torch.zeros(kv_heads, head_dim + value_noise, dtype=_FP64)
     else:
-        raw_v = v_bias.detach().to(dtype=_FP64)
+        raw_v = v_bias.detach().cpu().to(dtype=_FP64)
         bias_v = torch.stack(
             [
                 torch.cat(
@@ -323,12 +323,12 @@ def build_deployed_feed_forward(
     projection = basis.signal_projection()
     top = basis.signal_rows()
     bottom = basis.noise_rows()
-    gamma = gamma_ffn.detach().to(dtype=_FP64)
+    gamma = gamma_ffn.detach().cpu().to(dtype=_FP64)
     permutation = neuron_permutation.detach().cpu()
-    scale = neuron_scale.detach().to(dtype=_FP64)
-    coupling_z = swiglu_noise_coupling.detach().to(dtype=_FP64)
-    coupling_d = down_noise_coupling.detach().to(dtype=_FP64)
-    propagator = noise_propagator.detach().to(dtype=_FP64)
+    scale = neuron_scale.detach().cpu().to(dtype=_FP64)
+    coupling_z = swiglu_noise_coupling.detach().cpu().to(dtype=_FP64)
+    coupling_d = down_noise_coupling.detach().cpu().to(dtype=_FP64)
+    propagator = noise_propagator.detach().cpu().to(dtype=_FP64)
 
     absorbed = projection * gamma[None, :]
     deployed_gate = absorbed @ gate_math[:, permutation]
@@ -348,7 +348,7 @@ def build_deployed_feed_forward(
         if fixed_refresh.shape != (noise_dim,):
             raise ValueError("fixed_refresh shape must be [r]")
         refresh_out = torch.diag(
-            fixed_refresh.detach().to(dtype=_FP64)
+            fixed_refresh.detach().cpu().to(dtype=_FP64)
         ) @ bottom
 
     return DeployedFeedForwardWeights(

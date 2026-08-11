@@ -20,8 +20,12 @@ from ..layers.attention import (
     ObfuscatedAttention,
     safe_masked_softmax_fp32,
 )
+from ..layers.deployed import (
+    build_deployed_attention,
+    build_deployed_feed_forward,
+    validate_auxiliary_budget,
+)
 from ..layers.rmsnorm import (
-    absorbed_rms_projection,
     apply_qk_orthogonal_after_rope,
     apply_rope,
     rms_no_gamma_fp32,
@@ -172,6 +176,19 @@ def _cache_tensor_digest(*tensors: torch.Tensor) -> str:
         digest.update(str(tuple(value.shape)).encode("ascii"))
         digest.update(value.numpy().tobytes())
     return digest.hexdigest()
+
+
+def _make_rms_scale(basis: StructuredBasis):
+    """Capture a basis for the O(n*b) RMS scale outside persistent state.
+
+    Returns a callable ``(mixed, eps) -> [..., 1]`` in FP32. Only a scalar per
+    token is produced; the signal is never reconstructed.
+    """
+
+    def rms_scale(mixed: torch.Tensor, eps: float) -> torch.Tensor:
+        return basis.rms_scale(mixed, eps)
+
+    return rms_scale
 
 
 def _make_hidden_checkpoint(basis, *, signal_dimension: int):
@@ -346,12 +363,6 @@ class ObfuscatedDecoderBlock(nn.Module):
         hidden_noise = obfuscation.hidden_noise_dim
         value_noise = obfuscation.value_noise_dim_per_head
 
-        attention_rotation = generate_orthogonal(
-            hidden, seed=seed, domain="block-%d-attention-rms" % self.layer_id
-        )
-        ffn_rotation = generate_orthogonal(
-            hidden, seed=seed, domain="block-%d-ffn-rms" % self.layer_id
-        )
         common_qk = torch.stack(
             [
                 generate_orthogonal(
@@ -366,54 +377,25 @@ class ObfuscatedDecoderBlock(nn.Module):
         # ``common_qk`` is applied after RoPE and therefore cannot be absorbed
         # into a deployed weight; it stays a runtime tensor but is still key
         # material, so it is excluded from the checkpoint as well.
-        self.register_buffer(
-            "attention_rotation", attention_rotation, persistent=False
-        )
-        self.register_buffer("ffn_rotation", ffn_rotation, persistent=False)
         self.register_buffer("common_qk", common_qk, persistent=False)
 
-        gamma_attention = plain.attention_norm_weight.detach()
-        q_math = plain.q_proj.weight.detach().T.contiguous()
-        k_math = plain.k_proj.weight.detach().T.contiguous()
-        v_math = plain.v_proj.weight.detach().T.contiguous()
-        self.register_buffer(
-            "q_weight_math",
-            absorbed_rms_projection(
-                attention_rotation, gamma_attention, q_math
-            ),
-        )
-        self.register_buffer(
-            "k_weight_math",
-            absorbed_rms_projection(
-                attention_rotation, gamma_attention, k_math
-            ),
-        )
-        self.register_buffer(
-            "v_weight_math",
-            absorbed_rms_projection(
-                attention_rotation, gamma_attention, v_math
-            ),
-        )
         self.register_buffer(
             "q_bias",
             plain.q_proj.bias.detach().clone()
             if plain.q_proj.bias is not None
-            else torch.zeros(q_math.shape[1]),
+            else torch.zeros(plain.q_proj.weight.shape[0]),
         )
         self.register_buffer(
             "k_bias",
             plain.k_proj.bias.detach().clone()
             if plain.k_proj.bias is not None
-            else torch.zeros(k_math.shape[1]),
+            else torch.zeros(plain.k_proj.weight.shape[0]),
         )
         self.register_buffer(
             "v_bias",
             plain.v_proj.bias.detach().clone()
             if plain.v_proj.bias is not None
-            else torch.zeros(v_math.shape[1]),
-        )
-        self.register_buffer(
-            "o_weight_math", plain.o_proj.weight.detach().T.contiguous()
+            else torch.zeros(plain.v_proj.weight.shape[0]),
         )
 
         # Value bases always use a single dense orthogonal block: their own
@@ -431,10 +413,6 @@ class ObfuscatedDecoderBlock(nn.Module):
             )
             for head in range(kv_heads)
         )
-        (
-            self._fused_value_mix,
-            self._fused_value_unmix,
-        ) = _make_value_checkpoint(value_transforms)
         self.value_basis_fingerprints = tuple(
             item.fingerprint for item in value_transforms
         )
@@ -454,53 +432,14 @@ class ObfuscatedDecoderBlock(nn.Module):
                 ),
             )
         )
-        self.register_buffer(
-            "value_signal_coupling",
-            torch.stack(
-                [
-                    _random_matrix(
-                        hidden,
-                        value_noise,
-                        seed=seed,
-                        domain="block-%d-value-C-%d"
-                        % (self.layer_id, head),
-                        scale=0.03,
-                    )
-                    for head in range(kv_heads)
-                ]
-            ),
-            persistent=False,
+
+        # FFN RMS rotation: the FFN segment still uses the decoded reference
+        # form until task B3 fuses it into the deployed FFN weights, so the
+        # rotation survives here as a local buffer and is deleted there.
+        ffn_rotation = generate_orthogonal(
+            hidden, seed=seed, domain="block-%d-ffn-rms" % self.layer_id
         )
-        self.register_buffer(
-            "value_side_propagator",
-            torch.stack(
-                [
-                    _random_matrix(
-                        hidden_noise,
-                        value_noise,
-                        seed=seed,
-                        domain="block-%d-value-G-%d"
-                        % (self.layer_id, head),
-                        scale=0.08,
-                    )
-                    for head in range(kv_heads)
-                ]
-            ),
-            persistent=False,
-        )
-        self.register_buffer(
-            "value_fixed_refresh",
-            _random_matrix(
-                kv_heads,
-                value_noise,
-                seed=seed,
-                domain="block-%d-value-xi" % self.layer_id,
-                scale=0.02,
-            )
-            if obfuscation.refresh_mode == "fixed_debug"
-            else torch.zeros(kv_heads, value_noise),
-            persistent=False,
-        )
+        self.register_buffer("ffn_rotation", ffn_rotation, persistent=False)
 
         gamma_ffn = plain.ffn_norm_weight.detach()
         swiglu_transform = generate_swiglu_transform(
@@ -642,6 +581,115 @@ class ObfuscatedDecoderBlock(nn.Module):
             persistent=False,
         )
 
+        # -- deployed attention weights (offline fusion) ------------------
+        # Value noise coupling must be [n, Hkv, rh] to read directly from the
+        # mixed state; the legacy [d, Hkv, rh] form read from plaintext h.
+        value_signal_coupling = torch.stack(
+            [
+                _random_matrix(
+                    hidden_transform.total_dim,
+                    value_noise,
+                    seed=seed,
+                    domain="block-%d-value-C-%d" % (self.layer_id, head),
+                    scale=0.03,
+                )
+                for head in range(kv_heads)
+            ],
+            dim=1,
+        )
+        validate_auxiliary_budget(
+            basis=hidden_transform,
+            sample_signal=torch.randn(
+                64, hidden, generator=make_generator(seed, "budget-probe")
+            ),
+            signal_noise_coupling=self.attention_noise_coupling,
+            noise_propagator=self.attention_noise_propagator,
+            context="block-%d-attention" % self.layer_id,
+        )
+        deployed_attention = build_deployed_attention(
+            basis=hidden_transform,
+            value_bases=value_transforms,
+            gamma_attention=plain.attention_norm_weight.detach(),
+            q_weight_math=plain.q_proj.weight.detach().T.contiguous(),
+            k_weight_math=plain.k_proj.weight.detach().T.contiguous(),
+            v_weight_math=plain.v_proj.weight.detach().T.contiguous(),
+            o_weight_math=plain.o_proj.weight.detach().T.contiguous(),
+            q_bias=(
+                plain.q_proj.bias.detach()
+                if plain.q_proj.bias is not None
+                else None
+            ),
+            k_bias=(
+                plain.k_proj.bias.detach()
+                if plain.k_proj.bias is not None
+                else None
+            ),
+            v_bias=(
+                plain.v_proj.bias.detach()
+                if plain.v_proj.bias is not None
+                else None
+            ),
+            value_signal_coupling=value_signal_coupling,
+            signal_noise_coupling=self.attention_noise_coupling,
+            noise_propagator=self.attention_noise_propagator,
+            auxiliary_to_hidden=self.attention_aux_to_hidden,
+            fixed_refresh=(
+                self.attention_fixed_refresh if fixed else None
+            ),
+            kv_index=plain.kv_index.detach(),
+            head_dim=head_dim,
+        )
+        # Server-side deployed weights: persistent by design (B1.3 documents
+        # that ``deployed_attn_noise_out`` and ``noise_read`` jointly leak the
+        # noise state ``e`` up to an invertible r x r map; this is recorded in
+        # docs/threat_model.md and is not fixable in this design).
+        self.register_buffer(
+            "deployed_q", deployed_attention.query, persistent=True
+        )
+        self.register_buffer(
+            "deployed_k", deployed_attention.key, persistent=True
+        )
+        self.register_buffer(
+            "deployed_v", deployed_attention.value, persistent=True
+        )
+        self.register_buffer(
+            "deployed_q_bias", deployed_attention.query_bias, persistent=True
+        )
+        self.register_buffer(
+            "deployed_k_bias", deployed_attention.key_bias, persistent=True
+        )
+        self.register_buffer(
+            "deployed_v_bias", deployed_attention.value_bias, persistent=True
+        )
+        self.register_buffer(
+            "deployed_attn_out", deployed_attention.output, persistent=True
+        )
+        self.register_buffer(
+            "deployed_attn_noise_out",
+            deployed_attention.noise_out,
+            persistent=True,
+        )
+        self.register_buffer(
+            "deployed_attn_refresh_out",
+            deployed_attention.refresh_out,
+            persistent=True,
+        )
+        # N must be online for the (c @ N) @ Wnz residual terms. B1.3 records
+        # the recoverability consequence of shipping it.
+        self.register_buffer(
+            "noise_read",
+            hidden_transform.noise_projection().to(dtype=torch.float32),
+            persistent=True,
+        )
+        self.register_buffer(
+            "_noise_rows",
+            hidden_transform.noise_rows().to(dtype=torch.float32),
+            persistent=True,
+        )
+        # rho is a scalar per token; the basis factors stay in the closure and
+        # out of state_dict, matching the existing checkpoint convention.
+        self._rms_scale = _make_rms_scale(hidden_transform)
+
         self.attention = ObfuscatedAttention(
             mode=self.mode,
             approximation=approximation,
@@ -722,22 +770,59 @@ class ObfuscatedDecoderBlock(nn.Module):
     ) -> MixedState:
         return self._fused_checkpoint_mix(signal, noise)
 
-    def _mask(
-        self, hidden: torch.Tensor, token_mask: Optional[torch.Tensor]
+    def _mask_from_mixed(
+        self, mixed: torch.Tensor, token_mask: Optional[torch.Tensor]
     ) -> torch.Tensor:
+        """Return a boolean [batch, sequence] validity mask."""
+
         if token_mask is None:
             return torch.ones(
-                hidden.shape[0],
-                hidden.shape[1],
+                mixed.shape[0],
+                mixed.shape[1],
                 dtype=torch.bool,
-                device=hidden.device,
+                device=mixed.device,
             )
         if (
-            token_mask.shape != hidden.shape[:2]
+            token_mask.shape != mixed.shape[:2]
             or token_mask.dtype != torch.bool
         ):
             raise ValueError("token_mask must be boolean [batch, sequence]")
-        return token_mask.to(device=hidden.device)
+        return token_mask.to(device=mixed.device)
+
+    def _refresh_out(
+        self,
+        fixed_out: torch.Tensor,
+        context: RequestContext,
+        domain: str,
+        reference: torch.Tensor,
+    ) -> torch.Tensor:
+        """Return the mixed-basis increment contributed by the noise refresh.
+
+        ``fixed_debug`` uses the pre-absorbed ``diag(xi) @ M_bot`` rows summed
+        to a single ``[n]`` vector. ``per_request`` samples ``xi`` from the
+        request-scoped generator and maps it through the same rows.
+        """
+
+        if not self.noise_injection_enabled:
+            return torch.zeros(
+                fixed_out.shape[-1],
+                device=reference.device,
+                dtype=reference.dtype,
+            )
+        if self.obfuscation.refresh_mode == "fixed_debug":
+            return fixed_out.sum(dim=0)
+        generator = context.generator_for(
+            "block", self.layer_id, domain, "refresh"
+        )
+        sampled = torch.randn(
+            self.obfuscation.hidden_noise_dim,
+            generator=generator,
+            dtype=torch.float32,
+        ) * (0.02 * self.refresh_noise_scale)
+        rows = self._noise_rows.to(
+            device=reference.device, dtype=reference.dtype
+        )
+        return sampled.to(device=reference.device, dtype=reference.dtype) @ rows
 
     def _run(
         self,
@@ -754,52 +839,46 @@ class ObfuscatedDecoderBlock(nn.Module):
         Optional[ObfuscatedBlockDebug],
         Optional[ObfuscatedKVCache],
     ]:
-        hidden, side_noise = self._unmix_checkpoint(state)
-        batch, sequence, _ = hidden.shape
+        # No decode: the signal is never reconstructed on this path.
+        mixed = state.mixed
+        batch, sequence, _ = mixed.shape
         if positions is None:
-            positions = torch.arange(sequence, device=hidden.device)
+            positions = torch.arange(sequence, device=mixed.device)
         elif positions.shape != (sequence,):
             raise ValueError("positions must have shape [sequence]")
-        positions = positions.to(device=hidden.device, dtype=torch.long)
+        positions = positions.to(device=mixed.device, dtype=torch.long)
         if torch.any(positions < 0) or torch.any(
             positions >= self.config.max_sequence_length
         ):
             raise ValueError("position is outside configured context")
-        valid_tokens = self._mask(hidden, token_mask)
+        valid_tokens = self._mask_from_mixed(mixed, token_mask)
 
-        rotated_hidden = hidden @ self.attention_rotation.to(
-            device=hidden.device, dtype=hidden.dtype
+        def cast(name: str) -> torch.Tensor:
+            tensor = getattr(self, name)
+            return tensor.to(device=mixed.device, dtype=mixed.dtype)
+
+        # rho carries the RMSNorm statistic; FP32 reduction per AGENTS.md.
+        scale = self._rms_scale(mixed, self.config.rms_epsilon).to(
+            device=mixed.device, dtype=mixed.dtype
         )
-        normalized_rotated = rms_no_gamma_fp32(
-            rotated_hidden, self.config.rms_epsilon
-        )
-        q = normalized_rotated @ self.q_weight_math.to(
-            device=hidden.device, dtype=hidden.dtype
-        ) + self.q_bias.to(device=hidden.device, dtype=hidden.dtype)
-        k = normalized_rotated @ self.k_weight_math.to(
-            device=hidden.device, dtype=hidden.dtype
-        ) + self.k_bias.to(device=hidden.device, dtype=hidden.dtype)
-        v = normalized_rotated @ self.v_weight_math.to(
-            device=hidden.device, dtype=hidden.dtype
-        ) + self.v_bias.to(device=hidden.device, dtype=hidden.dtype)
-        q = q.view(
+        q_flat = (mixed @ cast("deployed_q")) / scale + cast("deployed_q_bias")
+        k_flat = (mixed @ cast("deployed_k")) / scale + cast("deployed_k_bias")
+        q = q_flat.view(
             batch,
             sequence,
             self.config.num_attention_heads,
             self.config.head_dim,
         ).transpose(1, 2)
-        k = k.view(
+        k = k_flat.view(
             batch,
             sequence,
             self.config.num_key_value_heads,
             self.config.head_dim,
         ).transpose(1, 2)
-        v = v.view(
-            batch,
-            sequence,
-            self.config.num_key_value_heads,
-            self.config.head_dim,
-        ).transpose(1, 2)
+        current_value_mixed = torch.einsum(
+            "btn,hne->bhte", mixed, cast("deployed_v")
+        ) / scale.unsqueeze(1) + cast("deployed_v_bias")[None, :, None, :]
+
         q_rope = apply_rope(q, positions, theta=self.config.rope_theta)
         k_rope = apply_rope(k, positions, theta=self.config.rope_theta)
         q_prime, k_prime = apply_qk_orthogonal_after_rope(
@@ -807,25 +886,6 @@ class ObfuscatedDecoderBlock(nn.Module):
             k_rope,
             self.common_qk,
             self.kv_index,
-        )
-
-        value_noise = torch.einsum(
-            "btd,hdr->bhtr",
-            hidden.float(),
-            self.value_signal_coupling.float(),
-        ) + torch.einsum(
-            "btr,hrv->bhtv",
-            side_noise.float(),
-            self.value_side_propagator.float(),
-        )
-        value_noise = value_noise + self._refresh(
-            self.value_fixed_refresh,
-            request_context,
-            "value",
-        )[None, :, None, :]
-        value_augmented = torch.cat((v.float(), value_noise), dim=-1)
-        current_value_mixed = self._fused_value_mix(value_augmented).to(
-            dtype=hidden.dtype
         )
         if cache is None:
             key = k_prime
@@ -864,8 +924,8 @@ class ObfuscatedDecoderBlock(nn.Module):
             if (
                 cache.key.dtype != k_prime.dtype
                 or cache.value_mixed.dtype != current_value_mixed.dtype
-                or cache.key.device != hidden.device
-                or cache.value_mixed.device != hidden.device
+                or cache.key.device != mixed.device
+                or cache.value_mixed.device != mixed.device
             ):
                 raise ValueError("cache dtype/device mismatch")
             cached_length = cache.key.shape[2]
@@ -874,8 +934,8 @@ class ObfuscatedDecoderBlock(nn.Module):
                 or cache.key_valid.dtype != torch.bool
                 or cache.positions.shape != (cached_length,)
                 or cache.positions.dtype != torch.long
-                or cache.key_valid.device != hidden.device
-                or cache.positions.device != hidden.device
+                or cache.key_valid.device != mixed.device
+                or cache.positions.device != mixed.device
             ):
                 raise ValueError("cache mask/position shape mismatch")
             key = torch.cat((cache.key, k_prime), dim=2)
@@ -883,10 +943,10 @@ class ObfuscatedDecoderBlock(nn.Module):
                 (cache.value_mixed, current_value_mixed), dim=2
             )
             key_valid = torch.cat(
-                (cache.key_valid.to(hidden.device), valid_tokens), dim=1
+                (cache.key_valid.to(mixed.device), valid_tokens), dim=1
             )
             key_positions = torch.cat(
-                (cache.positions.to(hidden.device), positions), dim=0
+                (cache.positions.to(mixed.device), positions), dim=0
             )
         new_cache = (
             ObfuscatedKVCache(
@@ -931,69 +991,39 @@ class ObfuscatedDecoderBlock(nn.Module):
                 key_positions=key_positions,
             )
             attention_debug = None
-        context_augmented = self._fused_value_unmix(
-            mixed_context, self.kv_index
-        )
-        context_signal = context_augmented[
-            ..., : self.config.head_dim
-        ]
-        context_auxiliary = context_augmented[
-            ..., self.config.head_dim :
-        ]
-        context_flat = context_signal.transpose(1, 2).reshape(
-            batch, sequence, self.config.hidden_size
-        )
-        attention_output = context_flat @ self.o_weight_math.to(
-            device=hidden.device, dtype=hidden.dtype
-        )
-        clean_attention_output = None
-        if attention_debug is not None:
-            clean_context_augmented = self._fused_value_unmix(
-                attention_debug.clean_output, self.kv_index
+        # The mixed context is consumed directly: no Value unmix, and the clean
+        # attention context O is never materialized.
+        post_attention_mixed = (
+            mixed
+            + torch.einsum(
+                "bhqd,hdn->bqn", mixed_context, cast("deployed_attn_out")
             )
-            clean_context_signal = clean_context_augmented[
-                ..., : self.config.head_dim
-            ]
-            clean_context_flat = clean_context_signal.transpose(1, 2).reshape(
-                batch, sequence, self.config.hidden_size
-            )
-            clean_attention_output = (
-                clean_context_flat
-                @ self.o_weight_math.to(
-                    device=hidden.device, dtype=hidden.dtype
-                )
-            )
-        post_attention_signal = hidden + attention_output
-        auxiliary_mean = context_auxiliary.mean(dim=1)
-        attention_noise = (
-            side_noise.float() @ self.attention_noise_propagator.float()
-            + attention_output.float()
-            @ self.attention_noise_coupling.float()
-            + auxiliary_mean.float() @ self.attention_aux_to_hidden.float()
-            + self._refresh(
-                self.attention_fixed_refresh,
+            + (mixed @ cast("noise_read")) @ cast("deployed_attn_noise_out")
+            + self._refresh_out(
+                cast("deployed_attn_refresh_out"),
                 request_context,
                 "attention",
+                mixed,
             )
-        ).to(dtype=hidden.dtype)
-        post_attention_state = self._mix_checkpoint(
-            post_attention_signal, attention_noise
+        )
+        post_attention_state = MixedState(
+            post_attention_mixed, self.hidden_basis
         )
 
         ffn_signal, ffn_side_noise = self._unmix_checkpoint(
             post_attention_state
         )
         ffn_rotated = ffn_signal @ self.ffn_rotation.to(
-            device=hidden.device, dtype=hidden.dtype
+            device=ffn_signal.device, dtype=ffn_signal.dtype
         )
         ffn_normalized = rms_no_gamma_fp32(
             ffn_rotated, self.config.rms_epsilon
         )
         gate_prime = ffn_normalized @ self.gate_weight_math.to(
-            device=hidden.device, dtype=hidden.dtype
+            device=ffn_signal.device, dtype=ffn_signal.dtype
         )
         up_prime = ffn_normalized @ self.up_weight_math.to(
-            device=hidden.device, dtype=hidden.dtype
+            device=ffn_signal.device, dtype=ffn_signal.dtype
         )
         z_prime = F.silu(gate_prime) * up_prime
         swiglu_noise = refresh_swiglu_noise(
@@ -1006,9 +1036,9 @@ class ObfuscatedDecoderBlock(nn.Module):
                 request_context,
                 "swiglu",
             ).float(),
-        ).to(dtype=hidden.dtype)
+        ).to(dtype=ffn_signal.dtype)
         down_signal = z_prime @ self.down_weight_math.to(
-            device=hidden.device, dtype=hidden.dtype
+            device=ffn_signal.device, dtype=ffn_signal.dtype
         )
         down_noise = (
             down_signal.float() @ self.down_noise_coupling.float()
@@ -1016,7 +1046,7 @@ class ObfuscatedDecoderBlock(nn.Module):
             + self._refresh(
                 self.down_fixed_refresh, request_context, "down"
             ).float()
-        ).to(dtype=hidden.dtype)
+        ).to(dtype=ffn_signal.dtype)
         final_signal = ffn_signal + down_signal
         final_noise = ffn_side_noise + down_noise
         final_state = self._mix_checkpoint(final_signal, final_noise)
@@ -1024,7 +1054,22 @@ class ObfuscatedDecoderBlock(nn.Module):
         if not return_debug:
             return final_state, None, new_cache
         assert attention_debug is not None
-        assert clean_attention_output is not None
+        # Debug path only: explicit decode for diagnostics. Never reachable
+        # from forward(); gated by debug_enabled in forward_debug().
+        hidden, _ = self._fused_checkpoint_unmix(state)
+        post_attention_signal, attention_noise = self._fused_checkpoint_unmix(
+            post_attention_state
+        )
+        _, final_noise = self._fused_checkpoint_unmix(final_state)
+        attention_output = post_attention_signal - hidden
+        clean_update = torch.einsum(
+            "bhqd,hdn->bqn",
+            attention_debug.clean_output.float(),
+            cast("deployed_attn_out"),
+        )
+        clean_attention_output, _ = self._fused_checkpoint_unmix(
+            MixedState(clean_update, self.hidden_basis)
+        )
         repeated_k_plain = k_rope[:, self.kv_index]
         plain_scores = torch.einsum(
             "bhqd,bhkd->bhqk", q_rope.float(), repeated_k_plain.float()

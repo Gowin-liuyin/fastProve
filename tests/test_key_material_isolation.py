@@ -56,8 +56,25 @@ def _converted():
     ).module
 
 
+def _is_deployed_artifact(key: str) -> bool:
+    """Deployed weights are the shipped server artifact, not raw key material.
+
+    ``deployed_*`` weights are produced by the offline fusion
+    (``layers/deployed.py``); they deliberately contain the ``(G-I) M_bot``
+    and ``N`` factors whose recoverability consequence is recorded in
+    ``docs/threat_model.md`` (B1.3). They must ship, so the raw-key-material
+    substring check below skips them.
+    """
+
+    return key.rsplit(".", 1)[-1].startswith("deployed_")
+
+
 def test_state_dict_excludes_key_material() -> None:
-    keys = list(_converted().state_dict().keys())
+    keys = [
+        key
+        for key in _converted().state_dict().keys()
+        if not _is_deployed_artifact(key)
+    ]
     offending = [
         key
         for key in keys
