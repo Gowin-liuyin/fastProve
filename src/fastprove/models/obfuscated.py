@@ -1140,20 +1140,22 @@ class ObfuscatedTinyCausalLM(nn.Module):
         self.register_buffer(
             "embedding_weight", plain.embedding.weight.detach().clone()
         )
+        # P @ diag(gamma_final) @ W_head^T, in math layout [n, V]. This is a
+        # separate matrix from the tied embedding table, which roughly doubles
+        # the vocabulary-side peak memory (task D2 records the measurement;
+        # the fused-norm-head alternative needs a fused kernel, stage E).
+        projection = hidden_transform.signal_projection()
+        deployed_head = (
+            projection
+            * plain.final_norm_weight.detach().cpu().to(torch.float64)[None, :]
+        ) @ plain.lm_head.weight.detach().cpu().T.contiguous().to(torch.float64)
         self.register_buffer(
-            "final_norm_weight",
-            plain.final_norm_weight.detach().clone(),
+            "deployed_head",
+            deployed_head.to(dtype=torch.float32),
+            persistent=True,
         )
-        self.register_buffer(
-            "lm_head_weight", plain.lm_head.weight.detach().clone()
-        )
-        (
-            self._fused_checkpoint_mix,
-            self._fused_checkpoint_unmix,
-        ) = _make_hidden_checkpoint(
-            hidden_transform,
-            signal_dimension=self.config.hidden_size,
-        )
+        self._basis_mix = lambda augmented: hidden_transform.mix(augmented)
+        self._rms_scale = _make_rms_scale(hidden_transform)
         self.register_buffer(
             "initial_noise_coupling",
             _random_matrix(
@@ -1310,7 +1312,12 @@ class ObfuscatedTinyCausalLM(nn.Module):
             embedding.float() @ self.initial_noise_coupling.float()
             + self._initial_refresh(request_context)
         ).to(dtype=embedding.dtype)
-        state = self._fused_checkpoint_mix(embedding, initial_noise)
+        # Stage C replaces this with a pre-mixed vocabulary so the plaintext
+        # embedding is never materialized. See task C2.
+        state = MixedState(
+            self._basis_mix(torch.cat((embedding, initial_noise), dim=-1)),
+            self.hidden_basis,
+        )
         debug_records = []
         new_layer_caches = []
         for layer_index, block in enumerate(self.blocks):
@@ -1341,13 +1348,15 @@ class ObfuscatedTinyCausalLM(nn.Module):
                 else:
                     assert isinstance(block_result, MixedState)
                     state = block_result
-        final_signal, _ = self._fused_checkpoint_unmix(state)
-        normalized = rms_norm_fp32(
-            final_signal,
-            self.final_norm_weight,
-            self.config.rms_epsilon,
+        # Final norm + head without decoding: rho from the blockwise Gram, and
+        # P diag(gamma_final) folded into the head.
+        scale = self._rms_scale(state.mixed, self.config.rms_epsilon).to(
+            device=state.mixed.device, dtype=state.mixed.dtype
         )
-        logits = F.linear(normalized, self.lm_head_weight)
+        head = self.deployed_head.to(
+            device=state.mixed.device, dtype=state.mixed.dtype
+        )
+        logits = (state.mixed @ head) / scale
         new_cache = (
             ObfuscatedLMCache(tuple(new_layer_caches))
             if use_cache

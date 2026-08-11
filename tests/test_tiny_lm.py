@@ -113,11 +113,25 @@ def test_tiny_models_use_identical_base_weights() -> None:
     torch.testing.assert_close(
         converted.module.embedding_weight, plain.embedding.weight
     )
-    torch.testing.assert_close(
-        converted.module.final_norm_weight, plain.final_norm_weight
+    # The final norm and LM head are fused into deployed_head ([n, V]) by the
+    # offline conversion; their plaintext buffers are no longer shipped.
+    assert not hasattr(converted.module, "final_norm_weight")
+    assert not hasattr(converted.module, "lm_head_weight")
+    expected_head = (
+        plain.final_norm_weight.detach().to(torch.float64)[:, None]
+        * plain.lm_head.weight.detach().T.contiguous().to(torch.float64)
     )
+    projection = converted.client._transform.signal_projection()
+    total = (
+        converted.module.config.hidden_size
+        + converted.module.obfuscation.hidden_noise_dim
+    )
+    assert projection.shape == (total, converted.module.config.hidden_size)
     torch.testing.assert_close(
-        converted.module.lm_head_weight, plain.lm_head.weight
+        converted.module.deployed_head,
+        (projection @ expected_head).to(dtype=torch.float32),
+        atol=1e-6,
+        rtol=1e-6,
     )
 
 
