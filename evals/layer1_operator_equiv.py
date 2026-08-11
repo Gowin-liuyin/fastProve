@@ -18,7 +18,7 @@ import torch.nn.functional as F
 from fastprove.layers.linear import ChainLinear
 from fastprove.layers.rmsnorm import rms_norm_fp32
 from fastprove.seed import make_generator
-from fastprove.state import encode_debug
+from fastprove.state import MixedState, encode_debug
 from fastprove.transforms import generate_transform
 
 from .metrics_common import infinity_and_relative
@@ -152,8 +152,11 @@ def run_layer1(
             else torch.zeros_like(obf.initial_fixed_refresh)
         )
     ).to(dtype=obf_emb.dtype)
-    mixed0 = obf._fused_checkpoint_mix(obf_emb, initial_noise)
-    hat_emb, _ = obf._fused_checkpoint_unmix(mixed0)
+    mixed0 = MixedState(
+        obf._basis_mix(torch.cat((obf_emb, initial_noise), dim=-1)),
+        obf.hidden_basis,
+    )
+    hat_emb, _ = client.decode_debug(mixed0)
     modules["embedding"] = infinity_and_relative(
         cast_activations(plain_emb, torch.float32),
         cast_activations(hat_emb, torch.float32),

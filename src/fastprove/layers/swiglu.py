@@ -79,6 +79,10 @@ def convert_swiglu_weights(
     ``Wg' = R.T Gamma Wg P``,
     ``Wu' = R.T Gamma Wu D P``, and
     ``Wd' = P.T D^-1 Wd``.
+
+    Reference form. The deployed forward path fuses this transformation into
+    ``layers/deployed.py`` (``build_deployed_feed_forward``); this function
+    remains the documented general case.
     """
 
     if hidden_rotation.ndim != 2 or (
@@ -128,7 +132,11 @@ def refresh_swiglu_noise(
     propagator: torch.Tensor,
     refresh: torch.Tensor,
 ) -> torch.Tensor:
-    """Compute ``e_z = z' C_z + e_side G_z + xi_z``."""
+    """Compute ``e_z = z' C_z + e_side G_z + xi_z``.
+
+    Reference form. The deployed forward path fuses the noise refresh into
+    ``layers/deployed.py``; this function remains the documented general case.
+    """
 
     if z_prime.shape[:-1] != side_noise.shape[:-1]:
         raise ValueError("signal and side-noise leading shapes must match")

@@ -38,7 +38,12 @@ def absorbed_rms_projection(
     gamma: torch.Tensor,
     weight_math: torch.Tensor,
 ) -> torch.Tensor:
-    """Return ``R.T @ diag(gamma) @ W`` in row-vector layout."""
+    """Return ``R.T @ diag(gamma) @ W`` in row-vector layout.
+
+    Reference form. The deployed forward path fuses this transformation into
+    ``layers/deployed.py``; this function remains the documented general case
+    and is exercised by ``tests/test_deployed_matches_chain_linear.py``.
+    """
 
     if rotation.ndim != 2 or rotation.shape[0] != rotation.shape[1]:
         raise ValueError("rotation must be square")
