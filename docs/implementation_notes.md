@@ -420,3 +420,34 @@ warning (about 17.1 GB conservative FP32 working set) remains authoritative;
 use batch size 1 and an isolated calibration attempt, or move to a larger-memory
 CUDA host. No formal pretrained run has been started in this implementation
 pass.
+
+## 阶段 B：开销实测与热点（任务 B7，2026-08-11）
+
+`scripts/measure_overhead.py`（eager 参考实现，非融合 kernel）实测
+（d=512/1024/2048，4 层，CPU FP32，seq=128，8 个 decode token，5 次取 min）：
+
+| hidden_size | prefill overhead | decode overhead |
+|---:|---:|---:|
+| 512 | +54.7% | +58.5% |
+| 1024 | +30.7% | +50.9% |
+| 2048 | +46.1% | +46.6% |
+
+全部记录带 `"implementation": "eager reference, not a fused kernel"`，
+原始文件 `results/raw/overhead_B7_d*.json`。相比阶段 A 开始时（+150.3%）
+明显下降；这仍是参考实现，与手册 §69 的 ≤5% 融合 kernel 目标无关。
+
+eager overhead 仍 >30%，按要求定位了热点（torch.profiler，d=1024，
+CPU，prefill，self CPU time，共 29.2ms）：
+
+| 排名 | 算子 | self CPU 占比 | 说明 |
+|---|---|---|---|
+| 1 | aten::mm | 35.2% | 部署权重 GEMM（q/k/v/attn_out/gate/up/ffn_out/head/embedding） |
+| 2 | aten::bmm | 15.5% | attention 分数与概率×value |
+| 3 | aten::copy_ | 7.0% | 布局转换与 cat（cache/value/去重） |
+| 4 | aten::select | 4.5% | view/拆分算子 |
+| 5 | aten::index | 4.1% | RoPE 与基的 gather |
+
+其余（add/div/einsum/mul/silu 等）各 ≤3.4%。einsum 的 total 占比 32.3%
+（内部派发到 mm/bmm）。结论：额外开销来自部署路径新增的少量 GEMM
+（`(c@N)@Wnz`、`rho` Gram 归约）与 attention 的 value einsum；算术预算
+表（文档 §2.3）显示融合 kernel 下增量约 +1.8%，参考实现达不到该数。

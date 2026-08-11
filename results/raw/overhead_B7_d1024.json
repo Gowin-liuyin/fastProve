@@ -1,0 +1,31 @@
+{
+  "implementation": "eager reference, not a fused kernel",
+  "torch_version": "2.11.0",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "threads": 4,
+  "device": "cpu",
+  "activation_dtype": "float32",
+  "model": {
+    "hidden_size": 1024,
+    "intermediate_size": 2752,
+    "num_layers": 4,
+    "num_attention_heads": 16,
+    "num_key_value_heads": 4,
+    "sequence_length": 128,
+    "decode_tokens": 8
+  },
+  "obfuscation": {
+    "hidden_noise_dim": 16,
+    "value_noise_dim_per_head": 2,
+    "basis_block_size": 16
+  },
+  "conversion_seconds": 0.5780902499973308,
+  "prefill_plaintext_seconds": 0.020585417005349882,
+  "prefill_obfuscated_seconds": 0.026899459000560455,
+  "prefill_overhead_fraction": 0.3067240267015061,
+  "decode_plaintext_seconds": 0.05305733299610438,
+  "decode_obfuscated_seconds": 0.08007250000082422,
+  "decode_overhead_fraction": 0.5091693358711298,
+  "decode_plaintext_tpot_seconds": 0.006632166624513047,
+  "decode_obfuscated_tpot_seconds": 0.010009062500103028
+}
