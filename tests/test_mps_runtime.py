@@ -32,6 +32,7 @@ def test_exact_checkpoint_uses_mps_supported_runtime_dtype() -> None:
         max_condition_number=10.0,
         noise_propagation_gamma=0.5,
         refresh_mode="per_request",
+        basis_block_size=8,
     )
     plain = PlainTinyCausalLM(config, seed=901, debug_enabled=True).to(
         device="mps", dtype=torch.float32

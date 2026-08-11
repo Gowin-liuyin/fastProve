@@ -61,6 +61,7 @@ def test_current_scheme_conversion_pair_no_legacy_arm() -> None:
         max_condition_number=10.0,
         noise_propagation_gamma=0.5,
         refresh_mode="fixed_debug",
+        basis_block_size=12,
     )
     compare = _load_compare_module()
     records = []
@@ -142,6 +143,7 @@ def test_greedy_unpadded_evaluates_all_rows_and_strips_pad() -> None:
             max_condition_number=10.0,
             noise_propagation_gamma=0.5,
             refresh_mode="fixed_debug",
+            basis_block_size=12,
         ),
         mode=AttentionMode.EXACT,
         approximation=None,
@@ -197,6 +199,7 @@ def test_run_pair_reports_e2e_logit_separate_from_chainlinear_unit() -> None:
             max_condition_number=10.0,
             noise_propagation_gamma=0.5,
             refresh_mode="fixed_debug",
+            basis_block_size=12,
         ),
         mode=AttentionMode.EXACT,
         approximation=None,

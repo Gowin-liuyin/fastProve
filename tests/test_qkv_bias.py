@@ -27,6 +27,7 @@ def test_qwen_style_qkv_bias_exact_path_matches_plaintext():
             max_condition_number=10.0,
             noise_propagation_gamma=0.5,
             refresh_mode="fixed_debug",
+            basis_block_size=10,
         ),
         mode=AttentionMode.EXACT,
         approximation=None,

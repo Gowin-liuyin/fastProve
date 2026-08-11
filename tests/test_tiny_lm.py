@@ -31,6 +31,7 @@ def _obfuscation() -> ObfuscationConfig:
         max_condition_number=10.0,
         noise_propagation_gamma=0.5,
         refresh_mode="per_request",
+        basis_block_size=8,
     )
 
 

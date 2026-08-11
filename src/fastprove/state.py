@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Protocol, Tuple
 
 import torch
 
-from .transforms import BasisDescriptor, BasisTransform
+from .transforms import BasisDescriptor
 
 
 @dataclass(frozen=True)
@@ -51,10 +51,22 @@ def _require_debug(enabled: bool) -> None:
         raise PermissionError("debug encode/decode is disabled")
 
 
+class _MixingBasis(Protocol):
+    """Structural protocol shared by BasisTransform and StructuredBasis."""
+
+    signal_dim: int
+    noise_dim: int
+
+    @property
+    def descriptor(self) -> BasisDescriptor: ...
+
+    def validate_integrity(self) -> None: ...
+
+
 def encode_debug(
     signal: torch.Tensor,
     noise: torch.Tensor,
-    transform: BasisTransform,
+    transform: _MixingBasis,
     *,
     enabled: bool,
 ) -> MixedState:
@@ -76,13 +88,17 @@ def encode_debug(
         raise ValueError("signal and noise dtypes must match")
     if not signal.is_floating_point() or not noise.is_floating_point():
         raise ValueError("signal and noise must use a floating dtype")
-    matrix = transform.matrix.to(device=signal.device, dtype=signal.dtype)
     augmented = torch.cat((signal, noise), dim=-1)
-    return MixedState(augmented @ matrix, transform.descriptor)
+    if hasattr(transform, "mix"):
+        mixed = transform.mix(augmented)
+    else:
+        matrix = transform.matrix.to(device=signal.device, dtype=signal.dtype)
+        mixed = augmented @ matrix
+    return MixedState(mixed, transform.descriptor)
 
 
 def decode_debug(
-    state: MixedState, transform: BasisTransform, *, enabled: bool
+    state: MixedState, transform: _MixingBasis, *, enabled: bool
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Decode a state for tests/reference debugging only."""
 
@@ -90,10 +106,13 @@ def decode_debug(
     transform.validate_integrity()
     if state.basis != transform.descriptor:
         raise ValueError("debug transform basis does not match mixed state")
-    inverse = transform.inverse.to(
-        device=state.mixed.device, dtype=state.mixed.dtype
-    )
-    augmented = state.mixed @ inverse
+    if hasattr(transform, "unmix"):
+        augmented = transform.unmix(state.mixed)
+    else:
+        inverse = transform.inverse.to(
+            device=state.mixed.device, dtype=state.mixed.dtype
+        )
+        augmented = state.mixed @ inverse
     return (
         augmented[..., : transform.signal_dim],
         augmented[..., transform.signal_dim :],

@@ -32,6 +32,7 @@ def _obfuscation(refresh_mode: str = "fixed_debug") -> ObfuscationConfig:
         max_condition_number=10.0,
         noise_propagation_gamma=0.5,
         refresh_mode=refresh_mode,
+        basis_block_size=8,
     )
 
 

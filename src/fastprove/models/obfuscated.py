@@ -34,12 +34,11 @@ from ..layers.swiglu import (
 )
 from ..seed import RequestContext, make_generator
 from ..state import MixedState, decode_debug, encode_debug
+from ..structured import StructuredBasis, generate_structured_basis
 from ..transforms import (
     BasisDescriptor,
-    BasisTransform,
     generate_orthogonal,
     generate_signed_permutation,
-    generate_transform,
 )
 from .plain import PlainDecoderBlock, PlainTinyCausalLM
 
@@ -47,7 +46,9 @@ from .plain import PlainDecoderBlock, PlainTinyCausalLM
 class ObfuscatedBlockClient:
     """Client/debug-side holder of the hidden mixing transform."""
 
-    def __init__(self, transform: BasisTransform, *, debug_enabled: bool) -> None:
+    def __init__(
+        self, transform: StructuredBasis, *, debug_enabled: bool
+    ) -> None:
         self._transform = transform
         self._debug_enabled = bool(debug_enabled)
 
@@ -173,47 +174,77 @@ def _cache_tensor_digest(*tensors: torch.Tensor) -> str:
     return digest.hexdigest()
 
 
-def _make_hidden_checkpoint(
-    transform: BasisTransform,
-    *,
-    signal_dimension: int,
-):
+def _make_hidden_checkpoint(basis, *, signal_dimension: int):
     """Capture a basis inside the designated fused-checkpoint reference.
 
-    The captured tensors are deliberately absent from ``state_dict`` and
+    The captured factors are deliberately absent from ``state_dict`` and
     ``named_buffers``. Python closure inspection, hooks, or modified kernels
     remain outside the prototype threat model.
+
+    ``basis`` is a ``StructuredBasis``. Both directions cost ``O(n*b)``.
+
+    Permutations are sorted once at capture time and the factor tensors are
+    cached per ``(device, dtype)`` inside the closure, so the online path is
+    pure blockwise arithmetic with no per-call permutation or dtype work.
     """
 
-    matrix = transform.matrix.detach().clone()
-    inverse = transform.inverse.detach().clone()
-    descriptor = transform.descriptor
+    descriptor = basis.descriptor
+    sort_in = torch.argsort(basis.perm_in).detach().clone()
+    sort_out = torch.argsort(basis.perm_out).detach().clone()
+    cache: dict = {}
+
+    def _factors(device: torch.device, dtype: torch.dtype):
+        key = (device.type, device.index, dtype)
+        prepared = cache.get(key)
+        if prepared is None:
+            prepared = (
+                sort_in.to(device=device),
+                basis.scales.to(device=device, dtype=dtype),
+                basis.blocks.to(device=device, dtype=dtype),
+                sort_out.to(device=device),
+                basis.blocks.transpose(-1, -2).contiguous().to(
+                    device=device, dtype=dtype
+                ),
+                basis.perm_out.to(device=device),
+                basis.perm_in.to(device=device),
+            )
+            cache[key] = prepared
+        return prepared
+
+    def _apply(
+        source: torch.Tensor, forward: bool
+    ) -> torch.Tensor:
+        sort_in, scales, blocks, sort_out, blocks_t, perm_out, perm_in = (
+            _factors(source.device, source.dtype)
+        )
+        count = int(blocks.shape[0])
+        block = int(blocks.shape[1])
+        if forward:
+            gathered = source[..., sort_in]
+            scaled = gathered * scales
+            segments = scaled.reshape(*source.shape[:-1], count, block)
+            mixed = torch.einsum("...mi,mij->...mj", segments, blocks)
+            return mixed.reshape(*source.shape)[..., sort_out]
+        gathered = source[..., perm_out]
+        segments = gathered.reshape(*source.shape[:-1], count, block)
+        unblocked = torch.einsum("...mi,mij->...mj", segments, blocks_t)
+        scaled = unblocked.reshape(*source.shape) / scales
+        return scaled[..., perm_in]
 
     def mix(signal: torch.Tensor, noise: torch.Tensor) -> MixedState:
-        # The checkpoint is the numerical boundary of the exact path.  Keep
-        # Offline basis generation/inversion is FP64. Runtime checkpoint
-        # arithmetic is FP64 on CPU and FP32 on accelerators because MPS does
-        # not support FP64 tensors.
         compute_dtype = _checkpoint_compute_dtype(signal.device)
-        converted = matrix.to(device=signal.device, dtype=compute_dtype)
-        augmented = torch.cat((signal, noise), dim=-1).to(
-            dtype=compute_dtype
-        )
+        augmented = torch.cat((signal, noise), dim=-1).to(dtype=compute_dtype)
         return MixedState(
-            (augmented @ converted).to(dtype=signal.dtype),
-            descriptor,
+            _apply(augmented, True).to(dtype=signal.dtype), descriptor
         )
 
     def unmix(state: MixedState) -> Tuple[torch.Tensor, torch.Tensor]:
         if state.basis != descriptor:
             raise ValueError("input mixed state basis does not match checkpoint")
         compute_dtype = _checkpoint_compute_dtype(state.mixed.device)
-        converted = inverse.to(
-            device=state.mixed.device, dtype=compute_dtype
+        augmented = _apply(state.mixed.to(dtype=compute_dtype), False).to(
+            dtype=state.mixed.dtype
         )
-        augmented = (
-            state.mixed.to(dtype=compute_dtype) @ converted
-        ).to(dtype=state.mixed.dtype)
         return (
             augmented[..., :signal_dimension],
             augmented[..., signal_dimension:],
@@ -222,13 +253,21 @@ def _make_hidden_checkpoint(
     return mix, unmix
 
 
-def _make_value_checkpoint(
-    transforms: Tuple[BasisTransform, ...],
-):
-    """Capture per-KV-head Value codecs outside persistent module state."""
+def _make_value_checkpoint(bases: Tuple["StructuredBasis", ...]):
+    """Capture per-KV-head Value codecs outside persistent module state.
 
-    matrices = torch.stack([item.matrix for item in transforms]).detach()
-    inverses = torch.stack([item.inverse for item in transforms]).detach()
+    Value bases are single dense orthogonal blocks, so the blockwise
+    application coincides with a dense matrix multiply. Stacking the dense
+    factors lets every head run in one einsum instead of one kernel per head
+    (the same formulation stage B ships as deployed weights).
+    """
+
+    matrices = torch.stack(
+        [item.dense().to(dtype=item.blocks.dtype) for item in bases]
+    ).detach()
+    inverses = torch.stack(
+        [item.dense_inverse().to(dtype=item.blocks.dtype) for item in bases]
+    ).detach()
 
     def mix(value_augmented: torch.Tensor) -> torch.Tensor:
         compute_dtype = _checkpoint_compute_dtype(value_augmented.device)
@@ -275,7 +314,7 @@ class ObfuscatedDecoderBlock(nn.Module):
         approximation: Optional[ApproximationConfig],
         seed: int,
         debug_enabled: bool,
-        hidden_transform: BasisTransform,
+        hidden_transform: StructuredBasis,
     ) -> None:
         super().__init__()
         self.config: ModelConfig = plain.config
@@ -377,12 +416,17 @@ class ObfuscatedDecoderBlock(nn.Module):
             "o_weight_math", plain.o_proj.weight.detach().T.contiguous()
         )
 
+        # Value bases always use a single dense orthogonal block: their own
+        # width (head_dim + value_noise_dim_per_head) is small, so no block
+        # partition is needed and the uniform ``basis_block_size`` (which may
+        # not divide the Value width) is not applied to them.
         value_transforms = tuple(
-            generate_transform(
+            generate_structured_basis(
                 head_dim,
                 value_noise,
                 seed=seed,
                 domain="block-%d-value-%d" % (self.layer_id, head),
+                block_size=head_dim + value_noise,
                 max_condition_number=obfuscation.max_condition_number,
             )
             for head in range(kv_heads)
@@ -615,7 +659,7 @@ class ObfuscatedDecoderBlock(nn.Module):
         approximation: Optional[ApproximationConfig],
         seed: int,
         debug_enabled: bool,
-        hidden_transform: Optional[BasisTransform] = None,
+        hidden_transform: Optional[StructuredBasis] = None,
     ) -> ConvertedObfuscatedBlock:
         """Convert a plaintext block and return separate client/server objects."""
 
@@ -623,11 +667,12 @@ class ObfuscatedDecoderBlock(nn.Module):
         transform = (
             hidden_transform
             if hidden_transform is not None
-            else generate_transform(
+            else generate_structured_basis(
                 plain.config.hidden_size,
                 obfuscation.hidden_noise_dim,
                 seed=seed,
                 domain="shared-hidden-basis",
+                block_size=obfuscation.basis_block_size,
                 max_condition_number=obfuscation.max_condition_number,
             )
         )
@@ -1088,7 +1133,7 @@ class ObfuscatedTinyCausalLM(nn.Module):
         approximation: Optional[ApproximationConfig],
         seed: int,
         debug_enabled: bool,
-        hidden_transform: BasisTransform,
+        hidden_transform: StructuredBasis,
     ) -> None:
         super().__init__()
         self.config = plain.config
@@ -1177,11 +1222,12 @@ class ObfuscatedTinyCausalLM(nn.Module):
         """Convert a plaintext tiny LM without changing its base weights."""
 
         started = time.perf_counter()
-        hidden_transform = generate_transform(
+        hidden_transform = generate_structured_basis(
             plain.config.hidden_size,
             obfuscation.hidden_noise_dim,
             seed=seed,
             domain="tiny-lm-shared-hidden-basis",
+            block_size=obfuscation.basis_block_size,
             max_condition_number=obfuscation.max_condition_number,
         )
         module = cls(

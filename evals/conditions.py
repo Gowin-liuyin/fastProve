@@ -472,6 +472,7 @@ def default_base_prototype_config() -> PrototypeConfig:
             max_condition_number=10.0,
             noise_propagation_gamma=0.5,
             refresh_mode="fixed_debug",
+            basis_block_size=8,
         ),
         attention=AttentionConfig(
             mode=AttentionMode.EXACT,
