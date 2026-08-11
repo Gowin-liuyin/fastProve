@@ -75,11 +75,13 @@ def test_current_scheme_conversion_pair_no_legacy_arm() -> None:
             debug_enabled=True,
         )
         module = converted.module
+        codec = converted.token_codec
         zero_noise_injection_(module)  # structural
         ctx = RequestContext(key.request_seed("t"), "test")
         with torch.no_grad():
             p_logits = plain(tokens, token_mask=mask)
-            o_logits = module(tokens, token_mask=mask, request_context=ctx)
+            o_logits = module(codec.encode(tokens), token_mask=mask, request_context=ctx)
+            o_logits = o_logits[..., codec.permutation]
         tf = compare_teacher_forced_metrics(
             plaintext_logits=p_logits,
             obfuscated_logits=o_logits,
@@ -94,6 +96,7 @@ def test_current_scheme_conversion_pair_no_legacy_arm() -> None:
             sample_ids=ids,
             generation_tokens=2,
             request_context=ctx,
+            codec=codec,
         )
         records.append(
             {
@@ -151,6 +154,7 @@ def test_greedy_unpadded_evaluates_all_rows_and_strips_pad() -> None:
         debug_enabled=True,
     )
     module = converted.module
+    codec = converted.token_codec
     zero_noise_injection_(module)
 
     # Four right-padded prompts of different valid lengths.
@@ -169,6 +173,7 @@ def test_greedy_unpadded_evaluates_all_rows_and_strips_pad() -> None:
         sample_ids=sample_ids,
         generation_tokens=2,
         request_context=ctx,
+        codec=codec,
     )
     assert greedy["greedy_n_samples"] == 4
     assert greedy["greedy_sample_ids"] == sample_ids
@@ -207,6 +212,7 @@ def test_run_pair_reports_e2e_logit_separate_from_chainlinear_unit() -> None:
         debug_enabled=True,
     )
     module = converted.module
+    codec = converted.token_codec
     zero_noise_injection_(module)
     tokens, ids = make_synthetic_token_batch(
         sample_count=3, sequence_length=6, vocab_size=64, seed=13
@@ -226,6 +232,7 @@ def test_run_pair_reports_e2e_logit_separate_from_chainlinear_unit() -> None:
         generation_tokens=2,
         batch_size=1,
         device=torch.device("cpu"),
+        codec=codec,
     )
     assert pair["greedy_n_samples"] == 3
     assert pair["greedy"]["greedy_sample_ids"] == ids

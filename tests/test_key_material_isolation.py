@@ -86,7 +86,7 @@ def test_state_dict_excludes_key_material() -> None:
 
 def test_state_dict_still_contains_deployed_weights() -> None:
     keys = " ".join(_converted().state_dict().keys())
-    for required in ("embedding_weight", "kv_index"):
+    for required in ("embedding.table", "deployed_head", "kv_index"):
         assert required in keys
 
 

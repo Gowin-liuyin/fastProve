@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ..config import ModelConfig, ObfuscationConfig
+from ..codec import TokenCodec, generate_token_codec
 from ..evaluation.metrics import tensor_error_metrics
 from ..layers.attention import (
     ApproximationConfig,
@@ -25,6 +26,8 @@ from ..layers.deployed import (
     build_deployed_feed_forward,
     validate_auxiliary_budget,
 )
+from ..layers.embedding import SecureEmbedding, build_secure_embedding
+from ..layers.head import build_secure_lm_head
 from ..layers.rmsnorm import (
     apply_qk_orthogonal_after_rope,
     apply_rope,
@@ -961,10 +964,11 @@ class ObfuscatedDecoderBlock(nn.Module):
 
 @dataclass(frozen=True)
 class ConvertedObfuscatedLM:
-    """Converted tiny LM, separate client helper, and conversion timing."""
+    """Converted tiny LM, separate client helper, codec, and timing."""
 
     module: "ObfuscatedTinyCausalLM"
     client: ObfuscatedBlockClient
+    token_codec: TokenCodec
     conversion_time_seconds: float
 
 
@@ -981,6 +985,7 @@ class ObfuscatedTinyCausalLM(nn.Module):
         seed: int,
         debug_enabled: bool,
         hidden_transform: StructuredBasis,
+        token_codec: TokenCodec,
     ) -> None:
         super().__init__()
         self.config = plain.config
@@ -994,48 +999,63 @@ class ObfuscatedTinyCausalLM(nn.Module):
                 "fixed_debug refresh is debug-only; use per_request in production"
             )
         self.hidden_basis = hidden_transform.descriptor
-        self.register_buffer(
-            "embedding_weight", plain.embedding.weight.detach().clone()
+        if obfuscation.lm_head_mode == "fused_norm_head":
+            raise NotImplementedError(
+                "fused_norm_head requires a fused kernel that keeps the "
+                "normalized state in registers; the eager path would "
+                "materialize plaintext. Use untied_deployed and record the "
+                "memory cost, or implement the kernel first."
+            )
+        # Pre-mixed vocabulary: server lookup returns c_0 directly. The noise
+        # table is an independent random [V, r] table so layer-0 noise is
+        # statistically independent of the signal (docs/threat_model.md 5bis.6
+        # records the e ~= hC channel the old linear coupling created).
+        noise_embedding = _random_matrix(
+            self.config.vocab_size,
+            obfuscation.hidden_noise_dim,
+            seed=seed,
+            domain="tiny-lm-noise-embedding",
+            scale=0.02,
         )
-        # P @ diag(gamma_final) @ W_head^T, in math layout [n, V]. This is a
-        # separate matrix from the tied embedding table, which roughly doubles
-        # the vocabulary-side peak memory (task D2 records the measurement;
-        # the fused-norm-head alternative needs a fused kernel, stage E).
-        projection = hidden_transform.signal_projection()
-        deployed_head = (
-            projection
-            * plain.final_norm_weight.detach().cpu().to(torch.float64)[None, :]
-        ) @ plain.lm_head.weight.detach().cpu().T.contiguous().to(torch.float64)
+        embedding_table = build_secure_embedding(
+            embedding_math=plain.embedding.weight.detach().cpu().to(torch.float64),
+            noise_embedding=noise_embedding.to(torch.float64),
+            basis=hidden_transform,
+            token_codec=token_codec,
+            dtype=torch.float32,
+        )
+        self.embedding = SecureEmbedding(
+            embedding_table,
+            hidden_transform.descriptor,
+            vocab_size=self.config.vocab_size,
+        )
+        # P @ diag(gamma_final) @ W_head^T @ Pi_voc, in math layout [n, V].
+        # The head columns are vocabulary-permuted, so the obfuscated logits
+        # are ``softmax(l) Pi_voc`` and the client decodes them with the codec.
+        # This is a separate matrix from the tied embedding table, which
+        # roughly doubles the vocabulary-side peak memory (task D2 records the
+        # measurement; the fused-norm-head alternative needs a fused kernel,
+        # stage E).
+        deployed_head = build_secure_lm_head(
+            basis=hidden_transform,
+            gamma_final=plain.final_norm_weight.detach(),
+            head_math=plain.lm_head.weight.detach().T.contiguous(),
+            token_codec=token_codec,
+            dtype=torch.float32,
+        )
         self.register_buffer(
             "deployed_head",
-            deployed_head.to(dtype=torch.float32),
+            deployed_head,
             persistent=True,
         )
-        self._basis_mix = lambda augmented: hidden_transform.mix(augmented)
         self._rms_scale = _make_rms_scale(hidden_transform)
+        # M_bot for the layer-0 per-request refresh ``xi_0 @ M_bot``. B1.3
+        # records the recoverability consequence of shipping M_bot-derived
+        # material; the block already ships the same rows.
         self.register_buffer(
-            "initial_noise_coupling",
-            _random_matrix(
-                self.config.hidden_size,
-                obfuscation.hidden_noise_dim,
-                seed=seed,
-                domain="tiny-lm-initial-noise-C",
-                scale=0.02,
-            ),
-            persistent=False,
-        )
-        self.register_buffer(
-            "initial_fixed_refresh",
-            _random_matrix(
-                1,
-                obfuscation.hidden_noise_dim,
-                seed=seed,
-                domain="tiny-lm-initial-xi",
-                scale=0.02,
-            ).squeeze(0)
-            if obfuscation.refresh_mode == "fixed_debug"
-            else torch.zeros(obfuscation.hidden_noise_dim),
-            persistent=False,
+            "_noise_rows",
+            hidden_transform.noise_rows().to(dtype=torch.float32),
+            persistent=True,
         )
         converted_blocks = [
             ObfuscatedDecoderBlock.from_plain(
@@ -1067,6 +1087,7 @@ class ObfuscatedTinyCausalLM(nn.Module):
         approximation: Optional[ApproximationConfig],
         seed: int,
         debug_enabled: bool,
+        token_codec: Optional[TokenCodec] = None,
     ) -> ConvertedObfuscatedLM:
         """Convert a plaintext tiny LM without changing its base weights."""
 
@@ -1079,6 +1100,12 @@ class ObfuscatedTinyCausalLM(nn.Module):
             block_size=obfuscation.basis_block_size,
             max_condition_number=obfuscation.max_condition_number,
         )
+        if token_codec is None:
+            token_codec = generate_token_codec(
+                plain.config.vocab_size,
+                seed=seed,
+                domain="tiny-lm-vocab",
+            )
         module = cls(
             plain,
             obfuscation=obfuscation,
@@ -1087,6 +1114,7 @@ class ObfuscatedTinyCausalLM(nn.Module):
             seed=seed,
             debug_enabled=debug_enabled,
             hidden_transform=hidden_transform,
+            token_codec=token_codec,
         )
         client = ObfuscatedBlockClient(
             hidden_transform, debug_enabled=debug_enabled
@@ -1094,24 +1122,43 @@ class ObfuscatedTinyCausalLM(nn.Module):
         return ConvertedObfuscatedLM(
             module=module,
             client=client,
+            token_codec=token_codec,
             conversion_time_seconds=time.perf_counter() - started,
         )
 
-    def _initial_refresh(self, context: RequestContext) -> torch.Tensor:
+    def _initial_refresh_out(
+        self, context: RequestContext, reference: torch.Tensor
+    ) -> torch.Tensor:
+        """Return the layer-0 mixed-basis refresh increment.
+
+        The pre-mixed vocabulary is static, so per-request refreshes are added
+        after the lookup as ``xi_0 @ M_bot``. ``fixed_debug`` carries no
+        separate initial refresh: the static noise embedding table provides
+        the layer-0 noise.
+        """
+
         if not self.noise_injection_enabled:
-            return torch.zeros_like(self.initial_fixed_refresh)
+            return torch.zeros(
+                reference.shape[-1],
+                device=reference.device,
+                dtype=reference.dtype,
+            )
         if self.obfuscation.refresh_mode == "fixed_debug":
-            return self.initial_fixed_refresh
+            return torch.zeros(
+                reference.shape[-1],
+                device=reference.device,
+                dtype=reference.dtype,
+            )
         generator = context.generator_for("tiny-lm", "initial", "refresh")
-        refresh = torch.randn(
-            self.initial_fixed_refresh.shape,
+        sampled = torch.randn(
+            self.obfuscation.hidden_noise_dim,
             generator=generator,
             dtype=torch.float32,
         ) * (0.02 * self.initial_refresh_noise_scale)
-        return refresh.to(
-            device=self.initial_fixed_refresh.device,
-            dtype=self.initial_fixed_refresh.dtype,
+        rows = self._noise_rows.to(
+            device=reference.device, dtype=reference.dtype
         )
+        return sampled.to(device=reference.device, dtype=reference.dtype) @ rows
 
     def _run(
         self,
@@ -1164,17 +1211,14 @@ class ObfuscatedTinyCausalLM(nn.Module):
             raise ValueError("LM cache layer count mismatch")
         if return_debug and (cache is not None or use_cache):
             raise ValueError("debug cache path is not supported")
-        embedding = F.embedding(input_ids, self.embedding_weight)
-        initial_noise = (
-            embedding.float() @ self.initial_noise_coupling.float()
-            + self._initial_refresh(request_context)
-        ).to(dtype=embedding.dtype)
-        # Stage C replaces this with a pre-mixed vocabulary so the plaintext
-        # embedding is never materialized. See task C2.
-        state = MixedState(
-            self._basis_mix(torch.cat((embedding, initial_noise), dim=-1)),
-            self.hidden_basis,
-        )
+        # Stage C: pre-mixed vocabulary; the plaintext embedding is never
+        # materialized and the lookup returns c_0 directly.
+        state = self.embedding(input_ids)
+        if self.obfuscation.refresh_mode == "per_request":
+            state = MixedState(
+                state.mixed + self._initial_refresh_out(request_context, state.mixed),
+                self.hidden_basis,
+            )
         debug_records = []
         new_layer_caches = []
         for layer_index, block in enumerate(self.blocks):

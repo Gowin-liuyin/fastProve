@@ -35,6 +35,12 @@ def _obfuscation() -> ObfuscationConfig:
     )
 
 
+def _decoded_logits(codec, logits):
+    """Recover plaintext-domain logits from the column-permuted output."""
+
+    return logits[..., codec.permutation]
+
+
 def test_tiny_exact_logits_and_greedy_tokens_match_plaintext() -> None:
     plain = PlainTinyCausalLM(_model_config(), seed=501, debug_enabled=True)
     converted = ObfuscatedTinyCausalLM.from_plain(
@@ -50,10 +56,14 @@ def test_tiny_exact_logits_and_greedy_tokens_match_plaintext() -> None:
     )
     mask = torch.ones_like(input_ids, dtype=torch.bool)
     plain_logits = plain(input_ids, token_mask=mask)
-    exact_logits = converted.module(
-        input_ids,
-        token_mask=mask,
-        request_context=RequestContext(503, "tiny-exact"),
+    codec = converted.token_codec
+    exact_logits = _decoded_logits(
+        codec,
+        converted.module(
+            codec.encode(input_ids),
+            token_mask=mask,
+            request_context=RequestContext(503, "tiny-exact"),
+        ),
     )
     torch.testing.assert_close(
         exact_logits, plain_logits, atol=2e-4, rtol=2e-4
@@ -64,10 +74,12 @@ def test_tiny_exact_logits_and_greedy_tokens_match_plaintext() -> None:
     assert torch.isfinite(exact_logits).all()
 
     plain_generated = plain.generate_greedy(input_ids, max_new_tokens=4)
-    exact_generated = converted.module.generate_greedy(
-        input_ids,
-        max_new_tokens=4,
-        request_context=RequestContext(503, "tiny-exact"),
+    exact_generated = codec.decode(
+        converted.module.generate_greedy(
+            codec.encode(input_ids),
+            max_new_tokens=4,
+            request_context=RequestContext(503, "tiny-exact"),
+        )
     )
     assert torch.equal(exact_generated, plain_generated)
 
@@ -89,11 +101,14 @@ def test_tiny_generation_preserves_explicit_prompt_mask_contract() -> None:
         token_mask=mask,
         max_new_tokens=2,
     )
-    exact_generated = converted.module.generate_greedy(
-        tokens,
-        token_mask=mask,
-        max_new_tokens=2,
-        request_context=RequestContext(520, "tiny-padded-generation"),
+    codec = converted.token_codec
+    exact_generated = codec.decode(
+        converted.module.generate_greedy(
+            codec.encode(tokens),
+            token_mask=mask,
+            max_new_tokens=2,
+            request_context=RequestContext(520, "tiny-padded-generation"),
+        )
     )
     assert plain_generated.shape == exact_generated.shape == (1, 6)
     assert torch.isfinite(plain_generated.float()).all()
@@ -101,20 +116,28 @@ def test_tiny_generation_preserves_explicit_prompt_mask_contract() -> None:
 
 
 def test_tiny_models_use_identical_base_weights() -> None:
-    plain = PlainTinyCausalLM(_model_config(), seed=504, debug_enabled=False)
+    plain = PlainTinyCausalLM(_model_config(), seed=504, debug_enabled=True)
     converted = ObfuscatedTinyCausalLM.from_plain(
         plain,
         obfuscation=_obfuscation(),
         mode=AttentionMode.EXACT,
         approximation=None,
         seed=505,
-        debug_enabled=False,
+        debug_enabled=True,
     )
+    codec = converted.token_codec
+    ids = torch.tensor([[1, 2, 3]])
+    state = converted.module.embedding(codec.encode(ids))
+    decoded_signal, _ = converted.client.decode_debug(state)
     torch.testing.assert_close(
-        converted.module.embedding_weight, plain.embedding.weight
+        decoded_signal,
+        plain.embedding.weight[ids],
+        atol=1e-6,
+        rtol=1e-6,
     )
-    # The final norm and LM head are fused into deployed_head ([n, V]) by the
-    # offline conversion; their plaintext buffers are no longer shipped.
+    # The final norm and LM head are fused into the column-permuted
+    # deployed_head ([n, V]) by the offline conversion; their plaintext
+    # buffers are no longer shipped.
     assert not hasattr(converted.module, "final_norm_weight")
     assert not hasattr(converted.module, "lm_head_weight")
     expected_head = (
@@ -127,9 +150,11 @@ def test_tiny_models_use_identical_base_weights() -> None:
         + converted.module.obfuscation.hidden_noise_dim
     )
     assert projection.shape == (total, converted.module.config.hidden_size)
+    fused = projection @ expected_head
+    expected_deployed = fused[:, codec.inverse_permutation]
     torch.testing.assert_close(
         converted.module.deployed_head,
-        (projection @ expected_head).to(dtype=torch.float32),
+        expected_deployed.to(dtype=torch.float32),
         atol=1e-6,
         rtol=1e-6,
     )
@@ -151,9 +176,10 @@ def test_tiny_approximate_modes_are_finite_and_reproducible(
         debug_enabled=False,
     )
     input_ids = torch.arange(1, 13).reshape(2, 6) % _model_config().vocab_size
+    encoded = converted.token_codec.encode(input_ids)
     context = RequestContext(508, "tiny-approx")
-    first = converted.module(input_ids, request_context=context)
-    repeated = converted.module(input_ids, request_context=context)
+    first = converted.module(encoded, request_context=context)
+    repeated = converted.module(encoded, request_context=context)
     torch.testing.assert_close(first, repeated)
     assert torch.isfinite(first).all()
 
@@ -169,7 +195,7 @@ def test_tiny_production_api_returns_only_logits() -> None:
         debug_enabled=False,
     )
     output = converted.module(
-        torch.tensor([[1, 2, 3]]),
+        converted.token_codec.encode(torch.tensor([[1, 2, 3]])),
         request_context=RequestContext(511, "production-lm"),
     )
     assert isinstance(output, torch.Tensor)
@@ -183,7 +209,7 @@ def test_tiny_production_api_returns_only_logits() -> None:
     assert all(not block.attention.debug_enabled for block in converted.module.blocks)
     with pytest.raises(PermissionError, match="debug"):
         converted.module.forward_debug(
-            torch.tensor([[1, 2, 3]]),
+            converted.token_codec.encode(torch.tensor([[1, 2, 3]])),
             request_context=RequestContext(511, "production-lm"),
         )
 
@@ -210,20 +236,21 @@ def test_tiny_all_modes_cached_decode_matches_full_prefix(
         debug_enabled=False,
     )
     tokens = torch.tensor([[1, 3, 5, 7, 9]])
+    encoded = converted.token_codec.encode(tokens)
     context = RequestContext(514, "tiny-cache")
     full_logits = converted.module(
-        tokens,
+        encoded,
         positions=torch.arange(5),
         request_context=context,
     )
     _, cache = converted.module(
-        tokens[:, :4],
+        encoded[:, :4],
         positions=torch.arange(4),
         request_context=context,
         use_cache=True,
     )
     cached_logits, updated_cache = converted.module(
-        tokens[:, 4:],
+        encoded[:, 4:],
         positions=torch.tensor([4]),
         request_context=context,
         cache=cache,
@@ -255,9 +282,12 @@ def test_tiny_exact_bfloat16_is_optional_but_aligned_when_supported() -> None:
         converted.module.to(dtype=torch.bfloat16)
         tokens = torch.tensor([[1, 2, 3, 4, 5, 6]])
         plain_logits = plain(tokens)
-        exact_logits = converted.module(
-            tokens,
-            request_context=RequestContext(517, "tiny-bfloat16"),
+        exact_logits = _decoded_logits(
+            converted.token_codec,
+            converted.module(
+                converted.token_codec.encode(tokens),
+                request_context=RequestContext(517, "tiny-bfloat16"),
+            ),
         )
     except RuntimeError as error:
         if "bfloat16" in str(error).lower() or "not implemented" in str(

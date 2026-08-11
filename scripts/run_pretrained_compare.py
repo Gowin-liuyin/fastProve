@@ -38,6 +38,7 @@ if str(_REPO / "src") not in sys.path:
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
+from fastprove.codec import TokenCodec
 from fastprove.config import ObfuscationConfig
 from fastprove.evaluation.accuracy import (
     compare_teacher_forced_metrics,
@@ -195,6 +196,7 @@ def greedy_unpadded_pair(
     sample_ids: Sequence[str],
     generation_tokens: int,
     request_context: RequestContext,
+    codec: Optional[TokenCodec] = None,
 ) -> Dict[str, Any]:
     """Greedy continuation on **every** sample after stripping pad tokens.
 
@@ -202,6 +204,9 @@ def greedy_unpadded_pair(
     would therefore decode from a pad position. This helper feeds only the
     valid (non-pad) prefix per row so the last index is the last real token.
     All ``sample_ids`` are evaluated (not a batch_size slice).
+
+    When ``codec`` is given, the obfuscated model runs in the obfuscated
+    token domain: inputs are encoded and generated tokens are decoded back.
     """
 
     if tokens.shape[0] != len(sample_ids):
@@ -230,11 +235,16 @@ def greedy_unpadded_pair(
         plain_gen = plain.generate_greedy(
             prompt, max_new_tokens=generation_tokens
         )
+        enc_prompt = (
+            prompt if codec is None else codec.encode(prompt).to(prompt.device)
+        )
         obf_gen = obfuscated.generate_greedy(
-            prompt,
+            enc_prompt,
             max_new_tokens=generation_tokens,
             request_context=request_context,
         )
+        if codec is not None:
+            obf_gen = codec.decode(obf_gen)
         plain_suf = plain_gen[0, prompt_len:]
         obf_suf = obf_gen[0, prompt_len:]
         if plain_suf.numel() != generation_tokens or obf_suf.numel() != generation_tokens:
@@ -302,11 +312,16 @@ def _run_pair(
     batch_size: int,
     device: torch.device,
     run_greedy: bool = True,
+    codec: Optional[TokenCodec] = None,
 ) -> Dict[str, Any]:
     """Stream teacher-forced metrics per batch (no full-logit materialization).
 
     Storing 1500×64×128k logits twice exceeds host RAM; accumulate agreement,
     NLL, and max logit error online instead.
+
+    When ``codec`` is given, the obfuscated model runs in the obfuscated
+    token domain: inputs are encoded and logit columns are decoded before any
+    comparison with the plaintext reference.
     """
 
     ctx = RequestContext(request_seed, "pretrained-compare-%s" % mode_name)
@@ -327,9 +342,14 @@ def _run_pair(
         batch = tokens[start:stop]
         batch_mask = mask[start:stop]
         plain_logits = plain(batch, token_mask=batch_mask).float()
+        enc_batch = (
+            batch if codec is None else codec.encode(batch).to(device)
+        )
         obf_logits = obfuscated(
-            batch, token_mask=batch_mask, request_context=ctx
+            enc_batch, token_mask=batch_mask, request_context=ctx
         ).float()
+        if codec is not None:
+            obf_logits = obf_logits[..., codec.permutation.to(obf_logits.device)]
 
         # Next-token targets on positions 0..T-2 predicting 1..T-1.
         valid = batch_mask[:, :-1] & batch_mask[:, 1:]
@@ -427,6 +447,7 @@ def _run_pair(
             sample_ids=sample_ids,
             generation_tokens=generation_tokens,
             request_context=ctx,
+            codec=codec,
         )
         if greedy["greedy_n_samples"] != len(sample_ids):
             raise RuntimeError(
@@ -745,6 +766,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     batch_size=args.batch_size,
                     device=device,
                     run_greedy=False,
+                    codec=converted.token_codec,
                 )
             else:
                 pair = _run_pair(
@@ -762,6 +784,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     batch_size=args.batch_size,
                     device=device,
                     run_greedy=True,
+                    codec=converted.token_codec,
                 )
             results["pairs"].append(pair)
             # Checkpoint after every key×mode so partial runs remain usable.

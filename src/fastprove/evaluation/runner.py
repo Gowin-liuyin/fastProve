@@ -24,6 +24,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import torch
 
 from ..config import AttentionConfig, EvaluationConfig, PrototypeConfig, load_config
+from ..codec import TokenCodec
 from ..layers.attention import ApproximationConfig, AttentionMode
 from ..models.obfuscated import (
     ObfuscatedBlockDebug,
@@ -629,6 +630,7 @@ def _performance_metrics(
     evaluation: EvaluationConfig,
     device: torch.device,
     conversion_seconds: float,
+    token_codec: Optional[TokenCodec] = None,
 ) -> Dict[str, Any]:
     batch = tokens[: evaluation.batch_size]
     mask = token_mask[: evaluation.batch_size]
@@ -705,9 +707,12 @@ def _performance_metrics(
     plaintext_kv_bytes = int(plain.config.num_layers * plain_layer_bytes)
     obfuscated_kv_bytes = plaintext_kv_bytes
     if obfuscated is not None:
+        if token_codec is None:
+            raise ValueError("obfuscated performance needs the token codec")
+        encoded = token_codec.encode(batch).to(device=device)
         with torch.inference_mode():
             _, measured_cache = obfuscated(
-                batch,
+                encoded,
                 token_mask=mask,
                 positions=torch.arange(batch.shape[1], device=batch.device),
                 request_context=context,
@@ -785,6 +790,7 @@ def _obfuscated_performance_metrics(
     context: RequestContext,
     evaluation: EvaluationConfig,
     device: torch.device,
+    token_codec: TokenCodec,
 ) -> Dict[str, Any]:
     """Measure the obfuscated phase while holding no plaintext model.
 
@@ -799,12 +805,13 @@ def _obfuscated_performance_metrics(
     mask = token_mask[: evaluation.batch_size]
     if mask.shape != batch.shape or mask.dtype != torch.bool:
         raise ValueError("token_mask must be boolean and match tokens")
+    encoded = token_codec.encode(batch).to(device=device)
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats(device)
         _sync(device)
     obfuscated_prefill = _time_call(
         lambda: obfuscated(
-            batch,
+            encoded,
             token_mask=mask,
             request_context=context,
         ),
@@ -813,7 +820,7 @@ def _obfuscated_performance_metrics(
         timed_runs=evaluation.timed_runs,
     )
     obfuscated_generated_call = lambda: obfuscated.generate_greedy(
-        batch,
+        encoded,
         max_new_tokens=evaluation.generation_tokens,
         request_context=context,
         token_mask=mask,
@@ -828,7 +835,7 @@ def _obfuscated_performance_metrics(
     decoded_tokens = int(batch.shape[0] * evaluation.generation_tokens)
     with torch.inference_mode():
         _, measured_cache = obfuscated(
-            batch,
+            encoded,
             token_mask=mask,
             positions=torch.arange(batch.shape[1], device=batch.device),
             request_context=context,
@@ -1138,6 +1145,7 @@ def _execute_tiny(
         obfuscated = converted.module.to(device=device, dtype=dtype)
         obfuscated.eval()
         conversion_seconds = converted.conversion_time_seconds
+        codec = converted.token_codec
         # The converted module owns cloned deployed weights and no longer
         # needs the plaintext module.  Drop the latter before obfuscated
         # forwards/timing so the two full 1.5B copies are not resident during
@@ -1149,27 +1157,34 @@ def _execute_tiny(
                 stop = min(start + config.evaluation.batch_size, tokens.shape[0])
                 batch = tokens[start:stop]
                 batch_mask = mask[start:stop]
+                encoded = codec.encode(batch).to(device=device)
                 context = RequestContext(
                     seed,
                     "%s:batch-%d"
                     % (config.runtime.request_id, start // config.evaluation.batch_size),
                 )
-                obfuscated_logits, debug = obfuscated.forward_debug(
-                    batch,
+                obfuscated_logits_permuted, debug = obfuscated.forward_debug(
+                    encoded,
                     token_mask=batch_mask,
                     request_context=context,
                 )
-                obfuscated_parts.append(obfuscated_logits.float().cpu())
+                obfuscated_parts.append(obfuscated_logits_permuted.float().cpu())
                 debug_batches.append(_debug_batch_to_cpu(debug))
-        obfuscated_logits = torch.cat(obfuscated_parts, dim=0)
+        # Column-permuted logits: L_plain[:, i] = L_tilde[:, tau(i)], so
+        # decoding the columns is an index gather by ``tau``.
+        obfuscated_logits = torch.cat(obfuscated_parts, dim=0)[
+            ..., codec.permutation
+        ]
         performance_context = RequestContext(
             seed, "%s:generation" % config.runtime.request_id
         )
-        obfuscated_generated = obfuscated.generate_greedy(
-            prompt,
-            max_new_tokens=config.evaluation.generation_tokens,
-            request_context=performance_context,
-            token_mask=prompt_mask,
+        obfuscated_generated = codec.decode(
+            obfuscated.generate_greedy(
+                codec.encode(prompt).to(device=device),
+                max_new_tokens=config.evaluation.generation_tokens,
+                request_context=performance_context,
+                token_mask=prompt_mask,
+            )
         )
         obfuscated_performance = _obfuscated_performance_metrics(
             obfuscated=obfuscated,
@@ -1178,6 +1193,7 @@ def _execute_tiny(
             context=performance_context,
             evaluation=config.evaluation,
             device=device,
+            token_codec=codec,
         )
         performance = _merge_staged_performance_metrics(
             plaintext=plain_performance,

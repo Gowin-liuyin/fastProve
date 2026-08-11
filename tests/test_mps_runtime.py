@@ -46,25 +46,32 @@ def test_exact_checkpoint_uses_mps_supported_runtime_dtype() -> None:
         debug_enabled=True,
     )
     obfuscated = converted.module.to(device="mps", dtype=torch.float32)
+    codec = converted.token_codec
     tokens = torch.tensor([[1, 3, 5, 7, 9, 11]], device="mps")
     with torch.no_grad():
         plaintext = plain(tokens)
         exact = obfuscated(
-            tokens,
+            codec.encode(tokens),
             request_context=RequestContext(903, "mps-runtime-test"),
         )
     torch.mps.synchronize()
     assert exact.device.type == "mps"
     assert torch.isfinite(exact).all().item()
-    torch.testing.assert_close(exact, plaintext, atol=2e-4, rtol=2e-4)
+    decoded = exact[..., codec.permutation.to(device="mps")]
+    torch.testing.assert_close(decoded, plaintext, atol=2e-4, rtol=2e-4)
 
     # The real evaluator uses this explicitly gated path to collect layer
     # diagnostics.  It must not attempt an FP64 reduction on MPS.
     with torch.no_grad():
         debug_exact, debug_records = obfuscated.forward_debug(
-            tokens,
+            codec.encode(tokens),
             request_context=RequestContext(903, "mps-runtime-debug-test"),
         )
     torch.mps.synchronize()
     assert len(debug_records) == config.num_layers
-    torch.testing.assert_close(debug_exact, plaintext, atol=2e-4, rtol=2e-4)
+    torch.testing.assert_close(
+        debug_exact[..., codec.permutation.to(device="mps")],
+        plaintext,
+        atol=2e-4,
+        rtol=2e-4,
+    )

@@ -29,7 +29,7 @@ def test_bf16_condition_casts_models_and_conversion_buffers() -> None:
     assert models.dtype == torch.bfloat16
     assert models.plain.embedding.weight.dtype == torch.bfloat16
     assert models.obfuscated is not None
-    assert models.obfuscated.embedding_weight.dtype == torch.bfloat16
+    assert models.obfuscated.embedding.table.dtype == torch.bfloat16
     assert models.obfuscated.blocks[0].common_qk.dtype == torch.bfloat16
     assert models.obfuscation_manifest is not None
     assert models.obfuscation_manifest["hidden_basis"]["condition_number"] <= 10.0

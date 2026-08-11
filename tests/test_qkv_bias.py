@@ -39,9 +39,10 @@ def test_qwen_style_qkv_bias_exact_path_matches_plaintext():
     with torch.inference_mode():
         plain_logits = plain(tokens)
         obfuscated_logits = obfuscated(
-            tokens,
+            converted.token_codec.encode(tokens),
             request_context=RequestContext(5, "qkv-bias-test"),
         )
     assert torch.isfinite(obfuscated_logits).all()
-    assert torch.allclose(plain_logits, obfuscated_logits, atol=2e-5, rtol=2e-5)
+    decoded = obfuscated_logits[..., converted.token_codec.permutation]
+    assert torch.allclose(plain_logits, decoded, atol=2e-5, rtol=2e-5)
 

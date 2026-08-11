@@ -70,6 +70,7 @@ class EvalModels:
     notes: List[str]
     model_manifest: Optional[Dict[str, Any]] = None
     obfuscation_manifest: Optional[Dict[str, Any]] = None
+    token_codec: Optional[Any] = None  # client-side vocabulary codec
 
     def request_context(self, request_id: str = "eval") -> RequestContext:
         seed = self.config.runtime.seed
@@ -270,6 +271,7 @@ def build_models(
     notes: List[str] = []
     obfuscated: Optional[ObfuscatedTinyCausalLM] = None
     client = None
+    codec = None
     conversion_time = 0.0
     structural_zeroed = False
     vocab_perm: Optional[torch.Tensor] = None
@@ -300,6 +302,7 @@ def build_models(
         obfuscated = converted.module
         client = converted.client
         conversion_time = converted.conversion_time_seconds
+        codec = converted.token_codec
         obfuscated.eval()
 
         # Optional vocab permutation buffer (identity if absent).
@@ -365,6 +368,7 @@ def build_models(
         notes=notes,
         model_manifest=artifact.to_dict() if artifact is not None else None,
         obfuscation_manifest=_obfuscation_manifest(obfuscated),
+        token_codec=codec,
     )
 
 

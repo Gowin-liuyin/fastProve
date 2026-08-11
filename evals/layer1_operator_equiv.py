@@ -140,22 +140,10 @@ def run_layer1(
 
     # --- Embedding ---
     plain_emb = plain.embedding(input_ids)
-    # Obfuscated initial mix: decode after embedding+noise encode inside LM.
-    # We re-run the initial path: embedding is shared weight; noise may be zero
-    # in structural mode.
-    obf_emb = F.embedding(input_ids, obf.embedding_weight)
-    initial_noise = (
-        obf_emb.float() @ obf.initial_noise_coupling.float()
-        + (
-            obf.initial_fixed_refresh
-            if obf.obfuscation.refresh_mode == "fixed_debug"
-            else torch.zeros_like(obf.initial_fixed_refresh)
-        )
-    ).to(dtype=obf_emb.dtype)
-    mixed0 = MixedState(
-        obf._basis_mix(torch.cat((obf_emb, initial_noise), dim=-1)),
-        obf.hidden_basis,
-    )
+    # Obfuscated initial state: the server lookup on the client-encoded ids
+    # returns the pre-mixed state c_0 directly; decode it for comparison.
+    # In structural mode the post-lookup refresh is disabled inside the model.
+    mixed0 = obf.embedding(models.token_codec.encode(input_ids))
     hat_emb, _ = client.decode_debug(mixed0)
     modules["embedding"] = infinity_and_relative(
         cast_activations(plain_emb, torch.float32),

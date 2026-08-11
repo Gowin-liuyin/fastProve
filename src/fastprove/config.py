@@ -75,12 +75,15 @@ class ObfuscationConfig:
     noise_propagation_gamma: float
     refresh_mode: str
     basis_block_size: int = 16
+    lm_head_mode: str = "untied_deployed"
 
     def __post_init__(self) -> None:
         if self.hidden_noise_dim <= 0 or self.value_noise_dim_per_head <= 0:
             raise ValueError("noise dimensions must be positive")
         if self.basis_block_size <= 0:
             raise ValueError("basis_block_size must be positive")
+        if self.lm_head_mode not in ("untied_deployed", "fused_norm_head"):
+            raise ValueError("lm_head_mode must be untied_deployed or fused_norm_head")
         if not math.isfinite(self.max_condition_number) or self.max_condition_number < 1:
             raise ValueError("max_condition_number must be at least one")
         if not math.isfinite(self.noise_propagation_gamma) or not 0 < self.noise_propagation_gamma < 1:
