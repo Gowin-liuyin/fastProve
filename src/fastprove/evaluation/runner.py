@@ -544,7 +544,7 @@ def _layer_metrics(
                 record.noisy_probabilities,
                 record.attention_output,
                 record.attention_noise_state,
-                record.swiglu_noise_state,
+                record.z_prime,
                 record.final_noise_state,
             ):
                 nan_inf_count += int(torch.isnan(tensor).sum().item())
@@ -587,7 +587,7 @@ def _debug_batch_to_cpu(
                 attention_output=record.attention_output.detach().cpu(),
                 post_attention=record.post_attention.detach().cpu(),
                 attention_noise_state=record.attention_noise_state.detach().cpu(),
-                swiglu_noise_state=record.swiglu_noise_state.detach().cpu(),
+                z_prime=record.z_prime.detach().cpu(),
                 final_noise_state=record.final_noise_state.detach().cpu(),
             )
         )

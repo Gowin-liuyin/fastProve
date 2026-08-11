@@ -137,7 +137,7 @@ def test_debug_batch_is_detached_to_cpu_before_retention() -> None:
         attention_output=tensor,
         post_attention=tensor,
         attention_noise_state=tensor,
-        swiglu_noise_state=tensor,
+        z_prime=tensor,
         final_noise_state=tensor,
     )
 

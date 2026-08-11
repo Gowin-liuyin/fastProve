@@ -28,14 +28,9 @@ from ..layers.deployed import (
 from ..layers.rmsnorm import (
     apply_qk_orthogonal_after_rope,
     apply_rope,
-    rms_no_gamma_fp32,
     rms_norm_fp32,
 )
-from ..layers.swiglu import (
-    convert_swiglu_weights,
-    generate_swiglu_transform,
-    refresh_swiglu_noise,
-)
+from ..layers.swiglu import generate_swiglu_transform
 from ..seed import RequestContext, make_generator
 from ..state import MixedState, decode_debug, encode_debug
 from ..structured import StructuredBasis, generate_structured_basis
@@ -108,7 +103,7 @@ class ObfuscatedBlockDebug:
     attention_output: torch.Tensor
     post_attention: torch.Tensor
     attention_noise_state: torch.Tensor
-    swiglu_noise_state: torch.Tensor
+    z_prime: torch.Tensor
     final_noise_state: torch.Tensor
 
 
@@ -346,13 +341,6 @@ class ObfuscatedDecoderBlock(nn.Module):
                 "fixed_debug refresh is debug-only; use per_request in production"
             )
         self.hidden_basis = hidden_transform.descriptor
-        (
-            self._fused_checkpoint_mix,
-            self._fused_checkpoint_unmix,
-        ) = _make_hidden_checkpoint(
-            hidden_transform,
-            signal_dimension=self.config.hidden_size,
-        )
         self.register_buffer("kv_index", plain.kv_index.detach().clone())
 
         hidden = self.config.hidden_size
@@ -433,36 +421,11 @@ class ObfuscatedDecoderBlock(nn.Module):
             )
         )
 
-        # FFN RMS rotation: the FFN segment still uses the decoded reference
-        # form until task B3 fuses it into the deployed FFN weights, so the
-        # rotation survives here as a local buffer and is deleted there.
-        ffn_rotation = generate_orthogonal(
-            hidden, seed=seed, domain="block-%d-ffn-rms" % self.layer_id
-        )
-        self.register_buffer("ffn_rotation", ffn_rotation, persistent=False)
-
         gamma_ffn = plain.ffn_norm_weight.detach()
         swiglu_transform = generate_swiglu_transform(
             intermediate,
             seed=seed,
             domain="block-%d-swiglu" % self.layer_id,
-        )
-        converted_swiglu = convert_swiglu_weights(
-            hidden_rotation=ffn_rotation,
-            gamma=gamma_ffn,
-            gate_weight_math=plain.gate_proj.weight.detach().T.contiguous(),
-            up_weight_math=plain.up_proj.weight.detach().T.contiguous(),
-            down_weight_math=plain.down_proj.weight.detach().T.contiguous(),
-            transform=swiglu_transform,
-        )
-        self.register_buffer(
-            "gate_weight_math", converted_swiglu.gate_weight_math
-        )
-        self.register_buffer(
-            "up_weight_math", converted_swiglu.up_weight_math
-        )
-        self.register_buffer(
-            "down_weight_math", converted_swiglu.down_weight_math
         )
 
         gamma = obfuscation.noise_propagation_gamma
@@ -473,16 +436,6 @@ class ObfuscatedDecoderBlock(nn.Module):
                 hidden_noise,
                 seed=seed,
                 domain="block-%d-attention-noise-G" % self.layer_id,
-            ),
-            persistent=False,
-        )
-        self.register_buffer(
-            "swiglu_noise_propagator",
-            gamma
-            * generate_signed_permutation(
-                hidden_noise,
-                seed=seed,
-                domain="block-%d-swiglu-noise-G" % self.layer_id,
             ),
             persistent=False,
         )
@@ -548,19 +501,6 @@ class ObfuscatedDecoderBlock(nn.Module):
                 hidden_noise,
                 seed=seed,
                 domain="block-%d-attention-xi" % self.layer_id,
-                scale=0.02,
-            ).squeeze(0)
-            if fixed
-            else torch.zeros(hidden_noise),
-            persistent=False,
-        )
-        self.register_buffer(
-            "swiglu_fixed_refresh",
-            _random_matrix(
-                1,
-                hidden_noise,
-                seed=seed,
-                domain="block-%d-swiglu-xi" % self.layer_id,
                 scale=0.02,
             ).squeeze(0)
             if fixed
@@ -689,6 +629,46 @@ class ObfuscatedDecoderBlock(nn.Module):
         # rho is a scalar per token; the basis factors stay in the closure and
         # out of state_dict, matching the existing checkpoint convention.
         self._rms_scale = _make_rms_scale(hidden_transform)
+        self._debug_basis_unmix = (
+            (lambda tensor: hidden_transform.unmix(tensor))
+            if debug_enabled
+            else None
+        )
+
+        # -- deployed feed-forward weights (offline fusion) ---------------
+        validate_auxiliary_budget(
+            basis=hidden_transform,
+            sample_signal=torch.randn(
+                64, hidden, generator=make_generator(seed, "budget-probe-ffn")
+            ),
+            signal_noise_coupling=self.down_noise_coupling,
+            noise_propagator=self.down_noise_propagator,
+            context="block-%d-ffn" % self.layer_id,
+        )
+        deployed_ffn = build_deployed_feed_forward(
+            basis=hidden_transform,
+            gamma_ffn=plain.ffn_norm_weight.detach(),
+            gate_weight_math=plain.gate_proj.weight.detach().T.contiguous(),
+            up_weight_math=plain.up_proj.weight.detach().T.contiguous(),
+            down_weight_math=plain.down_proj.weight.detach().T.contiguous(),
+            neuron_permutation=swiglu_transform.permutation,
+            neuron_scale=swiglu_transform.scale,
+            swiglu_noise_coupling=self.swiglu_noise_coupling,
+            down_noise_coupling=self.down_noise_coupling,
+            noise_propagator=self.down_noise_propagator,
+            fixed_refresh=self.down_fixed_refresh if fixed else None,
+        )
+        self.register_buffer("deployed_gate", deployed_ffn.gate, persistent=True)
+        self.register_buffer("deployed_up", deployed_ffn.up, persistent=True)
+        self.register_buffer(
+            "deployed_ffn_out", deployed_ffn.output, persistent=True
+        )
+        self.register_buffer(
+            "deployed_ffn_noise_out", deployed_ffn.noise_out, persistent=True
+        )
+        self.register_buffer(
+            "deployed_ffn_refresh_out", deployed_ffn.refresh_out, persistent=True
+        )
 
         self.attention = ObfuscatedAttention(
             mode=self.mode,
@@ -742,33 +722,16 @@ class ObfuscatedDecoderBlock(nn.Module):
             conversion_time_seconds=time.perf_counter() - started,
         )
 
-    def _refresh(
-        self,
-        fixed: torch.Tensor,
-        context: RequestContext,
-        domain: str,
-    ) -> torch.Tensor:
-        if not self.noise_injection_enabled:
-            return torch.zeros_like(fixed)
-        if self.obfuscation.refresh_mode == "fixed_debug":
-            return fixed
-        generator = context.generator_for(
-            "block", self.layer_id, domain, "refresh"
-        )
-        value = torch.randn(
-            fixed.shape, generator=generator, dtype=torch.float32
-        ) * (0.02 * self.refresh_noise_scale)
-        return value.to(device=fixed.device, dtype=fixed.dtype)
+    def _debug_unmix(self, mixed: torch.Tensor) -> torch.Tensor:
+        """Decode a mixed state. Debug/diagnostics only.
 
-    def _unmix_checkpoint(
-        self, state: MixedState
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        return self._fused_checkpoint_unmix(state)
+        Not called from the production forward path. Present so that
+        ``forward_debug`` can report plaintext-referenced error metrics.
+        """
 
-    def _mix_checkpoint(
-        self, signal: torch.Tensor, noise: torch.Tensor
-    ) -> MixedState:
-        return self._fused_checkpoint_mix(signal, noise)
+        if not self.debug_enabled:
+            raise PermissionError("decode is disabled outside debug mode")
+        return self._debug_basis_unmix(mixed)
 
     def _mask_from_mixed(
         self, mixed: torch.Tensor, token_mask: Optional[torch.Tensor]
@@ -1010,66 +973,48 @@ class ObfuscatedDecoderBlock(nn.Module):
             post_attention_mixed, self.hidden_basis
         )
 
-        ffn_signal, ffn_side_noise = self._unmix_checkpoint(
-            post_attention_state
+        # FFN segment, also without decoding.
+        post_mixed = post_attention_state.mixed
+        scale_ffn = self._rms_scale(post_mixed, self.config.rms_epsilon).to(
+            device=post_mixed.device, dtype=post_mixed.dtype
         )
-        ffn_rotated = ffn_signal @ self.ffn_rotation.to(
-            device=ffn_signal.device, dtype=ffn_signal.dtype
-        )
-        ffn_normalized = rms_no_gamma_fp32(
-            ffn_rotated, self.config.rms_epsilon
-        )
-        gate_prime = ffn_normalized @ self.gate_weight_math.to(
-            device=ffn_signal.device, dtype=ffn_signal.dtype
-        )
-        up_prime = ffn_normalized @ self.up_weight_math.to(
-            device=ffn_signal.device, dtype=ffn_signal.dtype
-        )
+        gate_prime = (post_mixed @ cast("deployed_gate")) / scale_ffn
+        up_prime = (post_mixed @ cast("deployed_up")) / scale_ffn
         z_prime = F.silu(gate_prime) * up_prime
-        swiglu_noise = refresh_swiglu_noise(
-            z_prime=z_prime.float(),
-            side_noise=ffn_side_noise.float(),
-            coupling=self.swiglu_noise_coupling.float(),
-            propagator=self.swiglu_noise_propagator.float(),
-            refresh=self._refresh(
-                self.swiglu_fixed_refresh,
+        final_mixed = (
+            post_mixed
+            + z_prime @ cast("deployed_ffn_out")
+            + (post_mixed @ cast("noise_read")) @ cast("deployed_ffn_noise_out")
+            + self._refresh_out(
+                cast("deployed_ffn_refresh_out"),
                 request_context,
-                "swiglu",
-            ).float(),
-        ).to(dtype=ffn_signal.dtype)
-        down_signal = z_prime @ self.down_weight_math.to(
-            device=ffn_signal.device, dtype=ffn_signal.dtype
+                "down",
+                post_mixed,
+            )
         )
-        down_noise = (
-            down_signal.float() @ self.down_noise_coupling.float()
-            + swiglu_noise.float() @ self.down_noise_propagator.float()
-            + self._refresh(
-                self.down_fixed_refresh, request_context, "down"
-            ).float()
-        ).to(dtype=ffn_signal.dtype)
-        final_signal = ffn_signal + down_signal
-        final_noise = ffn_side_noise + down_noise
-        final_state = self._mix_checkpoint(final_signal, final_noise)
+        final_state = MixedState(final_mixed, self.hidden_basis)
 
         if not return_debug:
             return final_state, None, new_cache
         assert attention_debug is not None
-        # Debug path only: explicit decode for diagnostics. Never reachable
-        # from forward(); gated by debug_enabled in forward_debug().
-        hidden, _ = self._fused_checkpoint_unmix(state)
-        post_attention_signal, attention_noise = self._fused_checkpoint_unmix(
-            post_attention_state
-        )
-        _, final_noise = self._fused_checkpoint_unmix(final_state)
+        # Debug path only: explicit decode for diagnostics. Never reachable from
+        # forward(); gated by debug_enabled in forward_debug().
+        decoded_in = self._debug_unmix(state.mixed)
+        decoded_post = self._debug_unmix(post_attention_mixed)
+        decoded_final = self._debug_unmix(final_mixed)
+        hidden = decoded_in[..., : self.config.hidden_size]
+        post_attention_signal = decoded_post[..., : self.config.hidden_size]
+        attention_noise = decoded_post[..., self.config.hidden_size :]
+        final_noise = decoded_final[..., self.config.hidden_size :]
         attention_output = post_attention_signal - hidden
         clean_update = torch.einsum(
             "bhqd,hdn->bqn",
             attention_debug.clean_output.float(),
             cast("deployed_attn_out"),
         )
-        clean_attention_output, _ = self._fused_checkpoint_unmix(
-            MixedState(clean_update, self.hidden_basis)
-        )
+        clean_attention_output = self._debug_unmix(clean_update)[
+            ..., : self.config.hidden_size
+        ]
         repeated_k_plain = k_rope[:, self.kv_index]
         plain_scores = torch.einsum(
             "bhqd,bhkd->bhqk", q_rope.float(), repeated_k_plain.float()
@@ -1101,7 +1046,7 @@ class ObfuscatedDecoderBlock(nn.Module):
             attention_output=attention_output,
             post_attention=post_attention_signal,
             attention_noise_state=attention_noise,
-            swiglu_noise_state=swiglu_noise,
+            z_prime=z_prime,
             final_noise_state=final_noise,
         )
         return final_state, debug, new_cache
