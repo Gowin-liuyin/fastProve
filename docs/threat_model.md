@@ -365,6 +365,57 @@ PYTHONPATH=src python scripts/verify_gram_leakage.py \
 ```
 原始记录：`results/raw/gram_leakage.json`
 
+### 5bis.9 正确性强制的范数泄漏可直接恢复输入 token（实测，最严重后果）
+
+5bis.7 说明 `ρ` 必然泄漏逐 token 的 `‖h‖`。本节给出它的**具体后果**：
+这条通道可以直接恢复词表置换本应隐藏的明文输入 token ID。
+
+**攻击链（不需要已知明文对，不需要知道 `M`）：**
+
+1. C1 要求服务端算对 `ρ = sqrt(‖h‖²/d + eps)`，否则 RMSNorm 和模型输出都错；
+2. `ρ` 代数上确定 `‖h‖`：`‖h‖² = (ρ² − eps)·d`；
+3. 第 0 层 `h₀ = E[token]` 就是 embedding 表的一行，故 `‖h₀‖` 是**逐 token 常量**；
+4. **行范数对行置换不变。** 词表置换 `τ` 只重排 embedding 行，不改变任何一行的
+   范数，因此在这条通道上**不提供任何保护**；
+5. base checkpoint 是公开的，攻击者可离线建 `范数 → token` 查找表。
+
+**实测恢复率**（`scripts/verify_token_recovery_from_rho.py`，n=4000 随机 token）：
+
+| 模型 | `ρ` 存储精度 | 平均候选数 | 唯一且正确恢复 |
+|---|---|---:|---:|
+| Qwen2-1.5B | FP64 | 1.06 | **98.7%** |
+| Qwen2-1.5B | **FP32** | 1.75 | **92.5%** |
+| Qwen2-1.5B | BF16 | 4360 | 0.0% |
+| Llama-3.2-3B | FP64 | 1.00 | **100.0%** |
+| Llama-3.2-3B | **FP32** | 1.07 | **93.4%** |
+| Llama-3.2-3B | BF16 | 4491 | 0.0% |
+
+embedding 行范数互不相同的比例：Qwen2 99.05%，Llama-3.2 **100.00%**。
+
+端到端演示（Qwen2，8 token 句子，服务端只见混淆 ID
+`[87196, 89827, 24139, 36140, 43166, 69916, 19409, 83762]`）：
+**8/8 逐 token 精确恢复**，还原出原句
+`", I am a patient with diabetes"`。
+
+**核心张力：AGENTS.md R5 要求 RMS 统计用 FP32 或更高，exact 门禁也在 FP32 下
+判定——而正是这个精度让攻击成立。** BF16 的 `ρ` 能挡住这条通道（恢复率 0%），
+但它违反 R5，且 4.7e-03 的相对误差远超 exact 门禁的 logit 容差 1e-3。也就是说
+BF16 不是解法，它只是把隐私失败换成了正确性失败。
+
+**适用范围（不得夸大）：** 该攻击针对第 0 层，因为那里 `h₀` 恰好等于单个
+embedding 行。更深层的 `h` 是上下文相关的，`范数 → token` 的一对一关系不再成立。
+但第 0 层**就是输入**，而输入正是客户端要隐藏的东西；且 `‖h_ℓ‖` 序列在所有层
+都仍然泄漏，只是语义解释需要另做实验。
+
+复现：
+```bash
+PYTHONPATH=src python scripts/verify_token_recovery_from_rho.py \
+    --model-path <本地明文 checkpoint 目录> \
+    --output results/raw/token_recovery_from_rho.json
+```
+原始记录：`results/raw/token_recovery_from_rho.json`、
+`results/raw/token_recovery_from_rho_llama.json`
+
 ## 6. 各模式实际隐藏与保留的信息
 
 ### 6.1 `plaintext`

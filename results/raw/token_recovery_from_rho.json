@@ -1,0 +1,48 @@
+{
+  "claim": "the RMSNorm scale rho alone recovers layer-0 input token ids; the vocabulary permutation provides no protection because row norms are invariant under a row permutation",
+  "requires_known_plaintext_pairs": false,
+  "requires_knowledge_of_the_mixing_basis": false,
+  "requires_public_base_checkpoint": true,
+  "forced_by": "constraint C1 (exact output): the server must compute rho correctly, and AGENTS.md R5 requires FP32 or better for RMS statistics, which is the precision that makes this succeed",
+  "model_path": "/Users/yin/dr-claw/\u57fa\u4e8e\u534f\u53d8\u6df7\u6dc6\u7684\u8fb9\u4e91\u534f\u540c\u63a8\u7406/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+  "vocab_size": 151936,
+  "hidden_size": 1536,
+  "rms_norm_eps": 1e-06,
+  "embedding_norm_statistics": {
+    "min": 0.730105889242909,
+    "max": 1.9898323078121525,
+    "mean": 1.1660844350314248,
+    "std": 0.16908915344786304,
+    "distinct_fraction": 0.9904762531592249
+  },
+  "by_rho_precision": [
+    {
+      "rho_storage_dtype": "float64",
+      "mean_candidate_count": 1.06025,
+      "median_candidate_count": 1.0,
+      "uniquely_determined_fraction": 0.987,
+      "unique_and_correct_fraction": 0.987,
+      "sample_count": 4000
+    },
+    {
+      "rho_storage_dtype": "float32",
+      "mean_candidate_count": 1.74525,
+      "median_candidate_count": 1.0,
+      "uniquely_determined_fraction": 0.92525,
+      "unique_and_correct_fraction": 0.92525,
+      "sample_count": 4000
+    },
+    {
+      "rho_storage_dtype": "bfloat16",
+      "mean_candidate_count": 4360.41575,
+      "median_candidate_count": 3653.0,
+      "uniquely_determined_fraction": 0.0,
+      "unique_and_correct_fraction": 0.0,
+      "sample_count": 4000
+    }
+  ],
+  "mitigation_note": "storing rho in bfloat16 blocks this channel but violates AGENTS.md R5 and exceeds the exact-mode logit tolerance, so it trades the privacy leak for a correctness failure rather than resolving the tension",
+  "torch_version": "2.11.0",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "seed": 1
+}

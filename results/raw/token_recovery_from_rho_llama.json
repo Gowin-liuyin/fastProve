@@ -1,0 +1,48 @@
+{
+  "claim": "the RMSNorm scale rho alone recovers layer-0 input token ids; the vocabulary permutation provides no protection because row norms are invariant under a row permutation",
+  "requires_known_plaintext_pairs": false,
+  "requires_knowledge_of_the_mixing_basis": false,
+  "requires_public_base_checkpoint": true,
+  "forced_by": "constraint C1 (exact output): the server must compute rho correctly, and AGENTS.md R5 requires FP32 or better for RMS statistics, which is the precision that makes this succeed",
+  "model_path": "/Users/yin/dr-claw/\u57fa\u4e8e\u534f\u53d8\u6df7\u6dc6\u7684\u8fb9\u4e91\u534f\u540c\u63a8\u7406/model_artifacts/raw_remote_pull/models/llama-3.2-3b-instruct/base_model",
+  "vocab_size": 128256,
+  "hidden_size": 3072,
+  "rms_norm_eps": 1e-05,
+  "embedding_norm_statistics": {
+    "min": 0.6221249886422342,
+    "max": 1.4694583316535945,
+    "mean": 1.0861297932528329,
+    "std": 0.1130581381168246,
+    "distinct_fraction": 1.0
+  },
+  "by_rho_precision": [
+    {
+      "rho_storage_dtype": "float64",
+      "mean_candidate_count": 1.0,
+      "median_candidate_count": 1.0,
+      "uniquely_determined_fraction": 1.0,
+      "unique_and_correct_fraction": 1.0,
+      "sample_count": 4000
+    },
+    {
+      "rho_storage_dtype": "float32",
+      "mean_candidate_count": 1.069,
+      "median_candidate_count": 1.0,
+      "uniquely_determined_fraction": 0.93425,
+      "unique_and_correct_fraction": 0.93425,
+      "sample_count": 4000
+    },
+    {
+      "rho_storage_dtype": "bfloat16",
+      "mean_candidate_count": 4491.466,
+      "median_candidate_count": 5121.0,
+      "uniquely_determined_fraction": 0.0,
+      "unique_and_correct_fraction": 0.0,
+      "sample_count": 4000
+    }
+  ],
+  "mitigation_note": "storing rho in bfloat16 blocks this channel but violates AGENTS.md R5 and exceeds the exact-mode logit tolerance, so it trades the privacy leak for a correctness failure rather than resolving the tension",
+  "torch_version": "2.11.0",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "seed": 1
+}
