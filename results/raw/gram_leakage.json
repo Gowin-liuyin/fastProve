@@ -1,0 +1,17 @@
+{
+  "claim": "server-side Gram blocks expose the exact Euclidean geometry of h; h is recoverable up to one global orthogonal map without any known-plaintext pair and without knowledge of M",
+  "supersedes": "threat_model 5bis.3 bounded distance distortion by kappa; the distances are in fact exact",
+  "torch_version": "2.11.0",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "seed": 3,
+  "signal_dim": 256,
+  "noise_dim": 16,
+  "block_size": 16,
+  "samples": 256,
+  "arithmetic_dtype": "float64",
+  "max_absolute_error_of_recovered_norms": 2.1316282072803006e-14,
+  "max_absolute_error_of_pairwise_inner_products": 8.526512829121202e-13,
+  "max_absolute_error_of_pairwise_distances": 1.066240299940009e-06,
+  "baseline_norm_error_without_using_the_gram": 11.842566457110504,
+  "interpretation": "errors at FP64 round-off level mean the geometry is exposed exactly, not approximately"
+}

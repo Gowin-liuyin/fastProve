@@ -2286,68 +2286,31 @@ def test_chain_linear_still_satisfies_its_documented_identity() -> None:
     """
 ```
 
-**B6.3** 加一个测试防止未来重新引入解码：
+**B6.3** 加一个测试防止未来重新引入解码。
 
-新建 `tests/test_no_decode_in_forward.py`：
+⚠️ **不要用纯静态 AST 扫描。** 纯静态分析无法区分「在 `_run` 的 `return_debug`
+分支内」和「在主路径上」——除非做控制流分析。本文档早期版本给出的静态实现是
+**空测试**：它把所有 `_debug_unmix` 提及都过滤掉，因此往 `forward()` 里注入一个
+真实解码也照样通过（已实测确认）。
 
-```python
-"""Static guard: the production forward path must not decode or invert."""
+正确做法是**运行时哨兵**：把解码闭包替换成抛异常的函数，然后跑每条生产入口，
+直接验证「forward 从不解码」这个性质本身。实现见
+`tests/test_no_decode_in_forward.py`（已落地，8 个测试）。它必须包含：
 
-from __future__ import annotations
+| 测试 | 作用 |
+|---|---|
+| `test_sentinel_actually_patches_a_decode_closure` | 元测试：确认哨兵真的替换到了东西，而不是静默替换了 0 个 |
+| `test_forward_does_not_decode` | 无 cache 前向 |
+| `test_cached_forward_does_not_decode` | prefill + 增量 decode |
+| `test_greedy_generation_does_not_decode` | `generate_greedy` 全程 |
+| `test_sentinel_fires_on_the_debug_path` | **反向控制**：debug 路径确实解码，哨兵必须触发。没有这条，上面三条可能只是因为哨兵根本不可达而通过 |
+| `test_debug_apis_are_rejected_when_debug_is_disabled` | `debug_enabled=False` 时 `forward_debug` 抛 `PermissionError` |
+| `test_no_linear_algebra_inverse_anywhere_in_the_obfuscated_module` | 静态：`inv`/`solve`/`pinv`/`lstsq` 全模块禁止 |
+| `test_deployed_builders_never_invert_at_runtime` | 静态：`build_*` 内禁止求逆 |
 
-import ast
-import pathlib
-
-_FORBIDDEN_CALLS = {"inv", "solve", "pinv", "lstsq"}
-_FORBIDDEN_NAMES = {"unmix", "_debug_unmix", "signal_projection"}
-
-
-def _forward_functions(tree: ast.AST):
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef) and node.name in (
-            "forward",
-            "_run",
-            "generate_greedy",
-        ):
-            yield node
-
-
-def test_forward_path_contains_no_inverse_or_decode() -> None:
-    source = pathlib.Path("src/fastprove/models/obfuscated.py").read_text(
-        encoding="utf-8"
-    )
-    tree = ast.parse(source)
-    offences = []
-    for function in _forward_functions(tree):
-        for node in ast.walk(function):
-            if isinstance(node, ast.Attribute):
-                if node.attr in _FORBIDDEN_CALLS | _FORBIDDEN_NAMES:
-                    offences.append("%s -> .%s" % (function.name, node.attr))
-            if isinstance(node, ast.Name) and node.id in _FORBIDDEN_NAMES:
-                offences.append("%s -> %s" % (function.name, node.id))
-    # ``_run`` legitimately references ``_debug_unmix`` inside its
-    # ``return_debug`` branch, which ``forward`` can never reach.
-    offences = [item for item in offences if "_debug_unmix" not in item]
-    assert offences == [], "decode/inverse reached the forward path: %s" % offences
-
-
-def test_deployed_module_never_inverts_at_runtime() -> None:
-    source = pathlib.Path("src/fastprove/layers/deployed.py").read_text(
-        encoding="utf-8"
-    )
-    tree = ast.parse(source)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef) and node.name.startswith("build_"):
-            for inner in ast.walk(node):
-                if isinstance(inner, ast.Attribute) and inner.attr in (
-                    "inv",
-                    "solve",
-                ):
-                    raise AssertionError(
-                        "%s calls a runtime inverse; conversion must use "
-                        "dense_inverse() from the basis instead" % node.name
-                    )
-```
+**自检方法**（必做）：往 block 的 `forward()` 里注入一行
+`self._debug_basis_unmix(state.mixed)`，确认哨兵测试**转为 FAIL**，然后恢复。
+一个抓不到注入泄漏的守卫比没有守卫更糟，因为它给出虚假保证。
 
 ### 验收标准
 - [ ] `python -m pytest -q` 全绿
@@ -3236,6 +3199,8 @@ gating，不要绕过。
 
 ### 必须新增到 `docs/threat_model.md` 的条目
 
+（第 6 条在阶段 B 落地后才被发现，早期版本的本文档缺它。）
+
 | 编号 | 内容 | 来源 |
 |---|---|---|
 | 1 | **块对角基降低已知明文攻击代价**：每输出坐标只依赖 `b` 个输入坐标，恢复 `M` 从 `O(n)` 样本/块降到 `O(b)`。`r ≪ d` 时大部分块不含噪声坐标 | 任务 A2 |
@@ -3243,6 +3208,7 @@ gating，不要绕过。
 | 3 | **`common_qk` 服务端可见**：RoPE 之后应用，无法吸收。QK 几何结构不受保护 | 任务 C4.3 |
 | 4 | **`ρ` 的 FP32 精度上界**：`‖e‖/‖h‖ ≤ 30`。想靠加大噪声提升混淆强度会污染信号路径 | 任务 A2.4 |
 | 5 | **tied-embedding 的内存代价**：`untied_deployed` 使词表侧内存 +100%，峰值内存超出手册 §69 的 5% 目标 | 任务 B4.2 |
+| 6 | **服务端必须持有 Gram 块 ⇒ `h` 的欧氏几何精确暴露**：`ρ` 的计算要求 `deployed_gram_blocks` 在服务端。`A = PPᵀ` 只把 `P` 定到右正交因子，故**无需已知明文、无需知道 `M`** 即可把 `h` 恢复到一个全局正交变换。实测范数 2.1e-14、成对距离 1.1e-6。**这加强并部分推翻 5bis.3 的 `κ` 界**——距离不是被界住而是可精确读出。不可用工程手段消除 | 阶段 B 的直接后果 |
 
 ### `results/REPORT.md` 必须区分的四类结论
 

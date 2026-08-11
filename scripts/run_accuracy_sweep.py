@@ -19,6 +19,7 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from fastprove.structured import reduction_compute_dtype_name
 from fastprove.config import load_config  # noqa: E402
 from fastprove.evaluation.artifacts import (  # noqa: E402
     append_jsonl_record,
@@ -249,9 +250,9 @@ def _planned_runtime_metadata(
             # record replaces them with actual_device/activation_dtype.
             "device": requested_device,
             "activation_dtype": requested_dtype,
-            "checkpoint_compute_dtype": (
-                "float64" if requested_device == "cpu" else "float32"
-            ),
+            # Derived, never hard-coded: task A4 made this FP32 on every
+            # device and Stage B removed the FP64 checkpoint arithmetic.
+            "checkpoint_compute_dtype": reduction_compute_dtype_name(),
         }
     )
     return enriched

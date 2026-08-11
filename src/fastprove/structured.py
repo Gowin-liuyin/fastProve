@@ -462,3 +462,25 @@ def check_auxiliary_magnitude(
             % (context, ratio, AUXILIARY_MAGNITUDE_BOUND)
         )
     return ratio
+
+
+#: Dtype of the runtime reduction that produces the RMSNorm scale ``rho``.
+#: This is the only elevated-precision arithmetic left on the deployed path
+#: after Stage B removed the checkpoint mix/unmix, and AGENTS.md requires FP32
+#: or better for RMS statistics. Experiment records must derive the reported
+#: dtype from here instead of hard-coding a literal, so that a record always
+#: states the dtype that actually executed.
+REDUCTION_COMPUTE_DTYPE = torch.float32
+
+
+def reduction_compute_dtype_name() -> str:
+    """Return the executed reduction dtype for experiment records.
+
+    Deployed inference performs no FP64 arithmetic on any device. Prior to task
+    A4 the checkpoint mix/unmix ran in FP64 on CPU, and several record writers
+    hard-coded ``"float64" if device == "cpu" else "float32"``. That literal
+    became false when A4 switched to FP32 and Stage B deleted the checkpoint
+    arithmetic entirely; this function is the single source of truth.
+    """
+
+    return str(REDUCTION_COMPUTE_DTYPE).replace("torch.", "")

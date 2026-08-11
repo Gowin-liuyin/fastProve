@@ -169,6 +169,12 @@ h = c\,(M^{-1})_{[:,\,:d]}
 拉伸比落在 \([1.19,1.84]\)。这正是 embedding-inversion 类攻击所需的条件，
 因此**即使 \(M\) 保密**，仅凭 \(c\) 也存在几何/统计泄漏通道。
 
+> **⚠️ 本节被 5bis.8 条目 6 加强（2026-08，阶段 B 之后）。** 上面的 \(\kappa\)
+> 界是「仅观察 \(c\)」情形下的结论。但阶段 B 的部署路径要求服务端持有
+> Gram 块以计算 \(\rho\)，而 \(A=PP^{T}\) 使 \(h\) 的距离结构
+> **精确**暴露（实测 1e-14~1e-6，非 \(\kappa\) 界内的近似）。
+> 引用本节时必须同时引用 5bis.8 条目 6，不得只引用 \(\kappa\) 界。
+
 ### 5bis.4 刷新档位与可恢复性正交
 
 设刷新为 \(e'=hC+eG+\xi\)。由于解码矩阵湮灭 \(e\) 所在子空间，
@@ -262,7 +268,7 @@ PYTHONPATH=src python3 scripts/verify_recoverability_bound.py \
 
 ### 5bis.8 阶段 A–C 新增的安全后果（任务 D4 记录）
 
-以下五条在阶段 A–C 的实现过程中被证实或引入，全部有复现命令，必须随
+以下六条在阶段 A–C 的实现过程中被证实或引入，全部有复现命令，必须随
 本文件一起维护：
 
 **1. 块对角基降低已知明文攻击的样本代价（任务 A2）。**
@@ -324,6 +330,40 @@ PYTHONPATH=src python scripts/record_performance_D2.py \
     --output results/raw/performance_D2.json
 python -m pytest -q tests/test_secure_lm_head.py::test_fused_norm_head_raises_not_implemented
 ```
+
+**6. 服务端必须持有 Gram 块，因此 `h` 的欧氏几何被精确暴露（阶段 B 的直接
+后果，本条加强 5bis.3）。**
+部署前向用 `A_gram = P Pᵀ` 的块对角形式计算 RMSNorm 标度 `ρ`
+（`structured.py:signal_norm_squared`），所以 `deployed_gram_blocks` 和
+`deployed_gram_perm` **必然**在服务端 bundle 中（已在
+`tests/test_converter.py` 的密钥扫描里显式归类为服务端可见）。
+
+后果：`A` 只把 `P` 确定到一个右正交因子——对任意满足 `A = R Rᵀ` 的
+`[n, d]` 因子 `R`（例如对称特征基），都有 `c R = h Q`，`Q` 正交。因此
+**不需要任何已知明文对、也不需要知道 `M`**，仅凭服务端 bundle 即可把 `h`
+恢复到一个全局正交变换。实测（d=256, r=16, b=16, FP64）：
+
+| 泄漏量 | 最大绝对误差 | 不用 Gram 的基线 |
+|---|---:|---:|
+| 逐 token 范数 `‖h‖` | 2.1e-14 | 11.84 |
+| 所有成对内积 | 8.5e-13 | — |
+| 所有成对距离 | 1.1e-6 | — |
+
+误差在 FP64 舍入量级，即几何是**精确**暴露而非近似。这使 5bis.3 的
+`κ ≤ 10` 距离保真度上界失去意义：距离不是被界住，而是可精确读出。
+embedding-inversion 与语义分类类攻击所需的条件因此被完全满足。
+
+这条**不可通过工程手段消除**：`ρ = rms(h)` 是模型语义的一部分，服务端要算
+它就必须掌握足够信息确定 `‖h‖`。可选缓解只有把 `ρ` 的计算移入 TEE 或融合
+kernel 并让 Gram 块不可读，那属于 5bis.5 讨论的信任边界迁移，不是本原型的
+性质。
+
+复现：
+```bash
+PYTHONPATH=src python scripts/verify_gram_leakage.py \
+    --output results/raw/gram_leakage.json
+```
+原始记录：`results/raw/gram_leakage.json`
 
 ## 6. 各模式实际隐藏与保留的信息
 

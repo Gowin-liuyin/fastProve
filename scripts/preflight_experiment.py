@@ -124,9 +124,7 @@ def _runtime_capability_check(
         "requested_activation_dtype": activation_dtype,
         "actual_device": product.device.type,
         "actual_activation_dtype": str(product.dtype).removeprefix("torch."),
-        "checkpoint_compute_dtype": (
-            "float64" if device.type == "cpu" else "float32"
-        ),
+        "checkpoint_compute_dtype": reduction_compute_dtype_name(),
         "mps_fallback_env": fallback_value or None,
         "matmul_and_softmax": "pass",
     }

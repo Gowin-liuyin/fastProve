@@ -32,6 +32,7 @@ from ..models.obfuscated import (
     ObfuscatedTinyCausalLM,
 )
 from ..models.plain import PlainTinyCausalLM
+from ..structured import reduction_compute_dtype_name
 from ..seed import RequestContext
 from .accuracy import (
     compare_teacher_forced_metrics,
@@ -344,7 +345,7 @@ def _exact_gate_tolerances(record: Dict[str, Any]) -> Dict[str, Any]:
     )
     checkpoint_dtype = str(
         environment.get("checkpoint_compute_dtype")
-        or ("float64" if actual_device == "cpu" else "float32")
+        or reduction_compute_dtype_name()
     )
     if dtype == "float32" and pretrained:
         profile = "deep_fp32_calibrated"
@@ -1360,11 +1361,7 @@ def run_tiny_sweep_spec(
             {
                 "actual_device": config.runtime.device,
                 "activation_dtype": config.runtime.activation_dtype,
-                "checkpoint_compute_dtype": (
-                    "float64"
-                    if config.runtime.device == "cpu"
-                    else "float32"
-                ),
+                "checkpoint_compute_dtype": reduction_compute_dtype_name(),
                 "batch_size": config.evaluation.batch_size,
             }
         )
@@ -1447,9 +1444,7 @@ def run_tiny_sweep_spec(
                     "requested_activation_dtype": planned_dtype,
                     "device": planned_device,
                     "activation_dtype": planned_dtype,
-                    "checkpoint_compute_dtype": (
-                        "float64" if planned_device == "cpu" else "float32"
-                    ),
+                    "checkpoint_compute_dtype": reduction_compute_dtype_name(),
                 }
             )
         requested_pretrained = bool(
