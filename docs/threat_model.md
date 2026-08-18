@@ -367,7 +367,7 @@ PYTHONPATH=src python scripts/verify_gram_leakage.py \
 
 ### 5bis.9 正确性强制的范数泄漏可直接恢复输入 token（实测，最严重后果）
 
-5bis.7 说明 `ρ` 必然泄漏逐 token 的 `‖h‖`。本节给出它的**具体后果**：
+`ρ` 必然泄漏逐 token 的 `‖h‖`（见 `docs/PROBLEMS.md` §1.1）。本节给出**具体后果**：
 这条通道可以直接恢复词表置换本应隐藏的明文输入 token ID。
 
 **攻击链（不需要已知明文对，不需要知道 `M`）：**
@@ -415,6 +415,71 @@ PYTHONPATH=src python scripts/verify_token_recovery_from_rho.py \
 ```
 原始记录：`results/raw/token_recovery_from_rho.json`、
 `results/raw/token_recovery_from_rho_llama.json`
+
+### 5bis.10 融合内核假设挡不住 `ρ`（实测）
+
+对 5bis.9 最自然的辩护是：`ρ` 只存在于融合内核的寄存器中，从不写回显存
+（方案 §15.4 要求「信号提取 → RMSNorm → Q/K/V 在一个融合流程中完成」，
+本文件 §3.3 也假设「指定的融合操作不返回其内部干净的临时值」）。
+
+**该辩护不成立。** 融合 RMS-QKV 必须输出 `Q`（注意力要用），而服务端必然
+持有 `c` 和部署权重 `W_q`。因此
+
+\[
+Q=\frac{cW_q}{\rho}\quad\Longrightarrow\quad \rho=\frac{cW_q}{Q}
+\]
+
+一次逐元素除法。`ρ` 不是任何意义上的「内部临时值」——它由**必须同时存在**的
+输入与输出代数确定。实测：
+
+| `Q` 存储精度 | 反推 `ρ` 相对误差 | 反推 `‖h‖` 相对误差 |
+|---|---:|---:|
+| FP64 | **0.000e+00** | 4.41e-16 |
+| FP32 | 1.45e-08 | 1.45e-08 |
+| BF16 | 7.89e-04 | 7.89e-04 |
+
+注意最后一行：即使 `Q` 用 BF16 输出，反推 `‖h‖` 的精度（7.9e-04）**仍好于
+`ρ` 自身用 BF16 存储时的精度（4.7e-03）**，所以 5bis.9 提到的 BF16 缓解比
+表面看更弱。
+
+不需要改 kernel，不需要读寄存器，不需要已知明文对，不需要知道 `M`。
+
+复现：
+```bash
+PYTHONPATH=src python scripts/verify_rho_recoverable_from_fused_output.py \
+    --output results/raw/rho_recoverable_from_fused_output.json
+```
+
+### 5bis.11 范数泄漏不随深度衰减，边云切分无法消除（实测）
+
+对 5bis.9 的另一个缓解设想是边云切分：客户端本地算 embedding 与前 `k` 层，
+服务端从第 `k` 层开始，`ρ₀` 从不出现在服务端。
+
+**实测表明这不能消除通道。** 残差流保留 embedding 贡献
+（`h_ℓ = h₀ + Σ更新`），故 `‖h_ℓ‖` 始终与 `‖h₀‖` 强相关。
+
+Qwen2-1.5B 全 28 层，120 条真实 prompt，以第 ℓ 层范数作**唯一特征**做 token
+最近邻预测：
+
+| 层 ℓ | top-1 | 稀有 token (train 中 1–2 次) | 最高频基线 |
+|---:|---:|---:|---:|
+| 0 | 98.7% | 100.0% | 8.7% |
+| 1 | 77.9% | 49.4% | 8.7% |
+| 28 | **74.9%** | **49.4%** | 8.7% |
+
+**⚠️ 语料局限：** 该语料模板化严重（train 去重仅 365 个 token，test 中 98.7%
+在 train 出现过，熵 7.29/8.37 bits），最近邻攻击被显著抬高。**可引用的是稀有
+token 那一列（49.4% vs 基线 8.7%，5.7 倍）**，它说明该通道在所有深度都携带
+真实 token 信息，而非仅利用重复。5bis.9 的第 0 层数字与语料无关，引用第 0 层
+请用那个。
+
+复现：
+```bash
+PYTHONPATH=src python scripts/verify_norm_leak_by_depth.py \
+    --model-path <checkpoint> \
+    --prompt-file results/raw/real_scenario_prompts_1500.jsonl \
+    --output results/raw/norm_leak_by_depth.json
+```
 
 ## 6. 各模式实际隐藏与保留的信息
 

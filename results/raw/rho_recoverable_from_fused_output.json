@@ -1,0 +1,37 @@
+{
+  "claim": "rho is recoverable from the fused kernel's emitted Q alone; the register-residency / no-write-back assumption does not protect it",
+  "why": "Q = (c @ W_q) / rho, and the server must hold c and W_q and must emit Q for attention, so rho = (c @ W_q) / Q",
+  "requires_modified_kernel": false,
+  "requires_register_access": false,
+  "requires_known_plaintext_pairs": false,
+  "requires_knowledge_of_the_mixing_basis": false,
+  "signal_dim": 256,
+  "noise_dim": 16,
+  "block_size": 16,
+  "head_dim": 64,
+  "tokens": 64,
+  "rms_epsilon": 1e-05,
+  "by_emitted_query_dtype": [
+    {
+      "emitted_query_dtype": "float64",
+      "rho_relative_error": 0.0,
+      "signal_norm_relative_error": 4.4133085777924484e-16,
+      "operations_needed": "one elementwise division and one median"
+    },
+    {
+      "emitted_query_dtype": "float32",
+      "rho_relative_error": 1.4461091695009304e-08,
+      "signal_norm_relative_error": 1.4461228190671712e-08,
+      "operations_needed": "one elementwise division and one median"
+    },
+    {
+      "emitted_query_dtype": "bfloat16",
+      "rho_relative_error": 0.0007886129463715598,
+      "signal_norm_relative_error": 0.0007886209005688191,
+      "operations_needed": "one elementwise division and one median"
+    }
+  ],
+  "torch_version": "2.11.0",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "seed": 0
+}

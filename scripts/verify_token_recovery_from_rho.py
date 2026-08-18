@@ -1,7 +1,7 @@
 """Recover input tokens from the RMSNorm scale alone (layer 0).
 
 This is the concrete consequence of the correctness-forced norm leak recorded in
-``docs/threat_model.md`` 5bis.7 and ``results/FINDINGS.md``. It is not a
+``docs/threat_model.md`` 5bis.9 and ``docs/PROBLEMS.md`` section 1.1. It is not a
 hypothetical channel: it recovers the plaintext input token ids that the
 vocabulary permutation of task C1/C2 is supposed to hide.
 

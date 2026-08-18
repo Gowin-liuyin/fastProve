@@ -1,0 +1,300 @@
+{
+  "claim": "the norm leak does not decay with depth: an edge/cloud split at layer k does not eliminate the channel",
+  "reason": "the residual stream retains the embedding contribution, so ||h_l|| stays correlated with ||h_0||",
+  "corpus_caveat": "the headline accuracy is inflated by a templated corpus; read by_train_frequency, and prefer verify_token_recovery_from_rho.py for the corpus-independent layer-0 number",
+  "model_path": "/Users/yin/dr-claw/\u57fa\u4e8e\u534f\u53d8\u6df7\u6dc6\u7684\u8fb9\u4e91\u534f\u540c\u63a8\u7406/model_artifacts/raw_remote_pull/models/deepseek-r1-distill-qwen-1.5b/base_model",
+  "num_hidden_layers": 28,
+  "prompt_file": "results/raw/real_scenario_prompts_1500.jsonl",
+  "prompt_count_used": 120,
+  "train_prompts": 84,
+  "test_prompts": 36,
+  "train_token_count": 3006,
+  "train_distinct_tokens": 365,
+  "test_token_count": 1341,
+  "test_distinct_tokens": 331,
+  "test_tokens_seen_in_train_fraction": 0.9865771532058716,
+  "test_token_entropy_bits": 7.289490808511659,
+  "uniform_entropy_bits": 8.370687406807217,
+  "most_frequent_token_baseline": 0.08724832534790039,
+  "by_layer": [
+    {
+      "layer": 0,
+      "top1_accuracy": 0.9865771532058716,
+      "accuracy_over_baseline": 11.307691571980566,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 1.0
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 1.0
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 1.0
+        }
+      }
+    },
+    {
+      "layer": 1,
+      "top1_accuracy": 0.7785235047340393,
+      "accuracy_over_baseline": 8.923076765424407,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.49438202381134033
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.8368298411369324
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7962732911109924
+        }
+      }
+    },
+    {
+      "layer": 2,
+      "top1_accuracy": 0.7755406498908997,
+      "accuracy_over_baseline": 8.888888661168588,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.5056179761886597
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.8438228368759155
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7863354086875916
+        }
+      }
+    },
+    {
+      "layer": 3,
+      "top1_accuracy": 0.7651006579399109,
+      "accuracy_over_baseline": 8.769230296273221,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.5280898809432983
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.8158507943153381
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7813664674758911
+        }
+      }
+    },
+    {
+      "layer": 4,
+      "top1_accuracy": 0.7651006579399109,
+      "accuracy_over_baseline": 8.769230296273221,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.49438202381134033
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.806526780128479
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7900621294975281
+        }
+      }
+    },
+    {
+      "layer": 6,
+      "top1_accuracy": 0.7598806619644165,
+      "accuracy_over_baseline": 8.709401113825537,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.49438202381134033
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.8158507943153381
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7763975262641907
+        }
+      }
+    },
+    {
+      "layer": 8,
+      "top1_accuracy": 0.7524235844612122,
+      "accuracy_over_baseline": 8.623931536346893,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.516853928565979
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.7925407886505127
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7739130258560181
+        }
+      }
+    },
+    {
+      "layer": 12,
+      "top1_accuracy": 0.7494407296180725,
+      "accuracy_over_baseline": 8.589743432091074,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.49438202381134033
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.7902097702026367
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7726708054542542
+        }
+      }
+    },
+    {
+      "layer": 16,
+      "top1_accuracy": 0.7509321570396423,
+      "accuracy_over_baseline": 8.606837484218984,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.49438202381134033
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.7925407886505127
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7739130258560181
+        }
+      }
+    },
+    {
+      "layer": 20,
+      "top1_accuracy": 0.7509321570396423,
+      "accuracy_over_baseline": 8.606837484218984,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.49438202381134033
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.7972028255462646
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7714285850524902
+        }
+      }
+    },
+    {
+      "layer": 24,
+      "top1_accuracy": 0.745712161064148,
+      "accuracy_over_baseline": 8.5470083017713,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.49438202381134033
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.7902097702026367
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7664596438407898
+        }
+      }
+    },
+    {
+      "layer": 28,
+      "top1_accuracy": 0.7494407296180725,
+      "accuracy_over_baseline": 8.589743432091074,
+      "by_train_frequency": {
+        "unseen": {
+          "sample_count": 18,
+          "top1_accuracy": 0.0
+        },
+        "rare_1_2": {
+          "sample_count": 89,
+          "top1_accuracy": 0.49438202381134033
+        },
+        "medium_3_10": {
+          "sample_count": 429,
+          "top1_accuracy": 0.7948718070983887
+        },
+        "frequent_gt_10": {
+          "sample_count": 805,
+          "top1_accuracy": 0.7701863646507263
+        }
+      }
+    }
+  ],
+  "torch_version": "2.11.0",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "seed": 0
+}
