@@ -451,3 +451,33 @@ CPU，prefill，self CPU time，共 29.2ms）：
 （内部派发到 mm/bmm）。结论：额外开销来自部署路径新增的少量 GEMM
 （`(c@N)@Wnz`、`rho` Gram 归约）与 attention 的 value einsum；算术预算
 表（文档 §2.3）显示融合 kernel 下增量约 +1.8%，参考实现达不到该数。
+
+## 增广带噪内核：阶段 A 执行记录（2026-09-14）
+
+依据 `docs/augmented_noisy_obfuscation_plan.md` 第 10 节阶段 A 与阶段 B 第 1、2 组。本次为小张量内核实现与数值验证，不含任何安全结论。
+
+### 新增代码
+
+- `src/fastprove/transforms.py`：新增 `generate_two_sided_transform`（`M = Q_L D Q_R`，双 FP64 QR，对角 `exp(u)`，`u ~ U[-log κ/2, log κ/2]`），保留原 `Pi D Q` 生成器作对照。
+- `src/fastprove/augmented_noise.py`（新文件）：`NoiseRefreshSpec`（r、γ、β）、`generate_propagator`（`G = γP_e` 符号置换）、`record_generator`（按 `(key_epoch, request_nonce, sample_id, token_position, layer_id, operation, head_id)` 域分离）、`sample_initial_noise` / `sample_refresh_noise`（均匀有界分布，方差匹配 σ_e² 与 σ_e²(1−γ²)）、`apply_noise_refresh`（`γeP_e + ξ`，C=0）、`noise_coverage_metrics`（列范数 min/max、近零比例、有效秩）、`observed_noise_ratios`（实际 ‖e‖/‖h‖ 分位数）。
+- `src/fastprove/coa_views.py`（新文件）：`transcript_coa` / `cloud_coa` 两视图输入白名单契约与 manifest 落盘（方案 4.3 节）。
+- `configs/augmented_noise_kernel.yaml`：内核实验配置草案（矩阵族、r、κ、β、γ、攻击视图清单）。
+- `scripts/run_augmented_noise_kernel.py`：阶段 A 闭环脚本，写 `results/raw/augmented_noise_kernel/kernel_records.jsonl`。
+- `tests/test_augmented_noise_kernel.py`（18 项）与 `tests/test_coa_view_contract.py`（7 项）。
+
+### 数值验证结果（CPU、FP64 转换、FP32 部署门禁）
+
+- 条件数：d=64、r=16、κ目标 3 时实测 κ₂=2.90；κ=1 时为 1.0000（正交）；κ=10 时 9.31，均未超限。
+- 逆残差（存储精度）：FP64 <1e-13；FP32 存储 <1e-6。
+- 恒等式：`M_n P ≈ 0`（<1e-13）；完整 `[y, e']` 输出信号最大绝对误差 ~1e-14（FP64）/ ~1e-7（FP32 部署，通过 ≤1e-5 门禁）。
+- 噪声链平稳性：20k 样本下 Var(e₀)=σ_e²、Var(e₁)=σ_e²（γ=0.5，均匀刷新，采样误差 <5%）。
+- 覆盖度：双侧基 r=16 有效秩 15.51/16（无近零坐标）；基线 `Pi D Q` 为 13.01/16；κ=10 时 14.12/16。
+- 实际噪声比：β=1 时 ‖e‖/‖h‖ 中位数 0.127、最大 0.165，远低于 FP32 Gram 上限 30。
+- 复现性/隔离：固定种子逐位复现；不同 token 位置、不同样本、不同层的噪声流互不相同；同一绝对位置 prefill/decode 一致。β=0 时流相等（无噪对照，符合预期）。
+- 测试：`pytest tests/ -q --ignore=tests/test_mps_runtime.py` → 338 passed。
+
+### 边界
+
+- 本轮未接入 Transformer block（方案阶段 D 未开始）；未运行任何 COA 攻击实验；`attacker_views` 仅落配置与契约测试。
+- 双侧基对攻击难度的提升仍是待检验假设；当前数据仅证明数值正确性与坐标覆盖差异。
+- per_request ξ 动态注入已在闭环验证（`ξ @ M_out,n` 外加项），尚未接入 `ChainLinear` 的 per_request forward 路径。

@@ -1,0 +1,23 @@
+# Augmented-noise kernel experiment (plan section 9, stage A + stage B groups 1-2).
+basis_family: dense_two_sided
+hidden_size: 64
+hidden_noise_dim: 16
+condition_target: 3.0
+max_condition_number: 10.0
+activation_dtype: float32
+refresh_mode: per_request
+refresh_granularity: sample_token_layer
+noise_energy_ratio: 1.0
+noise_propagation_gamma: 0.5
+signal_noise_coupling_scale: 0.0
+rho_noise_bound: 0.0
+attention_mode: exact
+attacker_views: [transcript_coa, cloud_coa]
+sweep:
+  energy_ratios: [0.0, 0.1, 1.0, 3.0]
+  noise_dims: [8, 16]
+  condition_numbers: [1.0, 3.0, 10.0]
+  basis_families: [dense_two_sided, dense_baseline]
+runtime:
+  seed: 20260914
+  device: cpu

@@ -241,3 +241,72 @@ def generate_transform(
         condition_number=condition,
         fingerprint=_fingerprint(matrix, signal_dim, noise_dim),
     )
+
+
+def generate_two_sided_transform(
+    signal_dim: int,
+    noise_dim: int,
+    *,
+    seed: int,
+    domain: str,
+    max_condition_number: float = 10.0,
+    dtype: torch.dtype = torch.float32,
+) -> BasisTransform:
+    """Generate the dense two-sided basis ``M = Q_L D Q_R`` (plan 7.2).
+
+    ``Q_L`` and ``Q_R`` are independent FP64-QR orthogonal factors and ``D`` is
+    a positive diagonal with ``D_ii = exp(u_i)``,
+    ``u_i ~ Uniform[-log(kappa)/2, log(kappa)/2]``, so
+    ``kappa_2(M) = max(D)/min(D) <= max_condition_number`` because orthogonal
+    factors do not change singular values. Unlike ``generate_transform`` the
+    row Gram ``Q_L D^2 Q_L^T`` generally has nonzero signal-noise cross blocks.
+
+    This is a candidate basis family for attack comparison only; density does
+    not constitute a security improvement (plan 12).
+    """
+
+    if signal_dim <= 0 or noise_dim <= 0:
+        raise ValueError("signal_dim and noise_dim must be positive")
+    _validate_transform_dtype(dtype)
+    if max_condition_number < 1.0 or not math.isfinite(max_condition_number):
+        raise ValueError("max_condition_number must be finite and at least one")
+    total_dim = signal_dim + noise_dim
+    generator = make_generator(
+        seed, domain, "two-sided-basis", signal_dim, noise_dim, total_dim
+    )
+    factors = []
+    for factor_domain in ("%s-two-sided-left" % domain, "%s-two-sided-right" % domain):
+        raw = torch.randn(
+            total_dim, total_dim, generator=generator, dtype=torch.float64
+        )
+        orthogonal, upper = torch.linalg.qr(raw)
+        signs = torch.sign(torch.diagonal(upper))
+        signs = torch.where(signs == 0, torch.ones_like(signs), signs)
+        factors.append(orthogonal * signs.unsqueeze(0))
+    q_left, q_right = factors
+
+    log_half_range = 0.5 * math.log(max_condition_number)
+    unit = torch.rand(total_dim, generator=generator, dtype=torch.float64)
+    log_scales = (2.0 * unit - 1.0) * log_half_range
+    diagonal = torch.diag(torch.exp(log_scales))
+    matrix_fp64 = q_left @ diagonal @ q_right
+    condition = float(torch.linalg.cond(matrix_fp64).item())
+    tolerance = max(1e-10, max_condition_number * 1e-10)
+    if not math.isfinite(condition) or condition > max_condition_number + tolerance:
+        raise ValueError(
+            "generated two-sided transform condition %.6g exceeds limit %.6g"
+            % (condition, max_condition_number)
+        )
+    inverse_fp64 = torch.linalg.solve(
+        matrix_fp64, torch.eye(total_dim, dtype=torch.float64)
+    )
+    matrix = matrix_fp64.to(dtype=dtype)
+    inverse = inverse_fp64.to(dtype=dtype)
+    return BasisTransform(
+        matrix=matrix,
+        inverse=inverse,
+        signal_dim=signal_dim,
+        noise_dim=noise_dim,
+        condition_number=condition,
+        fingerprint=_fingerprint(matrix, signal_dim, noise_dim),
+    )
