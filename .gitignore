@@ -7,6 +7,7 @@ build/
 dist/
 *.egg-info/
 .DS_Store
+.workbuddy/
 
 # Never commit checkpoints, datasets, caches, secrets, or generated raw runs.
 *.safetensors
@@ -19,10 +20,21 @@ results/raw/*.jsonl
 results/raw/*.pt
 results/raw/**/*.jsonl
 results/raw/**/*.pt
+# 白名单：被 results/REPORT.md 与复现说明引用的小体积原始记录必须入库。
+!results/raw/eval_sweep.jsonl
+!results/raw/eval_sweep_dtype_fixed.jsonl
+!results/raw/attack_costs.jsonl
+!results/raw/real_scenario_prompts_1500.jsonl
 results/tables/*.csv
 results/figures/*.png
 results/tables/**/*.csv
 results/figures/**/*.png
+results/figures/*.aux
+results/figures/*.log
+results/figures/*.out
+
+# 文献 PDF 已移出仓库（清单见 docs/literature-review/LITERATURE_INDEX.md）。
+docs/literature-review/papers/**/*.pdf
 
 # Downloaded benchmark datasets: never commit.
 results/raw/osnip_bench_data/
