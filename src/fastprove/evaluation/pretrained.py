@@ -9,11 +9,11 @@ input set and a merely present-but-unsuitable local file explicit.
 from __future__ import annotations
 
 import datetime as dt
-import hashlib
 import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
+from ..hashing import sha256_file as _sha256_file
 from ..pretrained.qwen2 import Qwen2Artifact, load_qwen2_artifact
 from .token_cache import TokenCache, load_token_cache
 
@@ -84,17 +84,6 @@ def default_local_qwen_path() -> Path:
     """Return the known local Qwen candidate without asserting it exists."""
 
     return (Path.home() / DEFAULT_QWEN_RELATIVE_PATH).expanduser().resolve()
-
-
-def _sha256_file(path: Path, *, chunk_size: int = 8 * 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while True:
-            chunk = handle.read(chunk_size)
-            if not chunk:
-                break
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _utc_now() -> str:

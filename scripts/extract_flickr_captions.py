@@ -9,19 +9,12 @@ non-standard caption-only language-model evaluation candidate.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Sequence
 
-
-def _sha256_file(path: Path, *, chunk_size: int = 8 * 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(chunk_size), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+from fastprove.hashing import sha256_file as _sha256_file
 
 
 def extract_caption_records(

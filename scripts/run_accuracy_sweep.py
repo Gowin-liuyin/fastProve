@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import shlex
 import sys
@@ -20,6 +19,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from fastprove.structured import reduction_compute_dtype_name
+from fastprove.hashing import sha256_file as _sha256_file
 from fastprove.config import load_config  # noqa: E402
 from fastprove.evaluation.artifacts import (  # noqa: E402
     append_jsonl_record,
@@ -152,14 +152,6 @@ def _parser() -> argparse.ArgumentParser:
 
 def _resolve(path: Path) -> Path:
     return path.expanduser().resolve()
-
-
-def _sha256_file(path: Path, *, chunk_size: int = 8 * 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(chunk_size), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _load_sweep(path: Path) -> Dict[str, Any]:

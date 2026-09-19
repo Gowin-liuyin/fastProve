@@ -49,9 +49,9 @@ from .load import (
     _runtime_approximation,
     _runtime_model_config,
     _runtime_obfuscation,
-    _sha256_file,
     load_server_model,
 )
+from ..hashing import sha256_file as _sha256_file
 from ..models.obfuscated import (
     ObfuscatedBlockClient,
     ObfuscatedDecoderBlock,

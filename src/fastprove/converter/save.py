@@ -24,7 +24,7 @@ from .hygiene import (
     _require_supported_architecture,
 )
 from ..layers.attention import ApproximationConfig, AttentionMode
-from .load import _sha256_file
+from ..hashing import sha256_file as _sha256_file
 from ..models.obfuscated import ObfuscatedTinyCausalLM
 from ..noise_budget import DualChannelBudget
 

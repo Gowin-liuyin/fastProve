@@ -10,7 +10,6 @@ implementation: all inference still goes through ``PlainTinyCausalLM`` and
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -19,18 +18,8 @@ from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple
 import torch
 
 from ..config import ModelConfig
+from ..hashing import sha256_file as _sha256_file
 from ..models.plain import PlainTinyCausalLM
-
-
-def _sha256_file(path: Path, *, chunk_size: int = 8 * 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while True:
-            chunk = handle.read(chunk_size)
-            if not chunk:
-                break
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _require_file(root: Path, name: str) -> Path:

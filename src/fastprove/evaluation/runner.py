@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import torch
 
 from ..config import PrototypeConfig, load_config
+from ..hashing import sha256_file as _sha256_file
 from ..layers.attention import ApproximationConfig, AttentionMode
 from ..models.obfuscated import ObfuscatedBlockDebug, ObfuscatedTinyCausalLM
 from ..models.plain import PlainTinyCausalLM
@@ -66,16 +67,6 @@ def _hash_identifiers(identifiers: Sequence[str]) -> str:
         list(identifiers), ensure_ascii=False, separators=(",", ":")
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
-
-
-def _sha256_file(path: Path, *, chunk_size: int = 8 * 1024 * 1024) -> str:
-    """Hash a local configuration file for run-level reproducibility."""
-
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(chunk_size), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _obfuscation_manifest(

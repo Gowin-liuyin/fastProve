@@ -25,16 +25,6 @@ from ..models.obfuscated import (
 from ..transforms import BasisDescriptor
 
 
-def _sha256_file(path: Path) -> str:
-    import hashlib
-
-    digest = hashlib.sha256()
-    with open(path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _descend(module: nn.Module, path: str) -> nn.Module:
     current = module
     for part in path.split("."):

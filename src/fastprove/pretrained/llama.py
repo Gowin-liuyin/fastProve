@@ -21,6 +21,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 import torch
 
 from ..config import ModelConfig
+from ..hashing import sha256_file as _sha256_file
 from ..models.plain import PlainTinyCausalLM
 
 # Weight-name substrings that indicate a non-plaintext / legacy-obfuscation tree.
@@ -37,17 +38,6 @@ _LEGACY_MARKERS: Tuple[str, ...] = (
     "chain_linear",
     "value_mixed",
 )
-
-
-def _sha256_file(path: Path, *, chunk_size: int = 8 * 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while True:
-            chunk = handle.read(chunk_size)
-            if not chunk:
-                break
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _require_file(root: Path, name: str) -> Path:
