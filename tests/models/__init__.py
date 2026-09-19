@@ -1,0 +1,1 @@
+"""fastprove models test package."""

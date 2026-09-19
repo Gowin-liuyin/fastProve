@@ -1,0 +1,1 @@
+"""fastprove cli test package."""

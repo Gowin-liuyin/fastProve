@@ -1,0 +1,71 @@
+from __future__ import annotations
+
+import pytest
+import torch
+
+from fastprove.layers.attention import AttentionMode
+from fastprove.models.obfuscated import ObfuscatedTinyCausalLM
+from fastprove.models.plain import PlainTinyCausalLM
+from fastprove.seed import RequestContext
+
+from tests._fixtures import model_config, obfuscation_config
+
+
+pytestmark = [
+    pytest.mark.mps,
+    pytest.mark.skipif(
+        not (hasattr(torch.backends, "mps") and torch.backends.mps.is_available()),
+        reason="MPS is unavailable",
+    ),
+]
+
+
+def test_exact_checkpoint_uses_mps_supported_runtime_dtype() -> None:
+    config = model_config(
+        vocab_size=48,
+        hidden_size=24,
+        intermediate_size=48,
+        max_sequence_length=24,
+    )
+    obfuscation = obfuscation_config(refresh_mode="per_request")
+    plain = PlainTinyCausalLM(config, seed=901, debug_enabled=True).to(
+        device="mps", dtype=torch.float32
+    )
+    converted = ObfuscatedTinyCausalLM.from_plain(
+        plain,
+        obfuscation=obfuscation,
+        mode=AttentionMode.EXACT,
+        approximation=None,
+        seed=902,
+        debug_enabled=True,
+    )
+    obfuscated = converted.module.to(device="mps", dtype=torch.float32)
+    codec = converted.token_codec
+    tokens = torch.tensor([[1, 3, 5, 7, 9, 11]], device="mps")
+    with torch.no_grad():
+        plaintext = plain(tokens)
+        exact = obfuscated(
+            codec.encode(tokens),
+            request_context=RequestContext(903, "mps-runtime-test"),
+        )
+    torch.mps.synchronize()
+    assert exact.device.type == "mps"
+    assert torch.isfinite(exact).all().item()
+    decoded = exact[..., codec.permutation.to(device="mps")]
+    torch.testing.assert_close(decoded, plaintext, atol=2e-4, rtol=2e-4)
+
+    # The real evaluator uses this explicitly gated path to collect layer
+    # diagnostics.  It must not attempt an FP64 reduction on MPS.
+    with torch.no_grad():
+        debug_exact, debug_records = obfuscated.forward_debug(
+            codec.encode(tokens),
+            request_context=RequestContext(903, "mps-runtime-debug-test"),
+        )
+    torch.mps.synchronize()
+    assert len(debug_records) == config.num_layers
+    torch.testing.assert_close(
+        debug_exact[..., codec.permutation.to(device="mps")],
+        plaintext,
+        atol=2e-4,
+        rtol=2e-4,
+    )

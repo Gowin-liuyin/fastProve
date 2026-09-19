@@ -38,3 +38,10 @@ evals = ["configs/*.yaml"]
 pythonpath = [".", "src"]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+  "slow: wall-clock-heavy test (label only; never skipped by default)",
+  "subprocess: spawns a CLI subprocess (label only; never skipped by default)",
+  "mps: exercises the Apple MPS backend (label only; existing skip guards unchanged)",
+  "bf16: exercises bfloat16 kernels (label only; never skipped by default)",
+  "safetensors: exercises safetensors checkpoint IO (label only; never skipped by default)",
+]
