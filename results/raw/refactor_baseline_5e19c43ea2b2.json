@@ -1,0 +1,3918 @@
+{
+  "environment": {
+    "numpy": "2.4.4",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "python": "3.13.12",
+    "torch": "2.11.0"
+  },
+  "generated_at_utc": "2026-09-19T16:23:17.663538+00:00",
+  "git_sha": "5e19c43ea2b2827abe7fd2ba8f3ea110da8b8bd4",
+  "schema": "fastprove.refactor_equivalence.v1",
+  "sections": {
+    "augmented_noise": {
+      "applied_refresh": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "786474f21835d22006d30b910ff9b73e0649f90aa9862152845450df6555c0ba",
+        "shape": [
+          4,
+          16
+        ]
+      },
+      "component_sigma": 0.35,
+      "deployed_free_noise_sigma_16": 0.02,
+      "deployed_free_noise_sigma_8": 0.02,
+      "free_noise_sigma": 0.0875,
+      "initial_noise": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "cb8a40857a14d6f41055acd807ccf5d3c78e235ef3186731cdadf5cbdb6fa2ab",
+        "shape": [
+          4,
+          16
+        ]
+      },
+      "propagator": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "3153b180c53d342d03648ae04edbde94726654a2269053133dbe1999e2aa3ecf",
+        "shape": [
+          16,
+          16
+        ]
+      },
+      "record_generator_draws": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "6851b9612376d195c9c44e9e3bca8584cc2c9436eba1bb7392236f5072bc6584",
+        "shape": [
+          4
+        ]
+      },
+      "refresh_noise": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "d0b88f6146c3e05d1fcd11337340e9c24574b372ad1df5c40ea642a50fdb3029",
+        "shape": [
+          4,
+          16
+        ]
+      }
+    },
+    "blocks": {
+      "exact": {
+        "actual_noise": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "2eb0b7e70d7498dc69b915eabcbf58acc9f2aa84f31fea439545dddce3042c7b",
+          "shape": [
+            2,
+            7,
+            8
+          ]
+        },
+        "actual_signal": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "d12d7aecf1b4b4954aba94f3d9c9a4bba45dba0013c9aa93d2665204e42be4ff",
+          "shape": [
+            2,
+            7,
+            32
+          ]
+        },
+        "debug": {
+          "attention_noise_state": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "2e7aa53e1fba127bd2c5ab5c97f7d484ca87f04a97aa9c18b183c13acf2c2c7c",
+            "shape": [
+              2,
+              7,
+              8
+            ]
+          },
+          "attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "381cf6a7ae5e05afa5d7382b42ff1bbcbea19bd8e5e932c95b1c8f098e61bbea",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "clean_attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "f2ddef6858d71893c3d9aa5e8ac60a21a3a911e877a2d5139999056c9dbc6f73",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "clean_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "8a28f345e8223d26dc217e5b5b1d955abb09e877a36ded601d1e57b77491449e",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "clean_probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "eefa52facc1028056eac9a1d8c0641a5a51a873bfafb296140e7a1622ae29f48",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "final_noise_state": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "2eb0b7e70d7498dc69b915eabcbf58acc9f2aa84f31fea439545dddce3042c7b",
+            "shape": [
+              2,
+              7,
+              8
+            ]
+          },
+          "logit_noise": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "7fbcfcd86bdfa943dbd68f67c3fcba6e7ab86fda2d14d28862c176bf18579fca",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "margin": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "6eb69e26de2a26eda48af77d4cec893aa0cf4748a64cbefcfe11a22c1e680ad9",
+            "shape": [
+              2,
+              4,
+              7,
+              1
+            ]
+          },
+          "noisy_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "8a28f345e8223d26dc217e5b5b1d955abb09e877a36ded601d1e57b77491449e",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "noisy_probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "eefa52facc1028056eac9a1d8c0641a5a51a873bfafb296140e7a1622ae29f48",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "post_attention": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "d46dba7d1f3325a610fb4a051411c1868d910413606dadd553d5e5f6da2125fd",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "qk_score_error": {
+            "cosine_similarity": 0.9999999999999919,
+            "inf_count": 0,
+            "max_absolute_error": 1.7881393432617188e-07,
+            "mean_absolute_error": 2.9798758653353672e-08,
+            "nan_count": 0,
+            "relative_l2_error": 1.3073965003899773e-07
+          },
+          "softmax_error": {
+            "cosine_similarity": 0.9999999999999997,
+            "inf_count": 0,
+            "max_absolute_error": 5.960464477539063e-08,
+            "mean_absolute_error": 3.972375879482347e-09,
+            "nan_count": 0,
+            "relative_l2_error": 4.768951767034987e-08
+          },
+          "tau": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "6eb69e26de2a26eda48af77d4cec893aa0cf4748a64cbefcfe11a22c1e680ad9",
+            "shape": [
+              2,
+              4,
+              7,
+              1
+            ]
+          },
+          "valid_mask": {
+            "dtype": "bool",
+            "kind": "tensor",
+            "sha256": "24411cd26a6d84dcd26d349c3ffe9a41c168fe7d78f18e12f592392882bc72c6",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "z_prime": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "b20d7534b3cdb18d23633295d06bb2be2f309ff0cd8002f0e529b6f933319956",
+            "shape": [
+              2,
+              7,
+              64
+            ]
+          }
+        },
+        "plain_debug": {
+          "attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "7119d9e0d7ecc5d2defb8871fa49c0f4756782001285ddacb823c4b50976ea20",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "final_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "bb3f9398b335250e81c97544848fd530a21e00934b21c7dbddd3f1480da2331e",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "masked_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "3982ec5df58eb52761934a20d3535d16bf1d4bb4086fe1fbd92878334bd96436",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "post_attention": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "0db4844ae7729dac3a3a3a6444ce71eed6299bdae25e67fbb6afdebffca700ce",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "5eb07097b38fb65479f587812de5b5e9c3ca8bac739dc556a1f9e033c81425ef",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "qk_scores": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "2cf8169cbf23d1faaea80e71bd90765848a89eb84badba9be2725c0d267c11ed",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "valid_mask": {
+            "dtype": "bool",
+            "kind": "tensor",
+            "sha256": "24411cd26a6d84dcd26d349c3ffe9a41c168fe7d78f18e12f592392882bc72c6",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          }
+        },
+        "plain_output": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "bb3f9398b335250e81c97544848fd530a21e00934b21c7dbddd3f1480da2331e",
+          "shape": [
+            2,
+            7,
+            32
+          ]
+        },
+        "signal_max_abs_error": 1.8775463104248047e-06
+      },
+      "fixed_refresh": {
+        "refresh_attn": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "33f155f017cf724390d44751ac7744990d99c1c779c338e724f589f62eb66d6d",
+          "shape": [
+            40
+          ]
+        },
+        "refresh_ffn": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "8b6b961f8cba93e203a712c9160eb05962d752e6e56e5056f5c119c17650a98b",
+          "shape": [
+            40
+          ]
+        }
+      },
+      "free_bounded": {
+        "actual_noise": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "7f6e137e7fe5444b620329fce6a7cfd1af36477e3e3ac0f8f569ee520e4e76ff",
+          "shape": [
+            2,
+            7,
+            8
+          ]
+        },
+        "actual_signal": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "1cc86b809a710e829fa5cb80e3e36c86657ae1270366ff8de24671506fa9c5d4",
+          "shape": [
+            2,
+            7,
+            32
+          ]
+        },
+        "debug": {
+          "attention_noise_state": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "567afe2e3d160ca03c0a554310be625f142177aee06580378320489ed9801307",
+            "shape": [
+              2,
+              7,
+              8
+            ]
+          },
+          "attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "a0819e6b9215b5fe695112a0767c0b926932bdbd80bc168f818381fcb1613e81",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "clean_attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "f2ddef6858d71893c3d9aa5e8ac60a21a3a911e877a2d5139999056c9dbc6f73",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "clean_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "8a28f345e8223d26dc217e5b5b1d955abb09e877a36ded601d1e57b77491449e",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "clean_probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "eefa52facc1028056eac9a1d8c0641a5a51a873bfafb296140e7a1622ae29f48",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "final_noise_state": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "7f6e137e7fe5444b620329fce6a7cfd1af36477e3e3ac0f8f569ee520e4e76ff",
+            "shape": [
+              2,
+              7,
+              8
+            ]
+          },
+          "logit_noise": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "dc7feab02260fec1f92654d8dc6d7e3e3809f59c4c05040782dcd512b479ecde",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "margin": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "6eb69e26de2a26eda48af77d4cec893aa0cf4748a64cbefcfe11a22c1e680ad9",
+            "shape": [
+              2,
+              4,
+              7,
+              1
+            ]
+          },
+          "noisy_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "1137aae34e5dd403045a3c076851c95392f79460041d386cb02d07a53f4bc313",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "noisy_probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "8a426ea31ae45527c2058779b41f2269c6455c9ee3dcc6bcd7c7442f1dd638e4",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "post_attention": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "4f3b033912ac4b582e61f03dbf987f377cd26fb780033173e7b46be24a9233bf",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "qk_score_error": {
+            "cosine_similarity": 0.9999999999999919,
+            "inf_count": 0,
+            "max_absolute_error": 1.7881393432617188e-07,
+            "mean_absolute_error": 2.9798758653353672e-08,
+            "nan_count": 0,
+            "relative_l2_error": 1.3073965003899773e-07
+          },
+          "softmax_error": {
+            "cosine_similarity": 0.9999999999999997,
+            "inf_count": 0,
+            "max_absolute_error": 5.960464477539063e-08,
+            "mean_absolute_error": 3.972375879482347e-09,
+            "nan_count": 0,
+            "relative_l2_error": 4.768951767034987e-08
+          },
+          "tau": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "acce28ecb1fe9b35f744f75d0a031481a6cd3b599c2e45aa57d780becdbb5d34",
+            "shape": [
+              2,
+              4,
+              7,
+              1
+            ]
+          },
+          "valid_mask": {
+            "dtype": "bool",
+            "kind": "tensor",
+            "sha256": "24411cd26a6d84dcd26d349c3ffe9a41c168fe7d78f18e12f592392882bc72c6",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "z_prime": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "e53cc58c251f98993aa38e30ff811bef03a3759de5def4387a8d3eaf5cbd0d1b",
+            "shape": [
+              2,
+              7,
+              64
+            ]
+          }
+        },
+        "plain_debug": {
+          "attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "7119d9e0d7ecc5d2defb8871fa49c0f4756782001285ddacb823c4b50976ea20",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "final_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "bb3f9398b335250e81c97544848fd530a21e00934b21c7dbddd3f1480da2331e",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "masked_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "3982ec5df58eb52761934a20d3535d16bf1d4bb4086fe1fbd92878334bd96436",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "post_attention": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "0db4844ae7729dac3a3a3a6444ce71eed6299bdae25e67fbb6afdebffca700ce",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "5eb07097b38fb65479f587812de5b5e9c3ca8bac739dc556a1f9e033c81425ef",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "qk_scores": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "2cf8169cbf23d1faaea80e71bd90765848a89eb84badba9be2725c0d267c11ed",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "valid_mask": {
+            "dtype": "bool",
+            "kind": "tensor",
+            "sha256": "24411cd26a6d84dcd26d349c3ffe9a41c168fe7d78f18e12f592392882bc72c6",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          }
+        },
+        "plain_output": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "bb3f9398b335250e81c97544848fd530a21e00934b21c7dbddd3f1480da2331e",
+          "shape": [
+            2,
+            7,
+            32
+          ]
+        },
+        "signal_max_abs_error": 0.011686861515045166
+      },
+      "per_request_rho_and_refresh": {
+        "refresh_attn": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "57283038692056b07458be5c0edbf376d18050b74491adda3c5dfd45584d5a59",
+          "shape": [
+            40
+          ]
+        },
+        "refresh_ffn": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "b5db949a183de97508c73d33c04660cea4ea91e148a175d02c0d5f5ff106ce87",
+          "shape": [
+            40
+          ]
+        },
+        "rho_attn": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "4f2dbac5a31e7a693f4202685493fcbf0f1bd45f4a45794141c694a28f508cd1",
+          "shape": [
+            2,
+            7,
+            1
+          ]
+        },
+        "rho_ffn": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "c8cd981ba72bb49001e117d22685f263a06c21103e3f7735c9566bfc9f99a913",
+          "shape": [
+            2,
+            7,
+            1
+          ]
+        }
+      },
+      "plaintext": {
+        "plain_debug": {
+          "attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "7119d9e0d7ecc5d2defb8871fa49c0f4756782001285ddacb823c4b50976ea20",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "final_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "bb3f9398b335250e81c97544848fd530a21e00934b21c7dbddd3f1480da2331e",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "masked_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "3982ec5df58eb52761934a20d3535d16bf1d4bb4086fe1fbd92878334bd96436",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "post_attention": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "0db4844ae7729dac3a3a3a6444ce71eed6299bdae25e67fbb6afdebffca700ce",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "5eb07097b38fb65479f587812de5b5e9c3ca8bac739dc556a1f9e033c81425ef",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "qk_scores": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "2cf8169cbf23d1faaea80e71bd90765848a89eb84badba9be2725c0d267c11ed",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "valid_mask": {
+            "dtype": "bool",
+            "kind": "tensor",
+            "sha256": "24411cd26a6d84dcd26d349c3ffe9a41c168fe7d78f18e12f592392882bc72c6",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          }
+        },
+        "plain_output": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "bb3f9398b335250e81c97544848fd530a21e00934b21c7dbddd3f1480da2331e",
+          "shape": [
+            2,
+            7,
+            32
+          ]
+        }
+      },
+      "topk_preserving": {
+        "actual_noise": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "257f51736e00609c3f560a82e41153c23b223fdbadce36f70ea6294d9dd00844",
+          "shape": [
+            2,
+            7,
+            8
+          ]
+        },
+        "actual_signal": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "21ac2e8ffbc768416a57af4a0afada1a59afc7ae12af9fffec00af4a4ce02293",
+          "shape": [
+            2,
+            7,
+            32
+          ]
+        },
+        "debug": {
+          "attention_noise_state": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "850f4c21ed328e62cc5741b34c4a87e9066d820f4391a9457a6694da414f64ae",
+            "shape": [
+              2,
+              7,
+              8
+            ]
+          },
+          "attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "8bcd3c54bdfc02c1434a674e793811c7718408f412edba463839f11a8b0dc19b",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "clean_attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "f2ddef6858d71893c3d9aa5e8ac60a21a3a911e877a2d5139999056c9dbc6f73",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "clean_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "8a28f345e8223d26dc217e5b5b1d955abb09e877a36ded601d1e57b77491449e",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "clean_probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "eefa52facc1028056eac9a1d8c0641a5a51a873bfafb296140e7a1622ae29f48",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "final_noise_state": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "257f51736e00609c3f560a82e41153c23b223fdbadce36f70ea6294d9dd00844",
+            "shape": [
+              2,
+              7,
+              8
+            ]
+          },
+          "logit_noise": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "a0fa5f538cff24fd674e24b57a4a280c5b5f6e8c909d222be157ef2a890c907c",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "margin": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "70f8440ed72f35a51a4028d4aae97cd54b820d9295be0470616c4c421df0e279",
+            "shape": [
+              2,
+              4,
+              7,
+              1
+            ]
+          },
+          "noisy_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "002e1d22f869fa35310d31ea4fe85fb793e03cf621002857aa8eedccfbc7c8cb",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "noisy_probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "ca0bd34ab9d775e4c61db41249564acbf607b6ec6dec7c08b74b2326f3f6d513",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "post_attention": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "d6d5d2998901793969403b500f59eb8e40ea6e7fc3c225d98671d9a26dec37a3",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "qk_score_error": {
+            "cosine_similarity": 0.9999999999999919,
+            "inf_count": 0,
+            "max_absolute_error": 1.7881393432617188e-07,
+            "mean_absolute_error": 2.9798758653353672e-08,
+            "nan_count": 0,
+            "relative_l2_error": 1.3073965003899773e-07
+          },
+          "softmax_error": {
+            "cosine_similarity": 0.9999999999999997,
+            "inf_count": 0,
+            "max_absolute_error": 5.960464477539063e-08,
+            "mean_absolute_error": 3.972375879482347e-09,
+            "nan_count": 0,
+            "relative_l2_error": 4.768951767034987e-08
+          },
+          "tau": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "8f137819e74bd1a96c68c2556f46326f46ca6e9bbf60decf672e125a25a481b4",
+            "shape": [
+              2,
+              4,
+              7,
+              1
+            ]
+          },
+          "valid_mask": {
+            "dtype": "bool",
+            "kind": "tensor",
+            "sha256": "24411cd26a6d84dcd26d349c3ffe9a41c168fe7d78f18e12f592392882bc72c6",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "z_prime": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "cd4e67935ad5c62924cd1c717f386b3dc3eba384607bb64cfc5252d84091511a",
+            "shape": [
+              2,
+              7,
+              64
+            ]
+          }
+        },
+        "plain_debug": {
+          "attention_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "7119d9e0d7ecc5d2defb8871fa49c0f4756782001285ddacb823c4b50976ea20",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "final_output": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "bb3f9398b335250e81c97544848fd530a21e00934b21c7dbddd3f1480da2331e",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "masked_logits": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "3982ec5df58eb52761934a20d3535d16bf1d4bb4086fe1fbd92878334bd96436",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "post_attention": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "0db4844ae7729dac3a3a3a6444ce71eed6299bdae25e67fbb6afdebffca700ce",
+            "shape": [
+              2,
+              7,
+              32
+            ]
+          },
+          "probabilities": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "5eb07097b38fb65479f587812de5b5e9c3ca8bac739dc556a1f9e033c81425ef",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "qk_scores": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "2cf8169cbf23d1faaea80e71bd90765848a89eb84badba9be2725c0d267c11ed",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          },
+          "valid_mask": {
+            "dtype": "bool",
+            "kind": "tensor",
+            "sha256": "24411cd26a6d84dcd26d349c3ffe9a41c168fe7d78f18e12f592392882bc72c6",
+            "shape": [
+              2,
+              4,
+              7,
+              7
+            ]
+          }
+        },
+        "plain_output": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "bb3f9398b335250e81c97544848fd530a21e00934b21c7dbddd3f1480da2331e",
+          "shape": [
+            2,
+            7,
+            32
+          ]
+        },
+        "signal_max_abs_error": 0.009373724460601807
+      }
+    },
+    "chain_linear": {
+      "actual_mixed": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "69d9b14c55aba9922314095fbbb990d314828fa036e6e72165a4e1306dde8108",
+        "shape": [
+          2,
+          3,
+          7
+        ]
+      },
+      "affine_chain_bias_mixed": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "c667e38a171b720b1cd3c40f26fa55bf4a8f6b6acc3b0a1f958b7812950b8dfb",
+        "shape": [
+          7
+        ]
+      },
+      "affine_chain_weight_pt": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "c347e205b6a64a954ccb493199720265718ae2011e5c89f16a4b3599e3160d2f",
+        "shape": [
+          7,
+          5
+        ]
+      },
+      "decoded_noise": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "681c1801d4cbaeda4a93dfad7c44c12802461afe395d18d07a4f7d1739732caa",
+        "shape": [
+          2,
+          3,
+          3
+        ]
+      },
+      "decoded_signal": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "a6eef52e4d3b895605b1e9afc8564bed8dda6e10cb0d9faa1bbb09d445e79a35",
+        "shape": [
+          2,
+          3,
+          4
+        ]
+      },
+      "expected_mixed": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "b2b6c31a44f27b8919a39ec75535e84f2d086c712778768fba7ead2a758bbf79",
+        "shape": [
+          2,
+          3,
+          7
+        ]
+      },
+      "identity_residual": 2.384185791015625e-07,
+      "per_request_first": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "2ad95ae404984db0ba360f41d8b36663deed608d70c931758147390bc8423edb",
+        "shape": [
+          2,
+          3,
+          7
+        ]
+      },
+      "per_request_other_context_differs": true,
+      "per_request_same_context_equal": true
+    },
+    "converter": {
+      "client_bases": {
+        "hidden": {
+          "blocks": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "644208a4103a783db65a6d4f570512459815452b77f51f103a7d288eaadbb92a",
+            "shape": [
+              5,
+              8,
+              8
+            ]
+          },
+          "condition_number": 9.858250394323072,
+          "fingerprint": "42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82",
+          "gram_blocks": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "3975e266285fb48cbf0396057bfcacc0ef9f0b6588aeecba1c003ccd56d409ea",
+            "shape": [
+              5,
+              8,
+              8
+            ]
+          },
+          "noise_dim": 8,
+          "perm_in": {
+            "dtype": "int64",
+            "kind": "tensor",
+            "sha256": "c6d9b7906e5735df39b7cb5bfaf432c23281e07872f2e8ce2d48db3809980596",
+            "shape": [
+              40
+            ]
+          },
+          "perm_out": {
+            "dtype": "int64",
+            "kind": "tensor",
+            "sha256": "c483379a08ccacaf3d2b83237b5563d345ae53f77323b2aa5658c1c4b6260996",
+            "shape": [
+              40
+            ]
+          },
+          "scales": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "96d8b126eca96c795c50c5b30823940f2d5e4eeb6268dbcfb15750dc6c4bbef5",
+            "shape": [
+              40
+            ]
+          },
+          "signal_dim": 32
+        },
+        "value": [
+          [
+            {
+              "blocks": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "1b0956b7c684d8778f5b542af0e121eab95037a3a75c68065668a76e3d1faf7e",
+                "shape": [
+                  1,
+                  10,
+                  10
+                ]
+              },
+              "condition_number": 7.4507453856134305,
+              "fingerprint": "1178b944dcd1ac704323c985154eedc3a4b2783f08faf86fefa713532f981b7f",
+              "gram_blocks": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "319d1c6483f29d000e6cb503f6dd1e2f3eeff6c3969c022b7e6601f4fb164219",
+                "shape": [
+                  1,
+                  10,
+                  10
+                ]
+              },
+              "noise_dim": 2,
+              "perm_in": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "7d61a0a57a210920f973ebf27f802e48e4d50842f498bcc747b0fc50fcdff64e",
+                "shape": [
+                  10
+                ]
+              },
+              "perm_out": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "f16b1c53abb52ed8ba83d7519a77cb17c3c04ea6240d33b0435426b9c465ce36",
+                "shape": [
+                  10
+                ]
+              },
+              "scales": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "ff422c9e44482163b66baac7970118dfe0db5618888a37dc50520042efdc206b",
+                "shape": [
+                  10
+                ]
+              },
+              "signal_dim": 8
+            },
+            {
+              "blocks": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "fdc96fa519e635c6c74a56f63784ad0492adf72ccf4e782935a0a5fc81bdbbf5",
+                "shape": [
+                  1,
+                  10,
+                  10
+                ]
+              },
+              "condition_number": 7.073677094281241,
+              "fingerprint": "9e6d02fc855fd7ec0e1dd7d6ea2ef8dcd7befdc755d5dd2bbb5c3c43aed2648a",
+              "gram_blocks": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "ba92b0fe123ce785fe9575f544f1aa3ced748ce9687d45235d31367e97c09ca2",
+                "shape": [
+                  1,
+                  10,
+                  10
+                ]
+              },
+              "noise_dim": 2,
+              "perm_in": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "faf8922f9f566293c603a40103d4a041a1827d02a817d6db8d7e70049e02b166",
+                "shape": [
+                  10
+                ]
+              },
+              "perm_out": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "34fa0a40ad67f5d099e936b256344cea3464a69566720cdd8e390c14b091ad4e",
+                "shape": [
+                  10
+                ]
+              },
+              "scales": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "93c7d32908703a80ae475b0ee778eab59ca00e2a4ab5e7fdfddeb340c55a0f2b",
+                "shape": [
+                  10
+                ]
+              },
+              "signal_dim": 8
+            }
+          ],
+          [
+            {
+              "blocks": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "535b34b29206fed1e743ff4b99f5ce485669076b492e64f5ece0e9876a700117",
+                "shape": [
+                  1,
+                  10,
+                  10
+                ]
+              },
+              "condition_number": 9.173586965017016,
+              "fingerprint": "86c47734be7a0b59f286ddc4ba6f11b2f9326995857828ebfd3611f1168b0451",
+              "gram_blocks": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "58b3caee13687d8cb42c753b5a6c2b88ee6140916c27311a4be71905ca827a10",
+                "shape": [
+                  1,
+                  10,
+                  10
+                ]
+              },
+              "noise_dim": 2,
+              "perm_in": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "fc041e713627c2a586e85f91364f648ccb9a6327b364db5aec3692e85d221b19",
+                "shape": [
+                  10
+                ]
+              },
+              "perm_out": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "9fd97db61ee576855523acf3727db4412107ee585421f17379926f5017b01957",
+                "shape": [
+                  10
+                ]
+              },
+              "scales": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "47cc9bebf9918f0ea3b587a893798f61faa35025c0789f18376584a802b7d3e6",
+                "shape": [
+                  10
+                ]
+              },
+              "signal_dim": 8
+            },
+            {
+              "blocks": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "99f8c2feac79e9147c5b1aab159473261cb97b21496f677002c642df7db98874",
+                "shape": [
+                  1,
+                  10,
+                  10
+                ]
+              },
+              "condition_number": 6.170037080392753,
+              "fingerprint": "f24faa01971bf7b2f42962928e1ae0311e7a733e760c7a765747ce464caaffa4",
+              "gram_blocks": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "8117101947819674601acef18e5bee495be29b68fda3a2b504904d9bcfc14790",
+                "shape": [
+                  1,
+                  10,
+                  10
+                ]
+              },
+              "noise_dim": 2,
+              "perm_in": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "8cc8f20aa9b26a0494969073fe90f2e362d6d238ca73f8bb4fc873b684850a3b",
+                "shape": [
+                  10
+                ]
+              },
+              "perm_out": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "df54ce4a7f9907c6f240347dd56c0843197146ccf1b0b20a7dbf4e88630ad64a",
+                "shape": [
+                  10
+                ]
+              },
+              "scales": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "c4788ff5897747dfb99f644e252131ed3e92c2fa8eb4622c49c54e6e06ae4e8f",
+                "shape": [
+                  10
+                ]
+              },
+              "signal_dim": 8
+            }
+          ]
+        ]
+      },
+      "client_manifest": {
+        "hidden_basis_fingerprint": "42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82",
+        "schema": "fastprove.client.manifest.v1",
+        "server_runtime_config_sha256": "54d8c80e41c3f80d6c4f5c8b64e4de8003bc12e79bb843331f56f61b101ba93a",
+        "token_codec_fingerprint": "d484e3c8cb9e951d606872b3bddd672f4f792431d59360f294e71ef469788f57",
+        "value_basis_fingerprints": [
+          [
+            "1178b944dcd1ac704323c985154eedc3a4b2783f08faf86fefa713532f981b7f",
+            "9e6d02fc855fd7ec0e1dd7d6ea2ef8dcd7befdc755d5dd2bbb5c3c43aed2648a"
+          ],
+          [
+            "86c47734be7a0b59f286ddc4ba6f11b2f9326995857828ebfd3611f1168b0451",
+            "f24faa01971bf7b2f42962928e1ae0311e7a733e760c7a765747ce464caaffa4"
+          ]
+        ],
+        "warning": "client material must never be copied into a server directory"
+      },
+      "client_token_codec": {
+        "fingerprint": "d484e3c8cb9e951d606872b3bddd672f4f792431d59360f294e71ef469788f57",
+        "inverse_permutation": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "eb61ffb54f787d9c72202883e5299981dd2531a96b61130987331f609109e1d5",
+          "shape": [
+            64
+          ]
+        },
+        "permutation": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "18238e2c9f5a96f35bc108f1c6b7398dc0f7e00425a1580b13b289540501ee65",
+          "shape": [
+            64
+          ]
+        },
+        "vocab_size": 64
+      },
+      "conversion_manifest": {
+        "client_manifest_sha256": "53be3f822736357e516574d6966c4a18d70af7aee7e276abd112379de8d837ce",
+        "model_sha256": {
+          "runtime_config": "54d8c80e41c3f80d6c4f5c8b64e4de8003bc12e79bb843331f56f61b101ba93a"
+        },
+        "runtime_config_sha256": "54d8c80e41c3f80d6c4f5c8b64e4de8003bc12e79bb843331f56f61b101ba93a",
+        "server_state_keys": [
+          "deployed_head",
+          "deployed_gram_blocks",
+          "deployed_gram_perm",
+          "_noise_rows",
+          "embedding.table",
+          "blocks.0.kv_index",
+          "blocks.0.common_qk",
+          "blocks.0.q_bias",
+          "blocks.0.k_bias",
+          "blocks.0.v_bias",
+          "blocks.0.deployed_q",
+          "blocks.0.deployed_k",
+          "blocks.0.deployed_v",
+          "blocks.0.deployed_q_bias",
+          "blocks.0.deployed_k_bias",
+          "blocks.0.deployed_v_bias",
+          "blocks.0.deployed_attn_out",
+          "blocks.0.deployed_attn_noise_out",
+          "blocks.0.deployed_attn_refresh_out",
+          "blocks.0.noise_read",
+          "blocks.0._noise_rows",
+          "blocks.0.deployed_gram_blocks",
+          "blocks.0.deployed_gram_perm",
+          "blocks.0.deployed_gate",
+          "blocks.0.deployed_up",
+          "blocks.0.deployed_ffn_out",
+          "blocks.0.deployed_ffn_noise_out",
+          "blocks.0.deployed_ffn_refresh_out",
+          "blocks.1.kv_index",
+          "blocks.1.common_qk",
+          "blocks.1.q_bias",
+          "blocks.1.k_bias",
+          "blocks.1.v_bias",
+          "blocks.1.deployed_q",
+          "blocks.1.deployed_k",
+          "blocks.1.deployed_v",
+          "blocks.1.deployed_q_bias",
+          "blocks.1.deployed_k_bias",
+          "blocks.1.deployed_v_bias",
+          "blocks.1.deployed_attn_out",
+          "blocks.1.deployed_attn_noise_out",
+          "blocks.1.deployed_attn_refresh_out",
+          "blocks.1.noise_read",
+          "blocks.1._noise_rows",
+          "blocks.1.deployed_gram_blocks",
+          "blocks.1.deployed_gram_perm",
+          "blocks.1.deployed_gate",
+          "blocks.1.deployed_up",
+          "blocks.1.deployed_ffn_out",
+          "blocks.1.deployed_ffn_noise_out",
+          "blocks.1.deployed_ffn_refresh_out"
+        ],
+        "tied_embedding": false,
+        "weights_format": "safetensors"
+      },
+      "file_hashes": {
+        "client_manifest.json": "53be3f822736357e516574d6966c4a18d70af7aee7e276abd112379de8d837ce",
+        "noise_budget.json": "9274e435f767bcf8b271d93de4269f79efd096268a9abad2fbde27c8d132894c",
+        "runtime_config.json": "54d8c80e41c3f80d6c4f5c8b64e4de8003bc12e79bb843331f56f61b101ba93a"
+      },
+      "noise_budget": {
+        "channel_1_hiding_bits_note": "left None in the config-derived ledger: it depends on the signal scale sigma_h and is computed per experiment via semantic_hiding_bits()",
+        "exact_signal_path": false,
+        "free": {
+          "accuracy_cost_bound": 0.0,
+          "bound_source": null,
+          "channel": 0,
+          "dimension": 8,
+          "energy_ratio": 0.02,
+          "information_theoretic_hiding_bits": 0.0,
+          "statement": "channel 0 (ker L): zero accuracy cost, zero information-theoretic hiding by theorem 4; not a privacy source"
+        },
+        "mode": "topk_preserving",
+        "schema": "fastprove.noise_budget.v1",
+        "semantic": {
+          "accuracy_cost_bound": 0.1,
+          "bound_source": "margin_delta_k",
+          "channel": 1,
+          "dimension": 32,
+          "energy_ratio": 1e-05,
+          "information_theoretic_hiding_bits": null,
+          "statement": "channel 1 (semantic direction): perturbs h by exactly n @ L (theorem 2); the bound source is margin_delta_k"
+        },
+        "semantic_sources": {
+          "margin_delta_k": 0.1,
+          "rho": 1e-05
+        }
+      },
+      "roundtrip_decoded_logits": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "b40cb9c0558a7311894a7ad917130976e390c7cbd85d5efab4f19d6d23517748",
+        "shape": [
+          1,
+          4,
+          64
+        ]
+      },
+      "roundtrip_encoded_tokens": {
+        "dtype": "int64",
+        "kind": "tensor",
+        "sha256": "5a3ca8689cfcc9d20894b9479d51944de17a28474b7368af8f945ea857b41a30",
+        "shape": [
+          1,
+          4
+        ]
+      },
+      "roundtrip_logits": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "68511b3621dfdab20e54b8fc8cef551daa5569aaa0a87ce365587a901442163f",
+        "shape": [
+          1,
+          4,
+          64
+        ]
+      },
+      "runtime_config": {
+        "approximation": {
+          "alpha": 0.8,
+          "preserve_top_k": 4,
+          "tau_error": 0.1,
+          "tau_max": 0.03
+        },
+        "cache_identity": [
+          "0:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:1178b944dcd1ac704323c985154eedc3a4b2783f08faf86fefa713532f981b7f:9e6d02fc855fd7ec0e1dd7d6ea2ef8dcd7befdc755d5dd2bbb5c3c43aed2648a:6b58ec0b69a81d457474238d01359c520c7efb68084a5248780ffb524d08095e",
+          "1:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:86c47734be7a0b59f286ddc4ba6f11b2f9326995857828ebfd3611f1168b0451:f24faa01971bf7b2f42962928e1ae0311e7a733e760c7a765747ce464caaffa4:5b24cbd726253e91b2928307be61a339f5cdee08d3d278ecb684565146f082c4"
+        ],
+        "hidden_basis": {
+          "condition_number": 9.858250394323072,
+          "fingerprint": "42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82",
+          "noise_dim": 8,
+          "signal_dim": 32
+        },
+        "mode": "topk_preserving",
+        "model": {
+          "hidden_size": 32,
+          "intermediate_size": 64,
+          "max_sequence_length": 32,
+          "num_attention_heads": 4,
+          "num_key_value_heads": 2,
+          "num_layers": 2,
+          "qkv_bias": false,
+          "rms_epsilon": 1e-05,
+          "rope_theta": 10000.0,
+          "vocab_size": 64
+        },
+        "obfuscation": {
+          "basis_block_size": 8,
+          "free_noise_energy_ratio": 0.02,
+          "hidden_noise_dim": 8,
+          "lm_head_mode": "untied_deployed",
+          "max_condition_number": 10.0,
+          "noise_propagation_gamma": 0.5,
+          "refresh_mode": "per_request",
+          "rho_noise_bound": 1e-05,
+          "signal_noise_coupling_scale": 0.02,
+          "value_noise_dim_per_head": 2
+        },
+        "schema": "fastprove.server.runtime.v1",
+        "server_visible_key_material": {
+          "common_qk": "applied after RoPE; cannot be absorbed into a deployed weight; the server must hold it and the QK geometry is not protected (docs/threat_model.md)"
+        },
+        "value_basis_condition_numbers": [
+          [
+            7.4507453856134305,
+            7.073677094281241
+          ],
+          [
+            9.173586965017016,
+            6.170037080392753
+          ]
+        ],
+        "value_basis_fingerprints": [
+          [
+            "1178b944dcd1ac704323c985154eedc3a4b2783f08faf86fefa713532f981b7f",
+            "9e6d02fc855fd7ec0e1dd7d6ea2ef8dcd7befdc755d5dd2bbb5c3c43aed2648a"
+          ],
+          [
+            "86c47734be7a0b59f286ddc4ba6f11b2f9326995857828ebfd3611f1168b0451",
+            "f24faa01971bf7b2f42962928e1ae0311e7a733e760c7a765747ce464caaffa4"
+          ]
+        ]
+      },
+      "server_manifest": {
+        "fastprove_version": "0.1.0",
+        "noise_budget_sha256": "9274e435f767bcf8b271d93de4269f79efd096268a9abad2fbde27c8d132894c",
+        "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+        "runtime_config_sha256": "54d8c80e41c3f80d6c4f5c8b64e4de8003bc12e79bb843331f56f61b101ba93a",
+        "schema": "fastprove.server.manifest.v1",
+        "server_state_keys": [
+          "deployed_head",
+          "deployed_gram_blocks",
+          "deployed_gram_perm",
+          "_noise_rows",
+          "embedding.table",
+          "blocks.0.kv_index",
+          "blocks.0.common_qk",
+          "blocks.0.q_bias",
+          "blocks.0.k_bias",
+          "blocks.0.v_bias",
+          "blocks.0.deployed_q",
+          "blocks.0.deployed_k",
+          "blocks.0.deployed_v",
+          "blocks.0.deployed_q_bias",
+          "blocks.0.deployed_k_bias",
+          "blocks.0.deployed_v_bias",
+          "blocks.0.deployed_attn_out",
+          "blocks.0.deployed_attn_noise_out",
+          "blocks.0.deployed_attn_refresh_out",
+          "blocks.0.noise_read",
+          "blocks.0._noise_rows",
+          "blocks.0.deployed_gram_blocks",
+          "blocks.0.deployed_gram_perm",
+          "blocks.0.deployed_gate",
+          "blocks.0.deployed_up",
+          "blocks.0.deployed_ffn_out",
+          "blocks.0.deployed_ffn_noise_out",
+          "blocks.0.deployed_ffn_refresh_out",
+          "blocks.1.kv_index",
+          "blocks.1.common_qk",
+          "blocks.1.q_bias",
+          "blocks.1.k_bias",
+          "blocks.1.v_bias",
+          "blocks.1.deployed_q",
+          "blocks.1.deployed_k",
+          "blocks.1.deployed_v",
+          "blocks.1.deployed_q_bias",
+          "blocks.1.deployed_k_bias",
+          "blocks.1.deployed_v_bias",
+          "blocks.1.deployed_attn_out",
+          "blocks.1.deployed_attn_noise_out",
+          "blocks.1.deployed_attn_refresh_out",
+          "blocks.1.noise_read",
+          "blocks.1._noise_rows",
+          "blocks.1.deployed_gram_blocks",
+          "blocks.1.deployed_gram_perm",
+          "blocks.1.deployed_gate",
+          "blocks.1.deployed_up",
+          "blocks.1.deployed_ffn_out",
+          "blocks.1.deployed_ffn_noise_out",
+          "blocks.1.deployed_ffn_refresh_out"
+        ],
+        "tied_embedding": false,
+        "torch_version": "2.11.0",
+        "weights_format": "safetensors"
+      },
+      "server_state_dict": {
+        "_noise_rows": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "d8ba53836932c14d0ae0c5f0c41c468a6295fc1d19d76af71bf0c5037e19382f",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.0._noise_rows": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "d8ba53836932c14d0ae0c5f0c41c468a6295fc1d19d76af71bf0c5037e19382f",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.0.common_qk": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "cb5ee9e6f86f26db08927368852d7349bd269075601d59cb1b1d246a1bd3bb2e",
+          "shape": [
+            2,
+            8,
+            8
+          ]
+        },
+        "blocks.0.deployed_attn_noise_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "00ec878ce727093c8dd1f71c6832478b9509fd2db6672dbab43836d77353f266",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.0.deployed_attn_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "e0aac4276ccf3e0ecfb8a70d14ab1f90e6e5d533902fc4987c597de77597fa0e",
+          "shape": [
+            4,
+            10,
+            40
+          ]
+        },
+        "blocks.0.deployed_attn_refresh_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "bfe492baf731a0dbf6e1e050f5bc3fe8c1b049383194dcdf82f023bfa409f462",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.0.deployed_ffn_noise_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "9eb8c7cb7cd610e6958c7a14d16bc93bd9adb5b6a265212ada09ca53af0b0e7e",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.0.deployed_ffn_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "522cf6cddbab5b0003e72becc1175448db6886df0fbd95607add17bd303e3c63",
+          "shape": [
+            64,
+            40
+          ]
+        },
+        "blocks.0.deployed_ffn_refresh_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "bfe492baf731a0dbf6e1e050f5bc3fe8c1b049383194dcdf82f023bfa409f462",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.0.deployed_gate": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "18e2d70a41b41942de79cbc7477dd2b479a54eecd3b4f34d4d2efa5c42e95e25",
+          "shape": [
+            40,
+            64
+          ]
+        },
+        "blocks.0.deployed_gram_blocks": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "3975e266285fb48cbf0396057bfcacc0ef9f0b6588aeecba1c003ccd56d409ea",
+          "shape": [
+            5,
+            8,
+            8
+          ]
+        },
+        "blocks.0.deployed_gram_perm": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "c483379a08ccacaf3d2b83237b5563d345ae53f77323b2aa5658c1c4b6260996",
+          "shape": [
+            40
+          ]
+        },
+        "blocks.0.deployed_k": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "e3d40d904bae09836694947b20dac77b3042284b6370a22d33ac49a470c27ac9",
+          "shape": [
+            40,
+            16
+          ]
+        },
+        "blocks.0.deployed_k_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b",
+          "shape": [
+            16
+          ]
+        },
+        "blocks.0.deployed_q": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "e8a7580c82477a5bdf724c5962fd2b18ac250909a005735ab0c7d600f4876721",
+          "shape": [
+            40,
+            32
+          ]
+        },
+        "blocks.0.deployed_q_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca",
+          "shape": [
+            32
+          ]
+        },
+        "blocks.0.deployed_up": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "11797e0266a7de24149464f28f487d5d2d09efb43f1596a844d23a0140400a8d",
+          "shape": [
+            40,
+            64
+          ]
+        },
+        "blocks.0.deployed_v": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "448f12bc451622742ae44deb9286df1c647c099f1ced1032f1b453640ecf4007",
+          "shape": [
+            2,
+            40,
+            10
+          ]
+        },
+        "blocks.0.deployed_v_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "5b6fb58e61fa475939767d68a446f97f1bff02c0e5935a3ea8bb51e6515783d8",
+          "shape": [
+            2,
+            10
+          ]
+        },
+        "blocks.0.k_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b",
+          "shape": [
+            16
+          ]
+        },
+        "blocks.0.kv_index": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "b64c0d4ec2af5aba75d0e38754bd4da29669e6bd54220441f3710964fdb4ece3",
+          "shape": [
+            4
+          ]
+        },
+        "blocks.0.noise_read": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "a1744fb191de8c68141cb7ccd1da4ae70da4b88b8c62936bb8441f2b074d7748",
+          "shape": [
+            40,
+            8
+          ]
+        },
+        "blocks.0.q_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca",
+          "shape": [
+            32
+          ]
+        },
+        "blocks.0.v_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b",
+          "shape": [
+            16
+          ]
+        },
+        "blocks.1._noise_rows": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "d8ba53836932c14d0ae0c5f0c41c468a6295fc1d19d76af71bf0c5037e19382f",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.1.common_qk": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "aabb6e3f3ef6e594b15b1b5347f7ffe17d6e80fe78f7c6eb6e097d4b0341320a",
+          "shape": [
+            2,
+            8,
+            8
+          ]
+        },
+        "blocks.1.deployed_attn_noise_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "3641ece1d12d54b3a1e206144cb87a45e12d621bcbf448fe4485e7ef326734d6",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.1.deployed_attn_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "c62415eafba4841198f5b7f02d8b130f2c5286b6bc331250e0281369b6a51e5d",
+          "shape": [
+            4,
+            10,
+            40
+          ]
+        },
+        "blocks.1.deployed_attn_refresh_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "bfe492baf731a0dbf6e1e050f5bc3fe8c1b049383194dcdf82f023bfa409f462",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.1.deployed_ffn_noise_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "1d8e55f90a8d65d2810c89e2b2a95db268e2dfff744249301a69ff2bf97e85bd",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.1.deployed_ffn_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "21bb7b827e5388ef0224959690051fe3b4b131938c22eb025323d661b011b7ec",
+          "shape": [
+            64,
+            40
+          ]
+        },
+        "blocks.1.deployed_ffn_refresh_out": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "bfe492baf731a0dbf6e1e050f5bc3fe8c1b049383194dcdf82f023bfa409f462",
+          "shape": [
+            8,
+            40
+          ]
+        },
+        "blocks.1.deployed_gate": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "19ce8cb52a7c067b328d9fcc35da30a7152d729aaf7707dfb9e94ec031f9c1be",
+          "shape": [
+            40,
+            64
+          ]
+        },
+        "blocks.1.deployed_gram_blocks": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "3975e266285fb48cbf0396057bfcacc0ef9f0b6588aeecba1c003ccd56d409ea",
+          "shape": [
+            5,
+            8,
+            8
+          ]
+        },
+        "blocks.1.deployed_gram_perm": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "c483379a08ccacaf3d2b83237b5563d345ae53f77323b2aa5658c1c4b6260996",
+          "shape": [
+            40
+          ]
+        },
+        "blocks.1.deployed_k": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "8e3b9061373c14025e005f0fba45bc245423197547300403caf8d5ea3e48a290",
+          "shape": [
+            40,
+            16
+          ]
+        },
+        "blocks.1.deployed_k_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b",
+          "shape": [
+            16
+          ]
+        },
+        "blocks.1.deployed_q": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "5f7606a30dec34f12c3b80d2e91ff21f91eb036e129d00a5699ceb9106d787ba",
+          "shape": [
+            40,
+            32
+          ]
+        },
+        "blocks.1.deployed_q_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca",
+          "shape": [
+            32
+          ]
+        },
+        "blocks.1.deployed_up": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "520f29f5039179920f25ec9ad4d0789dc6601f0a69a80628f4b3d07ebe45b53b",
+          "shape": [
+            40,
+            64
+          ]
+        },
+        "blocks.1.deployed_v": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "a6e00ba5457c81f3b037b929016e3ad0f189044339e7475cee3cd96e235c1ecf",
+          "shape": [
+            2,
+            40,
+            10
+          ]
+        },
+        "blocks.1.deployed_v_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "5b6fb58e61fa475939767d68a446f97f1bff02c0e5935a3ea8bb51e6515783d8",
+          "shape": [
+            2,
+            10
+          ]
+        },
+        "blocks.1.k_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b",
+          "shape": [
+            16
+          ]
+        },
+        "blocks.1.kv_index": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "b64c0d4ec2af5aba75d0e38754bd4da29669e6bd54220441f3710964fdb4ece3",
+          "shape": [
+            4
+          ]
+        },
+        "blocks.1.noise_read": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "a1744fb191de8c68141cb7ccd1da4ae70da4b88b8c62936bb8441f2b074d7748",
+          "shape": [
+            40,
+            8
+          ]
+        },
+        "blocks.1.q_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca",
+          "shape": [
+            32
+          ]
+        },
+        "blocks.1.v_bias": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b",
+          "shape": [
+            16
+          ]
+        },
+        "deployed_gram_blocks": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "3975e266285fb48cbf0396057bfcacc0ef9f0b6588aeecba1c003ccd56d409ea",
+          "shape": [
+            5,
+            8,
+            8
+          ]
+        },
+        "deployed_gram_perm": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "c483379a08ccacaf3d2b83237b5563d345ae53f77323b2aa5658c1c4b6260996",
+          "shape": [
+            40
+          ]
+        },
+        "deployed_head": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "6f519a6e76e181ff9bdd5949e1b2c57407d0b35fe40ba9f672c6a81b08533ee5",
+          "shape": [
+            40,
+            64
+          ]
+        },
+        "embedding.table": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "458e0c059d51aa79f1d647bc687a81aebc2dbc92a83f98dba2f9982131bc6b07",
+          "shape": [
+            64,
+            40
+          ]
+        }
+      },
+      "server_state_key_list": [
+        "_noise_rows",
+        "blocks.0._noise_rows",
+        "blocks.0.common_qk",
+        "blocks.0.deployed_attn_noise_out",
+        "blocks.0.deployed_attn_out",
+        "blocks.0.deployed_attn_refresh_out",
+        "blocks.0.deployed_ffn_noise_out",
+        "blocks.0.deployed_ffn_out",
+        "blocks.0.deployed_ffn_refresh_out",
+        "blocks.0.deployed_gate",
+        "blocks.0.deployed_gram_blocks",
+        "blocks.0.deployed_gram_perm",
+        "blocks.0.deployed_k",
+        "blocks.0.deployed_k_bias",
+        "blocks.0.deployed_q",
+        "blocks.0.deployed_q_bias",
+        "blocks.0.deployed_up",
+        "blocks.0.deployed_v",
+        "blocks.0.deployed_v_bias",
+        "blocks.0.k_bias",
+        "blocks.0.kv_index",
+        "blocks.0.noise_read",
+        "blocks.0.q_bias",
+        "blocks.0.v_bias",
+        "blocks.1._noise_rows",
+        "blocks.1.common_qk",
+        "blocks.1.deployed_attn_noise_out",
+        "blocks.1.deployed_attn_out",
+        "blocks.1.deployed_attn_refresh_out",
+        "blocks.1.deployed_ffn_noise_out",
+        "blocks.1.deployed_ffn_out",
+        "blocks.1.deployed_ffn_refresh_out",
+        "blocks.1.deployed_gate",
+        "blocks.1.deployed_gram_blocks",
+        "blocks.1.deployed_gram_perm",
+        "blocks.1.deployed_k",
+        "blocks.1.deployed_k_bias",
+        "blocks.1.deployed_q",
+        "blocks.1.deployed_q_bias",
+        "blocks.1.deployed_up",
+        "blocks.1.deployed_v",
+        "blocks.1.deployed_v_bias",
+        "blocks.1.k_bias",
+        "blocks.1.kv_index",
+        "blocks.1.noise_read",
+        "blocks.1.q_bias",
+        "blocks.1.v_bias",
+        "deployed_gram_blocks",
+        "deployed_gram_perm",
+        "deployed_head",
+        "embedding.table"
+      ]
+    },
+    "deployed_weights": {
+      "attention": {
+        "key": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "212f9434c0cda0a9e4be0808663ee10bbeee2194fabc8f9adad694248b3270ea",
+          "shape": [
+            72,
+            32
+          ]
+        },
+        "key_bias": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+          "shape": [
+            32
+          ]
+        },
+        "noise_out": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "2c998d1c5a9b20b27327072dba2ad5acdd5e079ca34f06cc996356e546d3e41e",
+          "shape": [
+            8,
+            72
+          ]
+        },
+        "output": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "654555e6018fb7bb32e64fa7cfe6176c6fde971cbd49d12590d98a4cbee3e59a",
+          "shape": [
+            4,
+            18,
+            72
+          ]
+        },
+        "query": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "3e2321a377bbd51b9c07ee0718b925c8e99dbbd56f07dd982c69329291e08a6b",
+          "shape": [
+            72,
+            64
+          ]
+        },
+        "query_bias": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560",
+          "shape": [
+            64
+          ]
+        },
+        "refresh_out": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "606f558e014930f9c1669f03c71c28945c4631568e39cd308c6c7f4077c7bfb9",
+          "shape": [
+            8,
+            72
+          ]
+        },
+        "value": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "607cef92b039f2120648d177d924490645b6cb6baab0eb3f6daa95d248d6faa8",
+          "shape": [
+            2,
+            72,
+            18
+          ]
+        },
+        "value_bias": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "2d5565fb483d8ea4525a7a9229677d1038ad34b6e22c8d5152e1d7f7b9817597",
+          "shape": [
+            2,
+            18
+          ]
+        }
+      },
+      "auxiliary_budget_ratio": 0.10884615438299215,
+      "basis_fingerprint": "507be022ea48b2dad1c06c8bcc0dc5a392e9cfe6660152eb619dc32fea92d681",
+      "feed_forward": {
+        "gate": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "5b365ce3d94036c6ac9f65914de80b7af426fd6a00cef2a1cd75cd116a960b11",
+          "shape": [
+            72,
+            96
+          ]
+        },
+        "neuron_permutation": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "041f34c632dc1dc9bd0ea5b821650a360aad39508b4022f341b2544dcfbf6409",
+          "shape": [
+            96
+          ]
+        },
+        "neuron_scale": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "75f48c8501073ff950f7dddb08d6d5ab96e665a083ff74b3c4820cdd0f2a1ced",
+          "shape": [
+            96
+          ]
+        },
+        "noise_out": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "2c998d1c5a9b20b27327072dba2ad5acdd5e079ca34f06cc996356e546d3e41e",
+          "shape": [
+            8,
+            72
+          ]
+        },
+        "output": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "58b8021d7155483ee8589545eb65c7b8170a7fa1311deeb825d26fd0646f0d00",
+          "shape": [
+            96,
+            72
+          ]
+        },
+        "refresh_out": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "606f558e014930f9c1669f03c71c28945c4631568e39cd308c6c7f4077c7bfb9",
+          "shape": [
+            8,
+            72
+          ]
+        },
+        "up": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "670652cc8d0b2df58cfdfce8e0e8dbd96097fb4d21a9ac9c10c6f32ca5bfed79",
+          "shape": [
+            72,
+            96
+          ]
+        }
+      }
+    },
+    "evaluation": {
+      "attention_distribution_metrics": {
+        "actual_noise_infinity_norm": 0.03999999910593033,
+        "attention_output_relative_l2_error": 0.025819895130657355,
+        "clean_boundary_margin_max": 1.0,
+        "clean_boundary_margin_mean": 0.5,
+        "clean_boundary_margin_min": 0.0,
+        "js_divergence": 0.06255030443333404,
+        "kl_divergence": 0.24911181107172098,
+        "rank_correlation": 0.0,
+        "topk_changed_fraction": 0.5,
+        "topk_overlap": 0.5,
+        "zero_noise_query_fraction": 0.5
+      },
+      "greedy_generation_metrics": {
+        "greedy_sequence_exact_match": 0.5,
+        "greedy_token_exact_match": 0.75
+      },
+      "report_rows": [
+        {
+          "actual_noise_inf": 0.01,
+          "alpha": 0.8,
+          "attention_output_relative_l2_error": 0.01,
+          "base_config_sha256": null,
+          "batch_size": 2,
+          "bootstrap_ppl_relative_high": null,
+          "bootstrap_ppl_relative_low": null,
+          "bootstrap_replicates": null,
+          "bootstrap_top1_drop_high": null,
+          "bootstrap_top1_drop_low": null,
+          "checkpoint_compute_dtype": null,
+          "clean_boundary_margin_max": null,
+          "clean_boundary_margin_mean": null,
+          "clean_boundary_margin_min": null,
+          "conversion_time_seconds": 0.01,
+          "dataset_id": "unit-data",
+          "dataset_split": "test",
+          "decode_obfuscated_tokens_per_second": null,
+          "decode_obfuscated_tpot_seconds": null,
+          "decode_plaintext_tokens_per_second": null,
+          "decode_plaintext_tpot_seconds": null,
+          "decode_status": null,
+          "device": "cpu",
+          "dtype": "float32",
+          "elapsed_seconds": 0.1,
+          "error_message": null,
+          "error_type": null,
+          "evaluation_scope": null,
+          "evidence_kind": null,
+          "exact_gate_passed": null,
+          "exact_softmax_max_absolute_error": null,
+          "generation_tokens": null,
+          "greedy_sequence_match": 0.99,
+          "greedy_token_match": 0.99,
+          "kv_cache_obfuscated_bytes": null,
+          "kv_cache_plaintext_bytes": null,
+          "kv_cache_status": null,
+          "last_completed_sample_id": null,
+          "logits_cosine_similarity": null,
+          "logits_max_absolute_error": null,
+          "logits_mean_absolute_error": null,
+          "logits_relative_l2_error": null,
+          "meaningful_lm_evidence": false,
+          "mode": "free_bounded",
+          "model_config_sha256": null,
+          "model_id": "unit-model",
+          "model_pretrained": false,
+          "model_revision": "revision-a",
+          "model_tokenizer_sha256": null,
+          "model_weight_sha256": "weight-sha-a",
+          "nan_inf_count": null,
+          "nll_absolute_increase": 0.01,
+          "nll_relative_increase": 0.01,
+          "obfuscated_nll": 1.01,
+          "obfuscated_perplexity": 2.728281828459045,
+          "obfuscated_top1": 0.49,
+          "obfuscated_top5": 0.89,
+          "partial_metrics_available": null,
+          "peak_memory_bytes": null,
+          "peak_memory_status": null,
+          "perplexity_absolute_increase": 0.01,
+          "perplexity_relative_increase": 0.0036787944117144234,
+          "plaintext_nll": 1.0,
+          "plaintext_perplexity": 2.718281828459045,
+          "plaintext_top1": 0.5,
+          "plaintext_top5": 0.9,
+          "prefill_obfuscated_mean_seconds": null,
+          "prefill_obfuscated_tokens_per_second": null,
+          "prefill_plaintext_mean_seconds": null,
+          "preserve_top_k": 8,
+          "qk_max_absolute_error": null,
+          "qk_mean_absolute_error": null,
+          "qk_relative_l2_error": null,
+          "rank_correlation": 0.99,
+          "raw_line": 1,
+          "raw_source": "results/raw/attempt/eval.jsonl",
+          "reason_code": null,
+          "reason_message": null,
+          "run_id": "digest-record",
+          "sample_count": 4,
+          "sample_ids_sha256": "sample-sha-a",
+          "seed": 52,
+          "selected_spec_ids_file": null,
+          "sequence_length": 128,
+          "softmax_js": 0.005,
+          "softmax_kl": 0.01,
+          "stage": "full_evaluation",
+          "status": "success",
+          "sweep_config_sha256": null,
+          "tau_max": 0.01,
+          "timestamp_utc": "1970-01-01T00:00:00+00:00",
+          "tokenized_inputs_sha256": "tokenized-sha-a",
+          "top1_absolute_drop": 0.01,
+          "top1_agreement": 0.99,
+          "top1_relative_drop": 0.02,
+          "top5_absolute_drop": 0.01,
+          "top5_relative_drop": 0.011111111111111112,
+          "topk_changed_fraction": 0.01,
+          "topk_overlap": 0.99,
+          "zero_noise_query_fraction": 0.0
+        }
+      ],
+      "report_series_groups": {
+        "free_bounded": [
+          {
+            "actual_noise_inf": 0.01,
+            "alpha": 0.8,
+            "attention_output_relative_l2_error": 0.01,
+            "base_config_sha256": null,
+            "batch_size": 2,
+            "bootstrap_ppl_relative_high": null,
+            "bootstrap_ppl_relative_low": null,
+            "bootstrap_replicates": null,
+            "bootstrap_top1_drop_high": null,
+            "bootstrap_top1_drop_low": null,
+            "checkpoint_compute_dtype": null,
+            "clean_boundary_margin_max": null,
+            "clean_boundary_margin_mean": null,
+            "clean_boundary_margin_min": null,
+            "conversion_time_seconds": 0.01,
+            "dataset_id": "unit-data",
+            "dataset_split": "test",
+            "decode_obfuscated_tokens_per_second": null,
+            "decode_obfuscated_tpot_seconds": null,
+            "decode_plaintext_tokens_per_second": null,
+            "decode_plaintext_tpot_seconds": null,
+            "decode_status": null,
+            "device": "cpu",
+            "dtype": "float32",
+            "elapsed_seconds": 0.1,
+            "error_message": null,
+            "error_type": null,
+            "evaluation_scope": null,
+            "evidence_kind": null,
+            "exact_gate_passed": null,
+            "exact_softmax_max_absolute_error": null,
+            "generation_tokens": null,
+            "greedy_sequence_match": 0.99,
+            "greedy_token_match": 0.99,
+            "kv_cache_obfuscated_bytes": null,
+            "kv_cache_plaintext_bytes": null,
+            "kv_cache_status": null,
+            "last_completed_sample_id": null,
+            "logits_cosine_similarity": null,
+            "logits_max_absolute_error": null,
+            "logits_mean_absolute_error": null,
+            "logits_relative_l2_error": null,
+            "meaningful_lm_evidence": false,
+            "mode": "free_bounded",
+            "model_config_sha256": null,
+            "model_id": "unit-model",
+            "model_pretrained": false,
+            "model_revision": "revision-a",
+            "model_tokenizer_sha256": null,
+            "model_weight_sha256": "weight-sha-a",
+            "nan_inf_count": null,
+            "nll_absolute_increase": 0.01,
+            "nll_relative_increase": 0.01,
+            "obfuscated_nll": 1.01,
+            "obfuscated_perplexity": 2.728281828459045,
+            "obfuscated_top1": 0.49,
+            "obfuscated_top5": 0.89,
+            "partial_metrics_available": null,
+            "peak_memory_bytes": null,
+            "peak_memory_status": null,
+            "perplexity_absolute_increase": 0.01,
+            "perplexity_relative_increase": 0.0036787944117144234,
+            "plaintext_nll": 1.0,
+            "plaintext_perplexity": 2.718281828459045,
+            "plaintext_top1": 0.5,
+            "plaintext_top5": 0.9,
+            "prefill_obfuscated_mean_seconds": null,
+            "prefill_obfuscated_tokens_per_second": null,
+            "prefill_plaintext_mean_seconds": null,
+            "preserve_top_k": 8,
+            "qk_max_absolute_error": null,
+            "qk_mean_absolute_error": null,
+            "qk_relative_l2_error": null,
+            "rank_correlation": 0.99,
+            "raw_line": 1,
+            "raw_source": "results/raw/attempt/eval.jsonl",
+            "reason_code": null,
+            "reason_message": null,
+            "run_id": "digest-record",
+            "sample_count": 4,
+            "sample_ids_sha256": "sample-sha-a",
+            "seed": 52,
+            "selected_spec_ids_file": null,
+            "sequence_length": 128,
+            "softmax_js": 0.005,
+            "softmax_kl": 0.01,
+            "stage": "full_evaluation",
+            "status": "success",
+            "sweep_config_sha256": null,
+            "tau_max": 0.01,
+            "timestamp_utc": "1970-01-01T00:00:00+00:00",
+            "tokenized_inputs_sha256": "tokenized-sha-a",
+            "top1_absolute_drop": 0.01,
+            "top1_agreement": 0.99,
+            "top1_relative_drop": 0.02,
+            "top5_absolute_drop": 0.01,
+            "top5_relative_drop": 0.011111111111111112,
+            "topk_changed_fraction": 0.01,
+            "topk_overlap": 0.99,
+            "zero_noise_query_fraction": 0.0
+          }
+        ]
+      },
+      "run_record": {
+        "_raw_line": 1,
+        "_raw_source": "results/raw/attempt/eval.jsonl",
+        "config": {
+          "alpha": 0.8,
+          "evaluation": {
+            "batch_size": 2,
+            "sequence_length": 128
+          },
+          "mode": "free_bounded",
+          "preserve_top_k": 8,
+          "stage": "full_evaluation",
+          "tau_max": 0.01
+        },
+        "dataset": {
+          "id": "unit-data",
+          "meaningful_lm_evidence": false,
+          "sample_ids_sha256": "sample-sha-a",
+          "split": "test",
+          "tokenized_inputs_sha256": "tokenized-sha-a"
+        },
+        "elapsed_seconds": 0.1,
+        "environment": {
+          "activation_dtype": "float32",
+          "actual_device": "cpu",
+          "batch_size": 2
+        },
+        "metrics": {
+          "agreement": {
+            "next_token_top1_agreement": 0.99
+          },
+          "degradation": {
+            "nll_absolute_increase": 0.01,
+            "nll_relative_increase": 0.01,
+            "perplexity_absolute_increase": 0.01,
+            "perplexity_relative_increase": 0.0036787944117144234,
+            "top1_absolute_drop": 0.01,
+            "top1_relative_drop": 0.02,
+            "top5_absolute_drop": 0.01,
+            "top5_relative_drop": 0.011111111111111112
+          },
+          "greedy": {
+            "greedy_sequence_exact_match": 0.99,
+            "greedy_token_exact_match": 0.99
+          },
+          "obfuscated": {
+            "negative_log_likelihood": 1.01,
+            "next_token_top1_accuracy": 0.49,
+            "next_token_top5_accuracy": 0.89,
+            "perplexity": 2.728281828459045
+          },
+          "performance": {
+            "conversion_time_seconds": 0.01,
+            "decode_tpot_seconds": 0.003,
+            "kv_cache_memory_bytes": 512,
+            "peak_memory_bytes": 1024,
+            "prefill_latency_seconds": 0.02,
+            "tokens_per_second": 333.0
+          },
+          "plaintext": {
+            "negative_log_likelihood": 1.0,
+            "next_token_top1_accuracy": 0.5,
+            "next_token_top5_accuracy": 0.9,
+            "perplexity": 2.718281828459045
+          },
+          "softmax": {
+            "actual_noise_infinity_norm": 0.01,
+            "attention_output_relative_l2_error": 0.01,
+            "js_divergence": 0.005,
+            "kl_divergence": 0.01,
+            "rank_correlation": 0.99,
+            "topk_changed_fraction": 0.01,
+            "topk_overlap": 0.99,
+            "zero_noise_query_fraction": 0.0
+          }
+        },
+        "model": {
+          "id": "unit-model",
+          "pretrained": false,
+          "revision": "revision-a",
+          "weight_sha256": "weight-sha-a"
+        },
+        "run_id": "digest-record",
+        "sample_count": 4,
+        "schema_version": "fastprove.run.v1",
+        "seed": 52,
+        "status": "success",
+        "timestamp_utc": "1970-01-01T00:00:00+00:00"
+      },
+      "synthetic_token_batch_tokens": {
+        "dtype": "int64",
+        "kind": "tensor",
+        "sha256": "4469731aaa24c1cf53620d801424b6368aae21a4481749209ce1436c0f5b13c7",
+        "shape": [
+          5,
+          8
+        ]
+      },
+      "synthetic_token_identifiers": [
+        "synthetic-77-0000",
+        "synthetic-77-0001",
+        "synthetic-77-0002",
+        "synthetic-77-0003",
+        "synthetic-77-0004"
+      ],
+      "teacher_forced_metrics": {
+        "agreement": {
+          "next_token_top1_agreement": 1.0
+        },
+        "bootstrap": {
+          "confidence_level": 0.95,
+          "metrics": {
+            "next_token_top1_agreement": {
+              "high": 1.0,
+              "low": 1.0
+            },
+            "nll_absolute_increase": {
+              "high": -0.006101846694946289,
+              "low": -0.006219625473022461
+            },
+            "perplexity_absolute_increase": {
+              "high": -0.07635879516601562,
+              "low": -0.1699199676513672
+            },
+            "perplexity_relative_increase": {
+              "high": -0.006083290558308363,
+              "low": -0.006200340576469898
+            },
+            "top1_absolute_drop": {
+              "high": 0.0,
+              "low": 0.0
+            },
+            "top5_absolute_drop": {
+              "high": 0.0,
+              "low": 0.0
+            }
+          },
+          "replicates": 50,
+          "seed": 123,
+          "unit": "sample"
+        },
+        "degradation": {
+          "nll_absolute_increase": -0.006160736083984375,
+          "nll_relative_increase": -0.0021096167992116694,
+          "perplexity_absolute_increase": -0.11391219988921364,
+          "perplexity_relative_increase": -0.0061417976609367065,
+          "top1_absolute_drop": 0.0,
+          "top1_relative_drop": null,
+          "top5_absolute_drop": 0.0,
+          "top5_relative_drop": 0.0
+        },
+        "obfuscated": {
+          "negative_log_likelihood": 2.914149761199951,
+          "next_token_top1_accuracy": 0.0,
+          "next_token_top5_accuracy": 0.625,
+          "perplexity": 18.43313317311653
+        },
+        "plaintext": {
+          "negative_log_likelihood": 2.9203104972839355,
+          "next_token_top1_accuracy": 0.0,
+          "next_token_top5_accuracy": 0.625,
+          "perplexity": 18.547045373005744
+        },
+        "token_count": 8
+      },
+      "tensor_error_metrics": {
+        "cosine_similarity": 1.0,
+        "inf_count": 0,
+        "max_absolute_error": 0.029999971389770508,
+        "mean_absolute_error": 0.019999980926513672,
+        "nan_count": 0,
+        "relative_l2_error": 0.009999990463256836
+      }
+    },
+    "noise_budget": {
+      "approx_manifest": {
+        "channel_1_hiding_bits_note": "left None in the config-derived ledger: it depends on the signal scale sigma_h and is computed per experiment via semantic_hiding_bits()",
+        "exact_signal_path": false,
+        "free": {
+          "accuracy_cost_bound": 0.0,
+          "bound_source": null,
+          "channel": 0,
+          "dimension": 8,
+          "energy_ratio": 0.02,
+          "information_theoretic_hiding_bits": 0.0,
+          "statement": "channel 0 (ker L): zero accuracy cost, zero information-theoretic hiding by theorem 4; not a privacy source"
+        },
+        "mode": "topk_preserving",
+        "schema": "fastprove.noise_budget.v1",
+        "semantic": {
+          "accuracy_cost_bound": 0.1,
+          "bound_source": "margin_delta_k",
+          "channel": 1,
+          "dimension": 32,
+          "energy_ratio": 1e-05,
+          "information_theoretic_hiding_bits": null,
+          "statement": "channel 1 (semantic direction): perturbs h by exactly n @ L (theorem 2); the bound source is margin_delta_k"
+        },
+        "semantic_sources": {
+          "margin_delta_k": 0.1,
+          "rho": 1e-05
+        }
+      },
+      "approx_manifest_with_basis": {
+        "channel_1_hiding_bits_note": "left None in the config-derived ledger: it depends on the signal scale sigma_h and is computed per experiment via semantic_hiding_bits()",
+        "exact_signal_path": false,
+        "free": {
+          "accuracy_cost_bound": 0.0,
+          "bound_source": null,
+          "channel": 0,
+          "dimension": 8,
+          "energy_ratio": 0.02,
+          "information_theoretic_hiding_bits": 0.0,
+          "statement": "channel 0 (ker L): zero accuracy cost, zero information-theoretic hiding by theorem 4; not a privacy source"
+        },
+        "mode": "topk_preserving",
+        "schema": "fastprove.noise_budget.v1",
+        "semantic": {
+          "accuracy_cost_bound": 0.1,
+          "bound_source": "margin_delta_k",
+          "channel": 1,
+          "dimension": 32,
+          "energy_ratio": 1e-05,
+          "information_theoretic_hiding_bits": null,
+          "statement": "channel 1 (semantic direction): perturbs h by exactly n @ L (theorem 2); the bound source is margin_delta_k"
+        },
+        "semantic_sources": {
+          "margin_delta_k": 0.1,
+          "rho": 1e-05
+        }
+      },
+      "exact_manifest": {
+        "channel_1_hiding_bits_note": "left None in the config-derived ledger: it depends on the signal scale sigma_h and is computed per experiment via semantic_hiding_bits()",
+        "exact_signal_path": true,
+        "free": {
+          "accuracy_cost_bound": 0.0,
+          "bound_source": null,
+          "channel": 0,
+          "dimension": 8,
+          "energy_ratio": 0.02,
+          "information_theoretic_hiding_bits": 0.0,
+          "statement": "channel 0 (ker L): zero accuracy cost, zero information-theoretic hiding by theorem 4; not a privacy source"
+        },
+        "mode": "exact",
+        "schema": "fastprove.noise_budget.v1",
+        "semantic": {
+          "accuracy_cost_bound": 0.0,
+          "bound_source": "rho",
+          "channel": 1,
+          "dimension": 32,
+          "energy_ratio": 0.0,
+          "information_theoretic_hiding_bits": null,
+          "statement": "channel 1 (semantic direction): perturbs h by exactly n @ L (theorem 2); the bound source is rho"
+        },
+        "semantic_sources": {
+          "margin_delta_k": 0.0,
+          "rho": 0.0
+        }
+      },
+      "semantic_hiding_bits_0p577": 1.0006567438459828,
+      "semantic_hiding_bits_1": 0.5,
+      "semantic_hiding_bits_1e-5": 16.609640474508947
+    },
+    "router_moe": {
+      "moe_exact": {
+        "debug": {
+          "gate_weights": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "afd0f4d57f3a294f9468f6bbefddd398d8546de109a3acdded6b1c53a086b1c8",
+            "shape": [
+              2,
+              5,
+              2
+            ]
+          },
+          "physical_expert_indices": {
+            "dtype": "int64",
+            "kind": "tensor",
+            "sha256": "12e9078b6068298df8aa61742f8852da5d79c15f471debf4f2fcd5958cc713a3",
+            "shape": [
+              2,
+              5,
+              2
+            ]
+          },
+          "router_debug": {
+            "margin": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "2c34ce1df23b838c5abf2a7f6437cca3d3067ed509ff25f11df6b11b582b51eb",
+              "shape": [
+                2,
+                5,
+                1
+              ]
+            },
+            "noise": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "7b6436b0c98f62380866d9432c2af0ee08ce16a171bda6951aecd95ee1307d61",
+              "shape": [
+                2,
+                5,
+                8
+              ]
+            },
+            "noisy_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "3d2fe9eaf8e0ea0d31ad33f10663b113abd876cae094ea419fd8a088ab82861e",
+              "shape": [
+                2,
+                5,
+                8
+              ]
+            },
+            "permuted_clean_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "3d2fe9eaf8e0ea0d31ad33f10663b113abd876cae094ea419fd8a088ab82861e",
+              "shape": [
+                2,
+                5,
+                8
+              ]
+            },
+            "tau": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "2c34ce1df23b838c5abf2a7f6437cca3d3067ed509ff25f11df6b11b582b51eb",
+              "shape": [
+                2,
+                5,
+                1
+              ]
+            }
+          }
+        }
+      },
+      "moe_margin_bounded": {
+        "debug": {
+          "gate_weights": {
+            "dtype": "float32",
+            "kind": "tensor",
+            "sha256": "e2893f1c3ac6060273aabda555f8924933c08d71f5b5c7534d292e25fd579333",
+            "shape": [
+              2,
+              5,
+              2
+            ]
+          },
+          "physical_expert_indices": {
+            "dtype": "int64",
+            "kind": "tensor",
+            "sha256": "12e9078b6068298df8aa61742f8852da5d79c15f471debf4f2fcd5958cc713a3",
+            "shape": [
+              2,
+              5,
+              2
+            ]
+          },
+          "router_debug": {
+            "margin": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "c58b0e1e55696eaa2402dc0289a551321e77526ae373a479c94e9f508bc922c5",
+              "shape": [
+                2,
+                5,
+                1
+              ]
+            },
+            "noise": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "ee49a72262f602855e003c49aa275f6d6ff4ba50e48e0d73526a6f53529d939c",
+              "shape": [
+                2,
+                5,
+                8
+              ]
+            },
+            "noisy_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "4775c0a44b577615292bf85dd90996f0cb891ce7ab55fb7d4af5c6dc86b6f3b4",
+              "shape": [
+                2,
+                5,
+                8
+              ]
+            },
+            "permuted_clean_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "3d2fe9eaf8e0ea0d31ad33f10663b113abd876cae094ea419fd8a088ab82861e",
+              "shape": [
+                2,
+                5,
+                8
+              ]
+            },
+            "tau": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "c32ad0b2bc0c7e6abcff93b354b993da407a26e9824938d7339f41ea1c19eb9e",
+              "shape": [
+                2,
+                5,
+                1
+              ]
+            }
+          }
+        }
+      },
+      "router": {
+        "exact": {
+          "debug": {
+            "margin": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+              "shape": [
+                1,
+                1
+              ]
+            },
+            "noise": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "374708fff7719dd5979ec875d56cd2286f6d3cf7ec317a3b25632aab28ec37bb",
+              "shape": [
+                1,
+                4
+              ]
+            },
+            "noisy_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "97e68136ac8ad6432cd8a756e78dd6d3cfd7b20340825efcf7b1f2dbe2b571ed",
+              "shape": [
+                1,
+                4
+              ]
+            },
+            "permuted_clean_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "97e68136ac8ad6432cd8a756e78dd6d3cfd7b20340825efcf7b1f2dbe2b571ed",
+              "shape": [
+                1,
+                4
+              ]
+            },
+            "tau": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+              "shape": [
+                1,
+                1
+              ]
+            }
+          },
+          "decision": {
+            "gate_weights": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "aac839cc875948c6b46adea64b5daaae5dc798cea9013166994f2b34534fd72d",
+              "shape": [
+                1,
+                2
+              ]
+            },
+            "physical_expert_indices": {
+              "dtype": "int64",
+              "kind": "tensor",
+              "sha256": "4cbbd8ca5215b8d161aec181a74b694f4e24b001d5b081dc0030ed797a8973e0",
+              "shape": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        "margin_bounded": {
+          "debug": {
+            "margin": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "7d2731ecf5c36c1e13fe7525b34a21ce9e0b7fc8e643949c238ddd4bbfbcb85b",
+              "shape": [
+                2,
+                1
+              ]
+            },
+            "noise": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "1872408e908f2b194c9d2da6c19c6f78a492f78b11af3ba526c99ebfe91c2c1a",
+              "shape": [
+                2,
+                4
+              ]
+            },
+            "noisy_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "c5a85080db5c89b17ee96f07da998f36ae6422a4b129caf41b76fceb5fca7b85",
+              "shape": [
+                2,
+                4
+              ]
+            },
+            "permuted_clean_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "20c2fabafceba1030af41d4650e55cdeb1ecd6d7242b5358103ed42c1709d8fc",
+              "shape": [
+                2,
+                4
+              ]
+            },
+            "tau": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "e49a88982fd42384a50fcf65657b349f5eef9661d834dfb5dce067acd24b3b9c",
+              "shape": [
+                2,
+                1
+              ]
+            }
+          },
+          "decision": {
+            "gate_weights": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "a28cab1a314dbdb1a3af811b79a7674e085393b9a790a5b23d5ff0c6ff8a57ec",
+              "shape": [
+                2,
+                2
+              ]
+            },
+            "physical_expert_indices": {
+              "dtype": "int64",
+              "kind": "tensor",
+              "sha256": "d8edf9a7a341fef9b9cf1a99e4ef9f08ef31b9bdf37af84f7068ac8ef667c54f",
+              "shape": [
+                2,
+                2
+              ]
+            }
+          }
+        },
+        "margin_bounded_noisy_gates": {
+          "debug": {
+            "margin": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "7d2731ecf5c36c1e13fe7525b34a21ce9e0b7fc8e643949c238ddd4bbfbcb85b",
+              "shape": [
+                2,
+                1
+              ]
+            },
+            "noise": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "1872408e908f2b194c9d2da6c19c6f78a492f78b11af3ba526c99ebfe91c2c1a",
+              "shape": [
+                2,
+                4
+              ]
+            },
+            "noisy_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "c5a85080db5c89b17ee96f07da998f36ae6422a4b129caf41b76fceb5fca7b85",
+              "shape": [
+                2,
+                4
+              ]
+            },
+            "permuted_clean_logits": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "20c2fabafceba1030af41d4650e55cdeb1ecd6d7242b5358103ed42c1709d8fc",
+              "shape": [
+                2,
+                4
+              ]
+            },
+            "tau": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "e49a88982fd42384a50fcf65657b349f5eef9661d834dfb5dce067acd24b3b9c",
+              "shape": [
+                2,
+                1
+              ]
+            }
+          },
+          "decision": {
+            "gate_weights": {
+              "dtype": "float32",
+              "kind": "tensor",
+              "sha256": "e885185a4f2611b1946f26cd4b8a60e97f8fbe671b5639f2388718bf808a5b80",
+              "shape": [
+                2,
+                2
+              ]
+            },
+            "physical_expert_indices": {
+              "dtype": "int64",
+              "kind": "tensor",
+              "sha256": "d8edf9a7a341fef9b9cf1a99e4ef9f08ef31b9bdf37af84f7068ac8ef667c54f",
+              "shape": [
+                2,
+                2
+              ]
+            }
+          }
+        }
+      }
+    },
+    "seed": {
+      "derive_seed_1234_layer_2_attention": 6560019120006676817,
+      "make_generator_draws": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "c74bd51e90b276f863b5ce5ea73d01b71a782f6f3d6b4e566a632ffaa974b973",
+        "shape": [
+          3
+        ]
+      },
+      "request_seed_layer_1": 10703714543177726,
+      "request_seed_layer_1_other_request": 4365154831601123385
+    },
+    "structured": {
+      "auxiliary_magnitude_bound": 30.0,
+      "block_count": 9,
+      "block_size": 8,
+      "blocks": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "457bbe7ea3d369f319bfd49a17b92414cb61cd8527a786f4c26ccad2d5be3661",
+        "shape": [
+          9,
+          8,
+          8
+        ]
+      },
+      "check_auxiliary_magnitude_ratio": 0.06069770149970158,
+      "condition_number": 9.253608497579854,
+      "dense": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "fa952ccd90b50650a26e99cf438cd80862e5a5e25039c2bccdd02fc3e3a7f83b",
+        "shape": [
+          72,
+          72
+        ]
+      },
+      "dense_inverse": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "d15274e6f2996477c9337d9a587e25393d3c9aac51da4fde6abd51b66467476c",
+        "shape": [
+          72,
+          72
+        ]
+      },
+      "descriptor": {
+        "condition_number": 9.253608497579854,
+        "fingerprint": "c87a5c7e06711231b5abd5b104dd01742ad1d8b97e447d1b68d6ab3379799285",
+        "noise_dim": 8,
+        "signal_dim": 64
+      },
+      "fingerprint": "c87a5c7e06711231b5abd5b104dd01742ad1d8b97e447d1b68d6ab3379799285",
+      "free_noise_basis": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "d97af2e41ff61317713a25988a519c97d71e301bbda3178b49f513d29739f6e7",
+        "shape": [
+          8,
+          72
+        ]
+      },
+      "free_noise_dim": 8,
+      "gram_blocks": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "6c7192a33a86336477628b997aa1ed4d4ac015e8104a2495c4cae85ccb686b6e",
+        "shape": [
+          9,
+          8,
+          8
+        ]
+      },
+      "noise_dim": 8,
+      "noise_projection": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "d1e577c7ead898b11528c289e3ac87efe4d6eb7bdb987e6bd27a1283603f642f",
+        "shape": [
+          72,
+          8
+        ]
+      },
+      "noise_rows": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "d6ea99e92abcc19d1fc8ee11e945d7d4b3cd7c4a4aaa158ef37ce4c0a2ea657c",
+        "shape": [
+          8,
+          72
+        ]
+      },
+      "perm_in": {
+        "dtype": "int64",
+        "kind": "tensor",
+        "sha256": "31ec1b8822ef2a59d4b369b976b9ad82d60c7dfbd1656359878de7548945ef21",
+        "shape": [
+          72
+        ]
+      },
+      "perm_out": {
+        "dtype": "int64",
+        "kind": "tensor",
+        "sha256": "5001d417d6e0cd62183556508aa1abef6751c918c1f53fa1638a076f71de976b",
+        "shape": [
+          72
+        ]
+      },
+      "recomputed_condition_number": 9.253608497579853,
+      "scales": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "e1010849d35a097f235aae7c45f55880a4f550276aab6bd80d5c423ae5c9cbb2",
+        "shape": [
+          72
+        ]
+      },
+      "signal_dim": 64,
+      "signal_projection": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "3310679948fb1b17994e1aaa16d38d74d8aabe57410d56c5ac875356c05de0cb",
+        "shape": [
+          72,
+          64
+        ]
+      },
+      "signal_rows": {
+        "dtype": "float64",
+        "kind": "tensor",
+        "sha256": "d00cf312ae18688945857ac8e927b7f3958a45604d09ff5059143a0eb333c095",
+        "shape": [
+          64,
+          72
+        ]
+      },
+      "total_dim": 72
+    },
+    "tiny_lm": {
+      "approx_config": {
+        "cache": {
+          "layers": [
+            {
+              "cache_identity": "0:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:1178b944dcd1ac704323c985154eedc3a4b2783f08faf86fefa713532f981b7f:9e6d02fc855fd7ec0e1dd7d6ea2ef8dcd7befdc755d5dd2bbb5c3c43aed2648a:6b58ec0b69a81d457474238d01359c520c7efb68084a5248780ffb524d08095e",
+              "key": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "0558cd6f801b37094fbcf4701bc40f3e351a1b1a0d15c453ade9e91de78dc177",
+                "shape": [
+                  2,
+                  2,
+                  4,
+                  8
+                ]
+              },
+              "key_valid": {
+                "dtype": "bool",
+                "kind": "tensor",
+                "sha256": "04abc8821a06e5a30937967d11ad10221cb5ac3b5273e434f1284ee87129a061",
+                "shape": [
+                  2,
+                  4
+                ]
+              },
+              "positions": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "a1e03200f1f82ad2c1cec8795c271aaecf98f5aa2d151d2229ec5fa0c177cf77",
+                "shape": [
+                  4
+                ]
+              },
+              "request_id": "tiny-cache",
+              "request_seed": 514,
+              "value_mixed": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "d7309eb79a8eb0089d0ce1f5f6d3c718d7929945e1c3cd6b2c4b1b739b315d6e",
+                "shape": [
+                  2,
+                  2,
+                  4,
+                  10
+                ]
+              }
+            },
+            {
+              "cache_identity": "1:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:86c47734be7a0b59f286ddc4ba6f11b2f9326995857828ebfd3611f1168b0451:f24faa01971bf7b2f42962928e1ae0311e7a733e760c7a765747ce464caaffa4:5b24cbd726253e91b2928307be61a339f5cdee08d3d278ecb684565146f082c4",
+              "key": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "54d91cb2b49e47b70083d5fa1bce37116a1796b3771e56730568710188c5998a",
+                "shape": [
+                  2,
+                  2,
+                  4,
+                  8
+                ]
+              },
+              "key_valid": {
+                "dtype": "bool",
+                "kind": "tensor",
+                "sha256": "04abc8821a06e5a30937967d11ad10221cb5ac3b5273e434f1284ee87129a061",
+                "shape": [
+                  2,
+                  4
+                ]
+              },
+              "positions": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "a1e03200f1f82ad2c1cec8795c271aaecf98f5aa2d151d2229ec5fa0c177cf77",
+                "shape": [
+                  4
+                ]
+              },
+              "request_id": "tiny-cache",
+              "request_seed": 514,
+              "value_mixed": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "937074e52450172fdd6b9b2534b893445afdf2433e6963ea7161bc4b06588d44",
+                "shape": [
+                  2,
+                  2,
+                  4,
+                  10
+                ]
+              }
+            }
+          ]
+        },
+        "cache_step_max_abs_error": 2.980232238769531e-07,
+        "decoded_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "cc0cb7d46e0b030e17927f159494fec9f3a190cfa206fcbb42e3bc372be48897",
+          "shape": [
+            2,
+            6,
+            64
+          ]
+        },
+        "full_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "a7d883ae84dc270af0e697bf9d8b1109352ddd970e2e4a5c0026566d24480971",
+          "shape": [
+            2,
+            6,
+            64
+          ]
+        },
+        "greedy_equal": true,
+        "initial_refresh": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "9fd95eeea27c2ba94eecb46cd81f529dde9870f5c6ee3d25786adce7a428ebd5",
+          "shape": [
+            40
+          ]
+        },
+        "logits_argmax_equal": true,
+        "logits_max_abs_error": 0.005246788263320923,
+        "obfuscated_generated": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "f7c32d77fa51ab4ea500f73dae2d8a0a81e12d919f98a72e7f11d44cf23a03a1",
+          "shape": [
+            2,
+            10
+          ]
+        },
+        "obfuscated_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "c8d23e718422c20007c2350e67cd8fe50d698f85023a14d46abca79b6ea4af2c",
+          "shape": [
+            2,
+            6,
+            64
+          ]
+        },
+        "plain_generated": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "f7c32d77fa51ab4ea500f73dae2d8a0a81e12d919f98a72e7f11d44cf23a03a1",
+          "shape": [
+            2,
+            10
+          ]
+        },
+        "plain_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "840c1ca3e90a9873cc68f03a09cc1a26a8185ac4b2aee494dd5ebc64abc2ad20",
+          "shape": [
+            2,
+            6,
+            64
+          ]
+        },
+        "step_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "0e873fd91789615608754f9ae785e7332b59ffdb379614b657f65998813c44ed",
+          "shape": [
+            2,
+            2,
+            64
+          ]
+        },
+        "updated_cache": {
+          "layers": [
+            {
+              "cache_identity": "0:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:1178b944dcd1ac704323c985154eedc3a4b2783f08faf86fefa713532f981b7f:9e6d02fc855fd7ec0e1dd7d6ea2ef8dcd7befdc755d5dd2bbb5c3c43aed2648a:6b58ec0b69a81d457474238d01359c520c7efb68084a5248780ffb524d08095e",
+              "key": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "5b63c6ee4609c4c61f8bc1d237d40f2a398e6c9d767a44fc2c98a1a48b33225b",
+                "shape": [
+                  2,
+                  2,
+                  6,
+                  8
+                ]
+              },
+              "key_valid": {
+                "dtype": "bool",
+                "kind": "tensor",
+                "sha256": "3ee5f0d83bf791f0fb4d750a5719ce19d6d352ef7e5a4264e4b760f0f9c15014",
+                "shape": [
+                  2,
+                  6
+                ]
+              },
+              "positions": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "f190072c5052f4f440d4a607c25f5bced487c420806c9aab4ca5b0653e72da61",
+                "shape": [
+                  6
+                ]
+              },
+              "request_id": "tiny-cache",
+              "request_seed": 514,
+              "value_mixed": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "fb1a754aa818f5bb7c89a6eced4a958b828564cca6420cbd695bbd1944ebcbe7",
+                "shape": [
+                  2,
+                  2,
+                  6,
+                  10
+                ]
+              }
+            },
+            {
+              "cache_identity": "1:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:86c47734be7a0b59f286ddc4ba6f11b2f9326995857828ebfd3611f1168b0451:f24faa01971bf7b2f42962928e1ae0311e7a733e760c7a765747ce464caaffa4:5b24cbd726253e91b2928307be61a339f5cdee08d3d278ecb684565146f082c4",
+              "key": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "7f486a908894ed17984262741c7304bebfdbf3c73ebbf2657e5ab2222809d43d",
+                "shape": [
+                  2,
+                  2,
+                  6,
+                  8
+                ]
+              },
+              "key_valid": {
+                "dtype": "bool",
+                "kind": "tensor",
+                "sha256": "3ee5f0d83bf791f0fb4d750a5719ce19d6d352ef7e5a4264e4b760f0f9c15014",
+                "shape": [
+                  2,
+                  6
+                ]
+              },
+              "positions": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "f190072c5052f4f440d4a607c25f5bced487c420806c9aab4ca5b0653e72da61",
+                "shape": [
+                  6
+                ]
+              },
+              "request_id": "tiny-cache",
+              "request_seed": 514,
+              "value_mixed": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "128fa87a3bf09700687da41a770d49a99f919bd7551518f2f6fa9808f812750b",
+                "shape": [
+                  2,
+                  2,
+                  6,
+                  10
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "exact_config": {
+        "cache": {
+          "layers": [
+            {
+              "cache_identity": "0:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:1178b944dcd1ac704323c985154eedc3a4b2783f08faf86fefa713532f981b7f:9e6d02fc855fd7ec0e1dd7d6ea2ef8dcd7befdc755d5dd2bbb5c3c43aed2648a:6b58ec0b69a81d457474238d01359c520c7efb68084a5248780ffb524d08095e",
+              "key": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "321904ecfb07cc57a17a50b69a4cdb3b763c67683d0a688d5cdac2e8c179b8d2",
+                "shape": [
+                  2,
+                  2,
+                  4,
+                  8
+                ]
+              },
+              "key_valid": {
+                "dtype": "bool",
+                "kind": "tensor",
+                "sha256": "04abc8821a06e5a30937967d11ad10221cb5ac3b5273e434f1284ee87129a061",
+                "shape": [
+                  2,
+                  4
+                ]
+              },
+              "positions": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "a1e03200f1f82ad2c1cec8795c271aaecf98f5aa2d151d2229ec5fa0c177cf77",
+                "shape": [
+                  4
+                ]
+              },
+              "request_id": "tiny-cache",
+              "request_seed": 514,
+              "value_mixed": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "af0bc361c328519d62efbc7e773b3ff84ee037912444e919cb1932d26f6ccfea",
+                "shape": [
+                  2,
+                  2,
+                  4,
+                  10
+                ]
+              }
+            },
+            {
+              "cache_identity": "1:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:86c47734be7a0b59f286ddc4ba6f11b2f9326995857828ebfd3611f1168b0451:f24faa01971bf7b2f42962928e1ae0311e7a733e760c7a765747ce464caaffa4:5b24cbd726253e91b2928307be61a339f5cdee08d3d278ecb684565146f082c4",
+              "key": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "79044481e5847b6b2a7e916a9e725789c81d2da5323c738f62f009a20a564236",
+                "shape": [
+                  2,
+                  2,
+                  4,
+                  8
+                ]
+              },
+              "key_valid": {
+                "dtype": "bool",
+                "kind": "tensor",
+                "sha256": "04abc8821a06e5a30937967d11ad10221cb5ac3b5273e434f1284ee87129a061",
+                "shape": [
+                  2,
+                  4
+                ]
+              },
+              "positions": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "a1e03200f1f82ad2c1cec8795c271aaecf98f5aa2d151d2229ec5fa0c177cf77",
+                "shape": [
+                  4
+                ]
+              },
+              "request_id": "tiny-cache",
+              "request_seed": 514,
+              "value_mixed": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "f1871b6cd4996f3b24aeaff6da9a418c98bd82e8b7dea3e31a6f72afcabd72c6",
+                "shape": [
+                  2,
+                  2,
+                  4,
+                  10
+                ]
+              }
+            }
+          ]
+        },
+        "cache_step_max_abs_error": 3.5762786865234375e-07,
+        "decoded_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "dbe6f3ce9836f839575d093db2b4ac67f6c491cd69dcb313f1ea6a20db273863",
+          "shape": [
+            2,
+            6,
+            64
+          ]
+        },
+        "full_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "f4f96bd4bd5807bb2f889877ccede68daddc393961595d2f382bb39d6d904b57",
+          "shape": [
+            2,
+            6,
+            64
+          ]
+        },
+        "greedy_equal": true,
+        "initial_refresh": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "b393978842a0fa3d3e1470196f098f473f9678e72463cb65ec4ab5581856c2e4",
+          "shape": [
+            40
+          ]
+        },
+        "logits_argmax_equal": true,
+        "logits_max_abs_error": 6.556510925292969e-07,
+        "obfuscated_generated": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "f7c32d77fa51ab4ea500f73dae2d8a0a81e12d919f98a72e7f11d44cf23a03a1",
+          "shape": [
+            2,
+            10
+          ]
+        },
+        "obfuscated_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "f4f96bd4bd5807bb2f889877ccede68daddc393961595d2f382bb39d6d904b57",
+          "shape": [
+            2,
+            6,
+            64
+          ]
+        },
+        "plain_generated": {
+          "dtype": "int64",
+          "kind": "tensor",
+          "sha256": "f7c32d77fa51ab4ea500f73dae2d8a0a81e12d919f98a72e7f11d44cf23a03a1",
+          "shape": [
+            2,
+            10
+          ]
+        },
+        "plain_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "840c1ca3e90a9873cc68f03a09cc1a26a8185ac4b2aee494dd5ebc64abc2ad20",
+          "shape": [
+            2,
+            6,
+            64
+          ]
+        },
+        "step_logits": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "a1e0b5b1cfa3eebd91162244e4ac07e9fdfab69b2773d28410fdceca85637ab5",
+          "shape": [
+            2,
+            2,
+            64
+          ]
+        },
+        "updated_cache": {
+          "layers": [
+            {
+              "cache_identity": "0:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:1178b944dcd1ac704323c985154eedc3a4b2783f08faf86fefa713532f981b7f:9e6d02fc855fd7ec0e1dd7d6ea2ef8dcd7befdc755d5dd2bbb5c3c43aed2648a:6b58ec0b69a81d457474238d01359c520c7efb68084a5248780ffb524d08095e",
+              "key": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "93d1a7b14305857c5fae52efbcc71607bc587241eedb857ccdf6e2185c3aeceb",
+                "shape": [
+                  2,
+                  2,
+                  6,
+                  8
+                ]
+              },
+              "key_valid": {
+                "dtype": "bool",
+                "kind": "tensor",
+                "sha256": "3ee5f0d83bf791f0fb4d750a5719ce19d6d352ef7e5a4264e4b760f0f9c15014",
+                "shape": [
+                  2,
+                  6
+                ]
+              },
+              "positions": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "f190072c5052f4f440d4a607c25f5bced487c420806c9aab4ca5b0653e72da61",
+                "shape": [
+                  6
+                ]
+              },
+              "request_id": "tiny-cache",
+              "request_seed": 514,
+              "value_mixed": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "7a074549674f7856be8c92d643a13e3b06bb894a752918590f1416a91372b729",
+                "shape": [
+                  2,
+                  2,
+                  6,
+                  10
+                ]
+              }
+            },
+            {
+              "cache_identity": "1:42fd22e85fe1cf169b280e06cf8ed60ba9eb15ffa739ecfc15fd86e2c50b4c82:86c47734be7a0b59f286ddc4ba6f11b2f9326995857828ebfd3611f1168b0451:f24faa01971bf7b2f42962928e1ae0311e7a733e760c7a765747ce464caaffa4:5b24cbd726253e91b2928307be61a339f5cdee08d3d278ecb684565146f082c4",
+              "key": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "afd69924926e6fc3849b72606db0c2a8053758af731c338115cc93db45fd2613",
+                "shape": [
+                  2,
+                  2,
+                  6,
+                  8
+                ]
+              },
+              "key_valid": {
+                "dtype": "bool",
+                "kind": "tensor",
+                "sha256": "3ee5f0d83bf791f0fb4d750a5719ce19d6d352ef7e5a4264e4b760f0f9c15014",
+                "shape": [
+                  2,
+                  6
+                ]
+              },
+              "positions": {
+                "dtype": "int64",
+                "kind": "tensor",
+                "sha256": "f190072c5052f4f440d4a607c25f5bced487c420806c9aab4ca5b0653e72da61",
+                "shape": [
+                  6
+                ]
+              },
+              "request_id": "tiny-cache",
+              "request_seed": 514,
+              "value_mixed": {
+                "dtype": "float32",
+                "kind": "tensor",
+                "sha256": "b6284a7c0e278793f5bd63da059d0a194a1fb5fcdf9b8952119821b5aec6c4cc",
+                "shape": [
+                  2,
+                  2,
+                  6,
+                  10
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "transforms": {
+      "dense_family": {
+        "condition_number": 2.9576568620145736,
+        "descriptor": {
+          "condition_number": 2.9576568620145736,
+          "fingerprint": "d33df288b3dc5d5d237f4b334d27a13ccde4a6aee37c5a393049bbba45ecd459",
+          "noise_dim": 3,
+          "signal_dim": 5
+        },
+        "fingerprint": "d33df288b3dc5d5d237f4b334d27a13ccde4a6aee37c5a393049bbba45ecd459",
+        "inverse": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "1e8512ff19a0a2ce98508d05815c954fd4517c29b86a720e3bf1f277a94bcca0",
+          "shape": [
+            8,
+            8
+          ]
+        },
+        "matrix": {
+          "dtype": "float32",
+          "kind": "tensor",
+          "sha256": "8d9b8eafde81664eaf485a290fd702a1d0ab5b3de11c6d1430ed8d9ac7c2bbd5",
+          "shape": [
+            8,
+            8
+          ]
+        }
+      },
+      "orthogonal_6": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "98de1461b62a3929126f686ac87158a3fe4bd4bcb5b1eef214011f5cbaee8f9b",
+        "shape": [
+          6,
+          6
+        ]
+      },
+      "signed_permutation_5": {
+        "dtype": "float32",
+        "kind": "tensor",
+        "sha256": "d06bc07fef6989473cdd1f8845e91dd0f30b13214ff5978bab6b42ed66d38a73",
+        "shape": [
+          5,
+          5
+        ]
+      },
+      "two_sided_family": {
+        "condition_number": 2.4884491844028767,
+        "descriptor": {
+          "condition_number": 2.4884491844028767,
+          "fingerprint": "fd846dfee7ad352fdc164b2a9b210c6ac8fd9ad65ce5b5f8b4c9d959b6eda82c",
+          "noise_dim": 2,
+          "signal_dim": 8
+        },
+        "fingerprint": "fd846dfee7ad352fdc164b2a9b210c6ac8fd9ad65ce5b5f8b4c9d959b6eda82c",
+        "inverse": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "c10ab11341991495ab7adab7d8042848cc288a033d528749073707e11d8ef2c1",
+          "shape": [
+            10,
+            10
+          ]
+        },
+        "matrix": {
+          "dtype": "float64",
+          "kind": "tensor",
+          "sha256": "42f397ffec4ae08f1d067ae57bc9293d84c4b80cfd9af753b453f379cbbf2c84",
+          "shape": [
+            10,
+            10
+          ]
+        }
+      }
+    }
+  }
+}

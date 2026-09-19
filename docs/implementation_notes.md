@@ -493,3 +493,13 @@ CPU，prefill，self CPU time，共 29.2ms）：
 - 依赖计划：使用已有 NumPy 运行数学 oracle；后续实现复用现有 PyTorch/YAML/pytest，不新增依赖、不下载模型数据。
 - 新方案入口：`DERIVATION_PACKAGE.md`；证明：`PROOF_PACKAGE.md`；工程合同：`docs/augmented_covariant_implementation_v2.md`。
 - 新数学检查脚本：`docs/verification/verify_augmented_covariant_v2.py`；扩维后 concat/full 两个方案的更新记录：`results/raw/expanded_augmentation_v2_math_check_20260916.json`。该记录不代表 fastprove runtime 测试或模型/安全评测；此前 compact-primary 和 concat-only 记录保留为历史文件，不作为当前方案验收。
+
+## 代码结构梳理 P0：环境审计与数值基线（2026-09-19）
+
+P0 目标是在任何结构改动前冻结可验证基线。
+
+- 环境：Python 3.13.12（`/Users/yin/miniconda3/bin/python`）；PyTorch 2.11.0；NumPy 2.4.4；macOS arm64；CPU + MPS，无 CUDA。
+- 包可导入性：`python -m pip install -e .` 成功；`python -c "import fastprove"` 与裸 `python -m pytest`（收集 382）均通过。此前裸 pytest 收集失败与脚本内 13 处 `sys.path` 引导的问题由可编辑安装解决；P5 将移除这些引导。
+- 测试基线：`python -m pytest tests -q` → 382 passed in 11.99s；本机 MPS 可用，MPS 测试实跑，无 skip。`--durations=25` 最长用例为 `tests/test_cli_plan.py::test_execution_flags_are_not_interchangeable`（1.44s）。
+- 数值基线：`python scripts/verify_refactor_equivalence.py` 生成 `results/raw/refactor_baseline_5e19c43ea2b2.json`（12 个 section、2395 个摘要叶子，覆盖种子/变换/StructuredBasis/噪声原语/预算/ChainLinear/部署权重/四种单块/tiny LM/router+MoE/converter 产物/评测流水线）；`--check` 重算全等。
+- 门：每个重构提交必须同时通过 `python -m pytest tests -q` 与 `python scripts/verify_refactor_equivalence.py --check`；等价性失败只允许回滚，不允许改基线。
