@@ -9,8 +9,8 @@ from typing import Any, Dict
 
 import yaml
 
-from .layers.attention import AttentionMode
-from .structured import AUXILIARY_MAGNITUDE_BOUND
+from .modes import AttentionMode
+from .policy import AUXILIARY_MAGNITUDE_BOUND
 
 
 @dataclass(frozen=True)

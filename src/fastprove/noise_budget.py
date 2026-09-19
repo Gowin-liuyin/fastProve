@@ -34,7 +34,7 @@ import math
 from dataclasses import asdict, dataclass
 
 from .config import PrototypeConfig
-from .layers.attention import AttentionMode
+from .modes import AttentionMode
 from .structured import StructuredBasis
 
 #: Whitelisted sources of a computable channel-1 accuracy bound. A channel-1

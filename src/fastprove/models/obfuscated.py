@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from ..config import ModelConfig, ObfuscationConfig
 from ..codec import TokenCodec, generate_token_codec
 from ..augmented_noise import deployed_free_noise_sigma
-from ..evaluation.metrics import tensor_error_metrics
+from ..metrics import tensor_error_metrics
 from ..layers.attention import (
     ApproximationConfig,
     AttentionDebug,

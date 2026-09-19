@@ -4,22 +4,13 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
 
+from ..modes import AttentionMode
 from ..seed import RequestContext
-
-
-class AttentionMode(str, Enum):
-    """Supported attention execution modes."""
-
-    PLAINTEXT = "plaintext"
-    EXACT = "exact"
-    TOPK_PRESERVING = "topk_preserving"
-    FREE_BOUNDED = "free_bounded"
 
 
 @dataclass(frozen=True)
