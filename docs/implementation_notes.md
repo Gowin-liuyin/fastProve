@@ -503,3 +503,22 @@ P0 目标是在任何结构改动前冻结可验证基线。
 - 测试基线：`python -m pytest tests -q` → 382 passed in 11.99s；本机 MPS 可用，MPS 测试实跑，无 skip。`--durations=25` 最长用例为 `tests/test_cli_plan.py::test_execution_flags_are_not_interchangeable`（1.44s）。
 - 数值基线：`python scripts/verify_refactor_equivalence.py` 生成 `results/raw/refactor_baseline_5e19c43ea2b2.json`（12 个 section、2395 个摘要叶子，覆盖种子/变换/StructuredBasis/噪声原语/预算/ChainLinear/部署权重/四种单块/tiny LM/router+MoE/converter 产物/评测流水线）；`--check` 重算全等。
 - 门：每个重构提交必须同时通过 `python -m pytest tests -q` 与 `python scripts/verify_refactor_equivalence.py --check`；等价性失败只允许回滚，不允许改基线。
+
+## P4 去重执行记录（2026-09-19）
+
+已完成并按序提交（每步双门通过）：
+
+- P4a：`_sha256_file` 7 份 → `fastprove/hashing.py`（分块读取，digest 不变）。
+- P4b：checkpoint I/O → `pretrained/_checkpoint_io.py`（错误信息逐字保留）。
+- P4c：dtype 校验 / `BasisDescriptor` / 指纹原语 → `fastprove/basis_common.py`（指纹逐位不变）。
+- P4d：dense 变换生成助手 → `transforms.py` 内部（抽样次序与形状不变）。
+- P4e：Gram `rms_scale` 三份 → `structured.gram_rms_scale`（einsum/clamp_min/除法/加法/sqrt 顺序不变）。
+- P4f：bounded-noise 位混合原语 → `fastprove/bounded_noise.py`；三种 centering 策略保持显式；
+  top-k 预算两处语义差异已补注释（不合并）。
+
+已知延期（不阻塞行为，待单独立项）：
+
+- `evaluation/performance.py` 的 `_performance_metrics` 与
+  `_obfuscated_performance_metrics` 共同骨架参数化（计划 §P4 末项）：两者含实测计时副作用，
+  收益低于门禁风险，本次未合并，行为保持不变。
+- plain/obfuscated 的 greedy 循环平行结构说明：移入 P8 文档。
