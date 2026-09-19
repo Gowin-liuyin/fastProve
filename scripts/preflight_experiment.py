@@ -17,18 +17,14 @@ from typing import Any, Dict, Sequence
 
 import torch
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = PROJECT_ROOT / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
-
-from fastprove.evaluation.runner import environment_metadata  # noqa: E402
-from fastprove.evaluation.pretrained import (  # noqa: E402
+from fastprove.evaluation.runner import environment_metadata
+from fastprove.evaluation.pretrained import (
     token_cache_evidence_scope,
     token_cache_provenance_issues,
 )
-from fastprove.evaluation.token_cache import load_token_cache  # noqa: E402
-from fastprove.pretrained.qwen2 import load_qwen2_artifact, load_qwen2_tokenizer  # noqa: E402
+from fastprove.evaluation.token_cache import load_token_cache
+from fastprove.pretrained.qwen2 import load_qwen2_artifact, load_qwen2_tokenizer
+from fastprove.structured import reduction_compute_dtype_name
 
 
 def _parser() -> argparse.ArgumentParser:

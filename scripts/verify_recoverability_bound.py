@@ -34,12 +34,10 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import torch
 
-_REPO = Path(__file__).resolve().parents[1]
-if str(_REPO / "src") not in sys.path:
-    sys.path.insert(0, str(_REPO / "src"))
-
 from fastprove.evaluation.attack_records import cost_dict
 from fastprove.transforms import generate_transform
+
+_REPO = Path(__file__).resolve().parents[1]
 
 
 def _rel_err(estimate: torch.Tensor, truth: torch.Tensor) -> float:

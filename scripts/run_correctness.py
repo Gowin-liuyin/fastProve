@@ -10,14 +10,9 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Sequence
 
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = PROJECT_ROOT / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
-
-from fastprove.config import load_config  # noqa: E402
-from fastprove.evaluation.artifacts import (  # noqa: E402
+from fastprove.config import load_config
+from fastprove.io import resolve_path
+from fastprove.evaluation.artifacts import (
     append_jsonl_record,
     build_run_record,
     require_fresh_jsonl_destination,
@@ -53,7 +48,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _resolve(path: Path) -> Path:
-    return path.expanduser().resolve()
+    return resolve_path(path)
 
 
 def _plan(config_path: Path, output_path: Path) -> dict:

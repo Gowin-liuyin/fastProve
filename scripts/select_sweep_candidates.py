@@ -15,12 +15,7 @@ from pathlib import Path
 from typing import Sequence
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = PROJECT_ROOT / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
-
-from fastprove.evaluation.selection import (  # noqa: E402
+from fastprove.evaluation.selection import (
     SELECTION_SCHEMA_VERSION,
     load_jsonl_records,
     select_sweep_candidates,

@@ -5,18 +5,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from collections import Counter
 from pathlib import Path
 from typing import Iterable, List, Sequence
 
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = PROJECT_ROOT / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
-
-from fastprove.evaluation.artifacts import validate_run_record  # noqa: E402
+from fastprove.evaluation.artifacts import validate_run_record
+from fastprove.io import resolve_path
 
 
 REQUIRED_SWEEP_MODES = frozenset(
@@ -64,7 +58,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _resolve(path: Path) -> Path:
-    return path.expanduser().resolve()
+    return resolve_path(path)
 
 
 def _raw_files(path: Path) -> List[Path]:

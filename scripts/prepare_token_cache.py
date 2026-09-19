@@ -10,19 +10,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import sys
 from pathlib import Path
-from typing import Any, Iterable, List, Sequence, Tuple
+from typing import List, Sequence, Tuple
 
 import torch
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = PROJECT_ROOT / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
-
-from fastprove.evaluation.token_cache import build_token_cache, save_token_cache  # noqa: E402
-from fastprove.pretrained.qwen2 import load_qwen2_artifact, load_qwen2_tokenizer  # noqa: E402
+from fastprove.evaluation.token_cache import build_token_cache, save_token_cache
+from fastprove.pretrained.qwen2 import load_qwen2_artifact, load_qwen2_tokenizer
 
 
 def _parser() -> argparse.ArgumentParser:

@@ -18,17 +18,14 @@ from __future__ import annotations
 import argparse
 import json
 import platform
-import sys
 from pathlib import Path
 from typing import Any
 
 import torch
 
 _REPO = Path(__file__).resolve().parents[1]
-if str(_REPO / "src") not in sys.path:
-    sys.path.insert(0, str(_REPO / "src"))
 
-from fastprove.evaluation.attack_records import (  # noqa: E402
+from fastprove.evaluation.attack_records import (
     build_attack_record,
     validate_attack_record,
 )

@@ -7,6 +7,12 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 
+def resolve_path(path: Path) -> Path:
+    """Expand ``~`` and resolve a path (shared by experiment scripts)."""
+
+    return path.expanduser().resolve()
+
+
 def write_json_file(
     results: Dict[str, Any],
     output: str | Path,

@@ -37,17 +37,12 @@ import json
 import math
 import platform
 import random
-import sys
 import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
 from safetensors import safe_open
-
-_REPO = Path(__file__).resolve().parents[1]
-if str(_REPO / "src") not in sys.path:
-    sys.path.insert(0, str(_REPO / "src"))
 
 from fastprove.evaluation.attack_records import cost_dict
 

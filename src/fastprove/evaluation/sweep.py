@@ -11,6 +11,8 @@ from typing import List, Optional, Sequence
 
 import yaml
 
+from ..io import resolve_path
+
 
 @dataclass(frozen=True)
 class SweepSpec:
@@ -96,7 +98,7 @@ def enumerate_sweep_specs(path: Path) -> List[SweepSpec]:
 
 
 def _resolve(path: Path) -> Path:
-    return path.expanduser().resolve()
+    return resolve_path(path)
 
 
 def _spec_payload(spec: SweepSpec) -> dict:

@@ -32,8 +32,8 @@ Digest policy:
     * Volatile fields (timestamps, elapsed times, platform metadata) are
       excluded by construction, never by post-hoc normalization.
 
-Requires the package to be installed (``pip install -e .``); this script does
-not bootstrap sys.path.
+Requires the package to be installed (``pip install -e .``); this script
+relies on the installed package and does not modify the import path.
 """
 
 from __future__ import annotations
