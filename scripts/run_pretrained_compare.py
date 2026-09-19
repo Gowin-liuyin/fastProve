@@ -21,494 +21,32 @@ from __future__ import annotations
 
 import argparse
 import json
-import platform
 import sys
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 import torch
-import torch.nn.functional as F
 
-# Ensure repo roots on path when invoked as a script.
 _REPO = Path(__file__).resolve().parents[1]
-if str(_REPO / "src") not in sys.path:
-    sys.path.insert(0, str(_REPO / "src"))
-if str(_REPO) not in sys.path:
-    sys.path.insert(0, str(_REPO))
 
-from fastprove.codec import TokenCodec
 from fastprove.config import ObfuscationConfig
 from fastprove.evaluation.accuracy import (
-    compare_teacher_forced_metrics,
-    make_synthetic_token_batch,
+    _build_token_batch,
+    _run_pair,
+    greedy_unpadded_pair,
 )
-from fastprove.evaluation.metrics import tensor_error_metrics
+from fastprove.evaluation.environment import environment_meta
+from fastprove.evaluation.prompts import load_prompt_texts
+from fastprove.io import write_json_file
 from fastprove.layers.attention import AttentionMode
 from fastprove.models.obfuscated import ObfuscatedTinyCausalLM
-from fastprove.models.plain import PlainTinyCausalLM
 from fastprove.pretrained.llama import (
     load_llama_artifact,
     load_llama_plain,
-    load_llama_tokenizer,
     verify_plaintext_llama_tree,
 )
-from fastprove.seed import RequestContext, make_generator
-
-from evals.keys import generate_master_keys
-from evals.model_factory import zero_noise_injection_
-from evals.stats import relative_increase, wilson_interval
-from evals.thresholds import evaluate_gates
-
-
-def _env_meta(device: torch.device) -> Dict[str, Any]:
-    cuda = torch.cuda.is_available()
-    return {
-        "python_version": platform.python_version(),
-        "torch_version": torch.__version__,
-        "platform": platform.platform(),
-        "cuda_available": cuda,
-        "cuda_version": torch.version.cuda,
-        "device": str(device),
-        "gpu_name": torch.cuda.get_device_name(0) if cuda else None,
-        "gpu_memory_total_bytes": (
-            int(torch.cuda.get_device_properties(0).total_memory) if cuda else None
-        ),
-    }
-
-
-def load_prompt_texts(
-    *,
-    prompt_file: Optional[Path],
-    sample_count: int,
-    seed: int,
-    real_scenario: bool,
-) -> List[str]:
-    """Load or synthesize prompt strings (at least sample_count)."""
-
-    texts: List[str] = []
-    if prompt_file is not None:
-        path = Path(prompt_file)
-        if not path.is_file():
-            raise FileNotFoundError("prompt file not found: %s" % path)
-        if path.suffix == ".jsonl":
-            for line in path.read_text(encoding="utf-8").splitlines():
-                if not line.strip():
-                    continue
-                obj = json.loads(line)
-                texts.append(str(obj.get("text") or obj.get("prompt") or obj))
-        elif path.suffix == ".json":
-            raw = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(raw, list):
-                for item in raw:
-                    if isinstance(item, str):
-                        texts.append(item)
-                    elif isinstance(item, dict):
-                        texts.append(str(item.get("text") or item.get("prompt")))
-            else:
-                raise ValueError("JSON prompt file must be a list")
-        else:
-            texts = [
-                line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
-            ]
-    def _build_real(n: int, s: int) -> List[str]:
-        import importlib.util
-
-        helper = Path(__file__).resolve().parent / "build_real_scenario_prompts.py"
-        spec = importlib.util.spec_from_file_location("real_prompts", helper)
-        if spec is None or spec.loader is None:
-            raise ImportError("cannot load build_real_scenario_prompts.py")
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return list(mod.build_real_scenario_prompts(n, seed=s))
-
-    if not texts and real_scenario:
-        texts = _build_real(sample_count, seed)
-    if not texts:
-        texts = list(DEFAULT_PROMPTS)
-    if len(texts) < sample_count and real_scenario:
-        texts = _build_real(sample_count, seed)
-    if len(texts) < sample_count:
-        # Repeat with index tags rather than silent synthetic token IDs.
-        base = list(texts)
-        while len(texts) < sample_count:
-            texts.append(base[len(texts) % len(base)] + " [dup-%d]" % len(texts))
-    return texts[:sample_count]
-
-
-def _build_token_batch(
-    *,
-    model_path: Optional[Path],
-    sample_count: int,
-    sequence_length: int,
-    vocab_size: int,
-    seed: int,
-    prompts: Optional[Sequence[str]],
-    sample_id_prefix: str = "scenario",
-) -> tuple[torch.Tensor, List[str], torch.Tensor]:
-    if model_path is not None and prompts:
-        tokenizer = load_llama_tokenizer(model_path)
-        if tokenizer.pad_token_id is None:
-            tokenizer.pad_token = tokenizer.eos_token
-        texts = list(prompts[:sample_count])
-        encoded = tokenizer(
-            texts,
-            return_tensors="pt",
-            truncation=True,
-            max_length=sequence_length,
-            padding="max_length",
-        )
-        tokens = encoded["input_ids"].to(dtype=torch.long)
-        if "attention_mask" in encoded:
-            mask = encoded["attention_mask"].to(dtype=torch.bool)
-        else:
-            pad_id = int(tokenizer.pad_token_id)
-            mask = tokens.ne(pad_id)
-        ids = ["%s-%05d" % (sample_id_prefix, index) for index in range(tokens.shape[0])]
-        return tokens, ids, mask
-
-    tokens, ids = make_synthetic_token_batch(
-        sample_count=sample_count,
-        sequence_length=sequence_length,
-        vocab_size=vocab_size,
-        seed=seed,
-    )
-    mask = torch.ones_like(tokens, dtype=torch.bool)
-    return tokens, ids, mask
-
-
-DEFAULT_PROMPTS = (
-    "The capital of France is",
-    "In mathematics, the derivative of x squared is",
-    "def fibonacci(n):",
-    "Once upon a time in a small village,",
-)
-
-
-@torch.no_grad()
-def greedy_unpadded_pair(
-    *,
-    plain: PlainTinyCausalLM,
-    obfuscated: ObfuscatedTinyCausalLM,
-    tokens: torch.Tensor,
-    mask: torch.Tensor,
-    sample_ids: Sequence[str],
-    generation_tokens: int,
-    request_context: RequestContext,
-    codec: Optional[TokenCodec] = None,
-) -> Dict[str, Any]:
-    """Greedy continuation on **every** sample after stripping pad tokens.
-
-    ``generate_greedy`` always reads ``logits[:, -1]``. Right-padded prompts
-    would therefore decode from a pad position. This helper feeds only the
-    valid (non-pad) prefix per row so the last index is the last real token.
-    All ``sample_ids`` are evaluated (not a batch_size slice).
-
-    When ``codec`` is given, the obfuscated model runs in the obfuscated
-    token domain: inputs are encoded and generated tokens are decoded back.
-    """
-
-    if tokens.shape[0] != len(sample_ids):
-        raise ValueError("sample_ids length must match batch dimension")
-    if tokens.shape != mask.shape:
-        raise ValueError("tokens and mask shapes must match")
-
-    seq_matches: List[float] = []
-    token_matches: List[float] = []
-    prompt_lengths: List[int] = []
-    first_div: List[Optional[int]] = []
-    evaluated_ids: List[str] = []
-
-    n_total = tokens.shape[0]
-    progress_every = max(1, n_total // 20)
-    for row in range(n_total):
-        valid = mask[row]
-        if not bool(valid.any().item()):
-            raise ValueError("sample %s has no valid tokens" % sample_ids[row])
-        prompt = tokens[row, valid].unsqueeze(0)
-        prompt_len = int(prompt.shape[1])
-        if prompt_len + generation_tokens > plain.config.max_sequence_length:
-            raise ValueError(
-                "prompt+generation exceeds context for sample %s" % sample_ids[row]
-            )
-        plain_gen = plain.generate_greedy(
-            prompt, max_new_tokens=generation_tokens
-        )
-        enc_prompt = (
-            prompt if codec is None else codec.encode(prompt).to(prompt.device)
-        )
-        obf_gen = obfuscated.generate_greedy(
-            enc_prompt,
-            max_new_tokens=generation_tokens,
-            request_context=request_context,
-        )
-        if codec is not None:
-            obf_gen = codec.decode(obf_gen)
-        plain_suf = plain_gen[0, prompt_len:]
-        obf_suf = obf_gen[0, prompt_len:]
-        if plain_suf.numel() != generation_tokens or obf_suf.numel() != generation_tokens:
-            raise RuntimeError("generation length mismatch for %s" % sample_ids[row])
-        seq_eq = bool(torch.equal(plain_suf, obf_suf))
-        seq_matches.append(1.0 if seq_eq else 0.0)
-        token_matches.append(float((plain_suf == obf_suf).float().mean().item()))
-        prompt_lengths.append(prompt_len)
-        evaluated_ids.append(str(sample_ids[row]))
-        if seq_eq:
-            first_div.append(None)
-        else:
-            diff = plain_suf != obf_suf
-            first_div.append(int(torch.nonzero(diff, as_tuple=False)[0].item()))
-        if (row + 1) % progress_every == 0 or (row + 1) == n_total:
-            print(
-                "    greedy progress %d/%d  running_seq_match=%.4f"
-                % (
-                    row + 1,
-                    n_total,
-                    float(sum(seq_matches) / len(seq_matches)),
-                ),
-                flush=True,
-            )
-
-    n = len(seq_matches)
-    return {
-        "greedy_sequence_exact_match": float(sum(seq_matches) / n),
-        "greedy_token_exact_match": float(sum(token_matches) / n),
-        "greedy_n_samples": n,
-        "greedy_sample_ids": evaluated_ids,
-        "greedy_prompt_lengths": prompt_lengths,
-        "greedy_first_divergence_step": first_div,
-        "greedy_padding_stripped": True,
-    }
-
-
-def _write_results_checkpoint(results: Dict[str, Any], output: str | Path) -> Path:
-    """Persist partial/final results so long runs remain recoverable."""
-
-    out_path = Path(output)
-    if not out_path.is_absolute():
-        out_path = _REPO / out_path
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(
-        json.dumps(results, indent=2, default=str), encoding="utf-8"
-    )
-    return out_path
-
-
-@torch.no_grad()
-def _run_pair(
-    *,
-    plain: PlainTinyCausalLM,
-    obfuscated: ObfuscatedTinyCausalLM,
-    tokens: torch.Tensor,
-    mask: torch.Tensor,
-    sample_ids: Sequence[str],
-    mode_name: str,
-    key_meta: Dict[str, Any],
-    conversion_seconds: float,
-    structural_noise_zeroed: bool,
-    request_seed: int,
-    generation_tokens: int,
-    batch_size: int,
-    device: torch.device,
-    run_greedy: bool = True,
-    codec: Optional[TokenCodec] = None,
-) -> Dict[str, Any]:
-    """Stream teacher-forced metrics per batch (no full-logit materialization).
-
-    Storing 1500×64×128k logits twice exceeds host RAM; accumulate agreement,
-    NLL, and max logit error online instead.
-
-    When ``codec`` is given, the obfuscated model runs in the obfuscated
-    token domain: inputs are encoded and logit columns are decoded before any
-    comparison with the plaintext reference.
-    """
-
-    ctx = RequestContext(request_seed, "pretrained-compare-%s" % mode_name)
-    n_batches = (tokens.shape[0] + batch_size - 1) // batch_size
-    n_agree = 0
-    n_valid = 0
-    sum_nll_plain = 0.0
-    sum_nll_obf = 0.0
-    n_ce = 0
-    top1_plain_hits = 0
-    top1_obf_hits = 0
-    e2e_max_abs = 0.0
-    e2e_sum_abs = 0.0
-    e2e_count = 0
-
-    for bi, start in enumerate(range(0, tokens.shape[0], batch_size)):
-        stop = min(start + batch_size, tokens.shape[0])
-        batch = tokens[start:stop]
-        batch_mask = mask[start:stop]
-        plain_logits = plain(batch, token_mask=batch_mask).float()
-        enc_batch = (
-            batch if codec is None else codec.encode(batch).to(device)
-        )
-        obf_logits = obfuscated(
-            enc_batch, token_mask=batch_mask, request_context=ctx
-        ).float()
-        if codec is not None:
-            obf_logits = obf_logits[..., codec.permutation.to(obf_logits.device)]
-
-        # Next-token targets on positions 0..T-2 predicting 1..T-1.
-        valid = batch_mask[:, :-1] & batch_mask[:, 1:]
-        if valid.any():
-            p_pred = plain_logits[:, :-1]
-            o_pred = obf_logits[:, :-1]
-            labels = batch[:, 1:]
-            # Agreement plain vs obf.
-            agree = (p_pred.argmax(dim=-1) == o_pred.argmax(dim=-1)) & valid
-            n_agree += int(agree.sum().item())
-            n_valid += int(valid.sum().item())
-            # Accuracy vs labels.
-            top1_plain_hits += int(
-                ((p_pred.argmax(dim=-1) == labels) & valid).sum().item()
-            )
-            top1_obf_hits += int(
-                ((o_pred.argmax(dim=-1) == labels) & valid).sum().item()
-            )
-            # NLL (mean later over valid positions).
-            flat_p = p_pred[valid]
-            flat_o = o_pred[valid]
-            flat_y = labels[valid]
-            sum_nll_plain += float(
-                F.cross_entropy(flat_p, flat_y, reduction="sum").item()
-            )
-            sum_nll_obf += float(
-                F.cross_entropy(flat_o, flat_y, reduction="sum").item()
-            )
-            n_ce += int(flat_y.numel())
-            # E2E logit error on valid next-token positions only.
-            diff = (flat_p - flat_o).abs()
-            e2e_max_abs = max(e2e_max_abs, float(diff.max().item()))
-            e2e_sum_abs += float(diff.sum().item())
-            e2e_count += int(diff.numel())
-
-        del plain_logits, obf_logits
-        if device.type == "cuda":
-            torch.cuda.empty_cache()
-        if (bi + 1) % max(1, n_batches // 10) == 0 or (bi + 1) == n_batches:
-            print(
-                "    teacher-forced batch %d/%d  running_agree=%.4f"
-                % (
-                    bi + 1,
-                    n_batches,
-                    (n_agree / max(n_valid, 1)),
-                ),
-                flush=True,
-            )
-
-    nll_plain = sum_nll_plain / max(n_ce, 1)
-    nll_obf = sum_nll_obf / max(n_ce, 1)
-    import math
-
-    ppl_plain = float(math.exp(min(nll_plain, 80.0)))
-    ppl_obf = float(math.exp(min(nll_obf, 80.0)))
-    ppl_rel = relative_increase(ppl_plain, ppl_obf)
-    top1_plain = top1_plain_hits / max(n_ce, 1)
-    top1_obf = top1_obf_hits / max(n_ce, 1)
-    top1_drop = (top1_plain - top1_obf) * 100.0
-    agree_rate = n_agree / max(n_valid, 1)
-    wilson = wilson_interval(n_agree, max(n_valid, 1), level=0.95)
-    e2e_mean_abs = e2e_sum_abs / max(e2e_count, 1)
-    e2e_logit_err = {
-        "max_absolute_error": e2e_max_abs,
-        "mean_absolute_error": e2e_mean_abs,
-        "n_elements": e2e_count,
-        "note": "streamed over valid next-token positions only",
-    }
-    tf = {
-        "plaintext": {
-            "negative_log_likelihood": nll_plain,
-            "perplexity": ppl_plain,
-            "next_token_top1_accuracy": top1_plain,
-        },
-        "obfuscated": {
-            "negative_log_likelihood": nll_obf,
-            "perplexity": ppl_obf,
-            "next_token_top1_accuracy": top1_obf,
-        },
-        "agreement": {"next_token_top1_agreement": agree_rate},
-        "degradation": {
-            "perplexity_relative_increase": ppl_rel,
-            "top1_absolute_drop": top1_plain - top1_obf,
-        },
-        "token_count": n_ce,
-        "streaming": True,
-    }
-
-    if run_greedy and generation_tokens > 0:
-        greedy = greedy_unpadded_pair(
-            plain=plain,
-            obfuscated=obfuscated,
-            tokens=tokens,
-            mask=mask,
-            sample_ids=sample_ids,
-            generation_tokens=generation_tokens,
-            request_context=ctx,
-            codec=codec,
-        )
-        if greedy["greedy_n_samples"] != len(sample_ids):
-            raise RuntimeError(
-                "greedy evaluated %d samples but sample_ids has %d"
-                % (greedy["greedy_n_samples"], len(sample_ids))
-            )
-        if greedy["greedy_sample_ids"] != [str(x) for x in sample_ids]:
-            raise RuntimeError("greedy sample_ids order/content mismatch")
-        # Shrink per-pair payload for large runs (ids already in evaluation).
-        if len(sample_ids) > 32:
-            greedy = {
-                **greedy,
-                "greedy_sample_ids": [
-                    greedy["greedy_sample_ids"][0],
-                    "...",
-                    greedy["greedy_sample_ids"][-1],
-                ],
-                "greedy_sample_ids_truncated": True,
-                "greedy_first_divergence_step": None,
-            }
-    else:
-        greedy = {
-            "greedy_sequence_exact_match": None,
-            "greedy_token_exact_match": None,
-            "greedy_n_samples": 0,
-            "greedy_sample_ids": [],
-            "greedy_prompt_lengths": [],
-            "greedy_first_divergence_step": [],
-            "greedy_padding_stripped": True,
-            "skipped": True,
-        }
-
-    return {
-        "mode": mode_name,
-        "legacy_modelsplit_obfuscation": False,
-        "scheme": "current_fastprove_covariant",
-        "structural_noise_zeroed": structural_noise_zeroed,
-        "key": key_meta,
-        "conversion_time_seconds": conversion_seconds,
-        # Avoid duplicating 1500 ids in every pair; full list lives under evaluation.
-        "sample_ids": list(sample_ids) if len(sample_ids) <= 32 else None,
-        "sample_id_count": len(sample_ids),
-        "teacher_forced": tf,
-        "greedy": greedy,
-        "logits_e2e": e2e_logit_err,
-        "e2e_logit_max_absolute_error": float(e2e_max_abs),
-        "top1_token_agreement": agree_rate,
-        "top1_token_agreement_ci95": wilson.to_dict(),
-        "lm_head_argmax_match": agree_rate,
-        "greedy_sequence_exact_match": (
-            None
-            if greedy.get("greedy_sequence_exact_match") is None
-            else float(greedy["greedy_sequence_exact_match"])
-        ),
-        "greedy_n_samples": int(greedy["greedy_n_samples"]),
-        "ppl_relative_increase": (
-            float(ppl_rel) if ppl_rel is not None else None
-        ),
-        "top1_absolute_drop_pp": float(top1_drop),
-        "n_valid_token_decisions": n_valid,
-    }
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -585,6 +123,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
     if args.no_real_scenario:
         args.real_scenario = False
+
+    from evals.keys import generate_master_keys
+    from evals.model_factory import zero_noise_injection_
+    from evals.thresholds import evaluate_gates
 
     modes = [m.strip() for m in args.modes.split(",") if m.strip()]
     for mode in modes:
@@ -699,7 +241,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             "recoverable from c regardless of noise magnitude or refresh mode "
             "(see docs/threat_model.md section 5bis)"
         ),
-        "environment": _env_meta(device),
+        "environment": environment_meta(device),
         "plaintext_base": artifact.to_dict(),
         "load_seconds": load_seconds,
         "evaluation": {
@@ -789,7 +331,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             results["pairs"].append(pair)
             # Checkpoint after every key×mode so partial runs remain usable.
             results["status"] = "partial"
-            _write_results_checkpoint(results, args.output)
+            write_json_file(results, args.output, base_dir=_REPO)
             print(
                 "  top1_agree=%.6g greedy_seq=%.6g greedy_n=%s ppl_rel=%s"
                 % (
@@ -975,7 +517,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     results["report_markdown"] = "\n".join(report_lines) + "\n"
 
     results["status"] = "complete"
-    out_path = _write_results_checkpoint(results, args.output)
+    out_path = write_json_file(results, args.output, base_dir=_REPO)
     report_path = out_path.with_suffix(".md")
     report_path.write_text(results["report_markdown"], encoding="utf-8")
     print("Wrote %s" % out_path)

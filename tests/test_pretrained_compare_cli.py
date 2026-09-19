@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
-from pathlib import Path
-
 import torch
 
 from fastprove.config import ModelConfig, ObfuscationConfig
@@ -13,27 +10,14 @@ from fastprove.models.obfuscated import ObfuscatedTinyCausalLM
 from fastprove.models.plain import PlainTinyCausalLM
 from fastprove.seed import RequestContext
 from fastprove.evaluation.accuracy import (
+    _run_pair,
     compare_teacher_forced_metrics,
+    greedy_unpadded_pair,
     make_synthetic_token_batch,
 )
 
 from evals.keys import generate_master_keys
 from evals.model_factory import zero_noise_injection_
-
-
-def _load_compare_module():
-    path = (
-        Path(__file__).resolve().parents[1]
-        / "scripts"
-        / "run_pretrained_compare.py"
-    )
-    spec = importlib.util.spec_from_file_location(
-        "run_pretrained_compare_shipped", path
-    )
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 
 def test_current_scheme_conversion_pair_no_legacy_arm() -> None:
@@ -63,7 +47,6 @@ def test_current_scheme_conversion_pair_no_legacy_arm() -> None:
         refresh_mode="fixed_debug",
         basis_block_size=12,
     )
-    compare = _load_compare_module()
     records = []
     for key in keys:
         converted = ObfuscatedTinyCausalLM.from_plain(
@@ -88,7 +71,7 @@ def test_current_scheme_conversion_pair_no_legacy_arm() -> None:
             input_ids=tokens,
             token_mask=mask,
         )
-        greedy = compare.greedy_unpadded_pair(
+        greedy = greedy_unpadded_pair(
             plain=plain,
             obfuscated=module,
             tokens=tokens,
@@ -126,7 +109,6 @@ def test_current_scheme_conversion_pair_no_legacy_arm() -> None:
 def test_greedy_unpadded_evaluates_all_rows_and_strips_pad() -> None:
     """Right-padded rows must strip pad so last index is last real token."""
 
-    compare = _load_compare_module()
     config = ModelConfig(
         vocab_size=64,
         hidden_size=32,
@@ -165,7 +147,7 @@ def test_greedy_unpadded_evaluates_all_rows_and_strips_pad() -> None:
         mask[i, :length] = True
     sample_ids = ["prompt-%04d" % i for i in range(4)]
     ctx = RequestContext(1, "pad-strip")
-    greedy = compare.greedy_unpadded_pair(
+    greedy = greedy_unpadded_pair(
         plain=plain,
         obfuscated=module,
         tokens=tokens,
@@ -184,7 +166,6 @@ def test_greedy_unpadded_evaluates_all_rows_and_strips_pad() -> None:
 def test_run_pair_reports_e2e_logit_separate_from_chainlinear_unit() -> None:
     """Shipped _run_pair must expose e2e logit error without claiming ChainLinear."""
 
-    compare = _load_compare_module()
     config = ModelConfig(
         vocab_size=64,
         hidden_size=32,
@@ -218,7 +199,7 @@ def test_run_pair_reports_e2e_logit_separate_from_chainlinear_unit() -> None:
         sample_count=3, sequence_length=6, vocab_size=64, seed=13
     )
     mask = torch.ones_like(tokens, dtype=torch.bool)
-    pair = compare._run_pair(
+    pair = _run_pair(
         plain=plain,
         obfuscated=module,
         tokens=tokens,

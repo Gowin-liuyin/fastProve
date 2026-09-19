@@ -12,6 +12,22 @@ from typing import Any, Dict, Optional
 import torch
 
 
+def environment_meta(device: torch.device) -> Dict[str, Any]:
+    cuda = torch.cuda.is_available()
+    return {
+        "python_version": platform.python_version(),
+        "torch_version": torch.__version__,
+        "platform": platform.platform(),
+        "cuda_available": cuda,
+        "cuda_version": torch.version.cuda,
+        "device": str(device),
+        "gpu_name": torch.cuda.get_device_name(0) if cuda else None,
+        "gpu_memory_total_bytes": (
+            int(torch.cuda.get_device_properties(0).total_memory) if cuda else None
+        ),
+    }
+
+
 def environment_metadata() -> Dict[str, Any]:
     """Return JSON-safe software and accelerator metadata without fallback."""
 
