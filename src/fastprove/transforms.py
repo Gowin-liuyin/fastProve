@@ -164,6 +164,68 @@ def generate_signed_permutation(
     return matrix.to(dtype=dtype)
 
 
+def _validate_dense_basis_request(
+    signal_dim: int,
+    noise_dim: int,
+    dtype: torch.dtype,
+    max_condition_number: float,
+) -> None:
+    if signal_dim <= 0 or noise_dim <= 0:
+        raise ValueError("signal_dim and noise_dim must be positive")
+    _validate_transform_dtype(dtype)
+    if max_condition_number < 1.0 or not math.isfinite(max_condition_number):
+        raise ValueError("max_condition_number must be finite and at least one")
+
+
+def _log_uniform_diagonal(
+    total_dim: int,
+    generator: torch.Generator,
+    max_condition_number: float,
+) -> torch.Tensor:
+    log_half_range = 0.5 * math.log(max_condition_number)
+    unit = torch.rand(total_dim, generator=generator, dtype=torch.float64)
+    log_scales = (2.0 * unit - 1.0) * log_half_range
+    return torch.diag(torch.exp(log_scales))
+
+
+def _checked_condition(
+    matrix_fp64: torch.Tensor,
+    max_condition_number: float,
+    label: str,
+) -> float:
+    condition = float(torch.linalg.cond(matrix_fp64).item())
+    tolerance = max(1e-10, max_condition_number * 1e-10)
+    if not math.isfinite(condition) or condition > max_condition_number + tolerance:
+        raise ValueError(
+            "generated %s condition %.6g exceeds limit %.6g"
+            % (label, condition, max_condition_number)
+        )
+    return condition
+
+
+def _finalize_transform(
+    matrix_fp64: torch.Tensor,
+    signal_dim: int,
+    noise_dim: int,
+    dtype: torch.dtype,
+    condition: float,
+) -> BasisTransform:
+    total_dim = signal_dim + noise_dim
+    inverse_fp64 = torch.linalg.solve(
+        matrix_fp64, torch.eye(total_dim, dtype=torch.float64)
+    )
+    matrix = matrix_fp64.to(dtype=dtype)
+    inverse = inverse_fp64.to(dtype=dtype)
+    return BasisTransform(
+        matrix=matrix,
+        inverse=inverse,
+        signal_dim=signal_dim,
+        noise_dim=noise_dim,
+        condition_number=condition,
+        fingerprint=_fingerprint(matrix, signal_dim, noise_dim),
+    )
+
+
 def generate_transform(
     signal_dim: int,
     noise_dim: int,
@@ -181,11 +243,9 @@ def generate_transform(
     requested dtype.
     """
 
-    if signal_dim <= 0 or noise_dim <= 0:
-        raise ValueError("signal_dim and noise_dim must be positive")
-    _validate_transform_dtype(dtype)
-    if max_condition_number < 1.0 or not math.isfinite(max_condition_number):
-        raise ValueError("max_condition_number must be finite and at least one")
+    _validate_dense_basis_request(
+        signal_dim, noise_dim, dtype, max_condition_number
+    )
     total_dim = signal_dim + noise_dim
     generator = make_generator(
         seed, domain, "basis", signal_dim, noise_dim, total_dim
@@ -199,30 +259,15 @@ def generate_transform(
         dtype=torch.float64,
     )
 
-    log_half_range = 0.5 * math.log(max_condition_number)
-    unit = torch.rand(total_dim, generator=generator, dtype=torch.float64)
-    log_scales = (2.0 * unit - 1.0) * log_half_range
-    diagonal = torch.diag(torch.exp(log_scales))
-    matrix_fp64 = permutation @ diagonal @ orthogonal
-    condition = float(torch.linalg.cond(matrix_fp64).item())
-    tolerance = max(1e-10, max_condition_number * 1e-10)
-    if not math.isfinite(condition) or condition > max_condition_number + tolerance:
-        raise ValueError(
-            "generated transform condition %.6g exceeds limit %.6g"
-            % (condition, max_condition_number)
-        )
-    inverse_fp64 = torch.linalg.solve(
-        matrix_fp64, torch.eye(total_dim, dtype=torch.float64)
+    diagonal = _log_uniform_diagonal(
+        total_dim, generator, max_condition_number
     )
-    matrix = matrix_fp64.to(dtype=dtype)
-    inverse = inverse_fp64.to(dtype=dtype)
-    return BasisTransform(
-        matrix=matrix,
-        inverse=inverse,
-        signal_dim=signal_dim,
-        noise_dim=noise_dim,
-        condition_number=condition,
-        fingerprint=_fingerprint(matrix, signal_dim, noise_dim),
+    matrix_fp64 = permutation @ diagonal @ orthogonal
+    condition = _checked_condition(
+        matrix_fp64, max_condition_number, "transform"
+    )
+    return _finalize_transform(
+        matrix_fp64, signal_dim, noise_dim, dtype, condition
     )
 
 
@@ -248,11 +293,9 @@ def generate_two_sided_transform(
     not constitute a security improvement (plan 12).
     """
 
-    if signal_dim <= 0 or noise_dim <= 0:
-        raise ValueError("signal_dim and noise_dim must be positive")
-    _validate_transform_dtype(dtype)
-    if max_condition_number < 1.0 or not math.isfinite(max_condition_number):
-        raise ValueError("max_condition_number must be finite and at least one")
+    _validate_dense_basis_request(
+        signal_dim, noise_dim, dtype, max_condition_number
+    )
     total_dim = signal_dim + noise_dim
     generator = make_generator(
         seed, domain, "two-sided-basis", signal_dim, noise_dim, total_dim
@@ -268,28 +311,13 @@ def generate_two_sided_transform(
         factors.append(orthogonal * signs.unsqueeze(0))
     q_left, q_right = factors
 
-    log_half_range = 0.5 * math.log(max_condition_number)
-    unit = torch.rand(total_dim, generator=generator, dtype=torch.float64)
-    log_scales = (2.0 * unit - 1.0) * log_half_range
-    diagonal = torch.diag(torch.exp(log_scales))
-    matrix_fp64 = q_left @ diagonal @ q_right
-    condition = float(torch.linalg.cond(matrix_fp64).item())
-    tolerance = max(1e-10, max_condition_number * 1e-10)
-    if not math.isfinite(condition) or condition > max_condition_number + tolerance:
-        raise ValueError(
-            "generated two-sided transform condition %.6g exceeds limit %.6g"
-            % (condition, max_condition_number)
-        )
-    inverse_fp64 = torch.linalg.solve(
-        matrix_fp64, torch.eye(total_dim, dtype=torch.float64)
+    diagonal = _log_uniform_diagonal(
+        total_dim, generator, max_condition_number
     )
-    matrix = matrix_fp64.to(dtype=dtype)
-    inverse = inverse_fp64.to(dtype=dtype)
-    return BasisTransform(
-        matrix=matrix,
-        inverse=inverse,
-        signal_dim=signal_dim,
-        noise_dim=noise_dim,
-        condition_number=condition,
-        fingerprint=_fingerprint(matrix, signal_dim, noise_dim),
+    matrix_fp64 = q_left @ diagonal @ q_right
+    condition = _checked_condition(
+        matrix_fp64, max_condition_number, "two-sided transform"
+    )
+    return _finalize_transform(
+        matrix_fp64, signal_dim, noise_dim, dtype, condition
     )
