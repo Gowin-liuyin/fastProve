@@ -10,7 +10,6 @@ implementation: all inference still goes through ``PlainTinyCausalLM`` and
 
 from __future__ import annotations
 
-import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple
@@ -20,13 +19,17 @@ import torch
 from ..config import ModelConfig
 from ..hashing import sha256_file as _sha256_file
 from ..models.plain import PlainTinyCausalLM
+from ._checkpoint_io import (
+    build_meta_model,
+    copy_tensor as _copy_tensor,
+    load_json as _load_json,
+    require_file,
+    target_tensors as _target_tensors,
+)
 
 
 def _require_file(root: Path, name: str) -> Path:
-    path = root / name
-    if not path.is_file():
-        raise FileNotFoundError("Qwen2 artifact is missing %s" % path)
-    return path
+    return require_file(root, name, artifact_label="Qwen2")
 
 
 @dataclass(frozen=True)
@@ -57,13 +60,6 @@ class Qwen2Artifact:
             "upstream_revision": self.upstream_revision,
             "max_position_embeddings": self.max_position_embeddings,
         }
-
-
-def _load_json(path: Path) -> dict:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError("JSON root must be an object: %s" % path)
-    return value
 
 
 def _qwen_model_config(raw: Mapping[str, object], *, max_sequence_length: int) -> ModelConfig:
@@ -183,30 +179,6 @@ def load_qwen2_artifact(
     )
 
 
-def _target_tensors(model: PlainTinyCausalLM) -> Dict[str, torch.Tensor]:
-    return {
-        **dict(model.named_parameters()),
-        **dict(model.named_buffers()),
-    }
-
-
-def _copy_tensor(
-    source: torch.Tensor,
-    target: torch.Tensor,
-    *,
-    source_name: str,
-) -> None:
-    if tuple(source.shape) != tuple(target.shape):
-        raise ValueError(
-            "%s shape mismatch: checkpoint=%s target=%s"
-            % (source_name, tuple(source.shape), tuple(target.shape))
-        )
-    if not source.is_floating_point() or not target.is_floating_point():
-        raise ValueError("%s must be floating point" % source_name)
-    with torch.no_grad():
-        target.copy_(source.to(device=target.device, dtype=target.dtype))
-
-
 def _qwen_mapping(config: ModelConfig) -> Dict[str, str]:
     mapping = {
         "model.embed_tokens.weight": "embedding.weight",
@@ -252,28 +224,13 @@ def load_qwen2_plain(
     except ImportError as error:  # pragma: no cover - optional dependency path
         raise RuntimeError("Qwen2 loading requires safetensors") from error
     weights_path = Path(artifact.root) / "model.safetensors"
-    old_default_dtype = torch.get_default_dtype()
-    torch.set_default_dtype(dtype)
-    try:
-        with torch.device("meta"):
-            model = PlainTinyCausalLM(
-                artifact.model_config, seed=seed, debug_enabled=debug_enabled
-            )
-    finally:
-        torch.set_default_dtype(old_default_dtype)
-    model = model.to_empty(device=device)
-    # ``to_empty`` intentionally leaves non-parameter buffers uninitialised;
-    # restore deterministic structural buffers that are not present in the
-    # checkpoint state dict.
-    for block in model.blocks:
-        block.kv_index.copy_(
-            torch.arange(
-                artifact.model_config.num_attention_heads,
-                device=block.kv_index.device,
-            )
-            // artifact.model_config.query_heads_per_kv_head
-        )
-    model.eval()
+    model = build_meta_model(
+        artifact.model_config,
+        seed=seed,
+        debug_enabled=debug_enabled,
+        dtype=dtype,
+        device=device,
+    )
     targets = _target_tensors(model)
     mapping = _qwen_mapping(artifact.model_config)
     with safe_open(str(weights_path), framework="pt", device="cpu") as handle:

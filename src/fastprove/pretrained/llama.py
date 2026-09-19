@@ -13,7 +13,6 @@ legacy-obfuscated trees as a base.
 from __future__ import annotations
 
 import hashlib
-import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
@@ -23,6 +22,13 @@ import torch
 from ..config import ModelConfig
 from ..hashing import sha256_file as _sha256_file
 from ..models.plain import PlainTinyCausalLM
+from ._checkpoint_io import (
+    build_meta_model,
+    copy_tensor as _copy_tensor,
+    load_json as _load_json,
+    require_file,
+    target_tensors as _target_tensors,
+)
 
 # Weight-name substrings that indicate a non-plaintext / legacy-obfuscation tree.
 _LEGACY_MARKERS: Tuple[str, ...] = (
@@ -41,17 +47,7 @@ _LEGACY_MARKERS: Tuple[str, ...] = (
 
 
 def _require_file(root: Path, name: str) -> Path:
-    path = root / name
-    if not path.is_file():
-        raise FileNotFoundError("Llama artifact is missing %s" % path)
-    return path
-
-
-def _load_json(path: Path) -> dict:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError("JSON root must be an object: %s" % path)
-    return value
+    return require_file(root, name, artifact_label="Llama")
 
 
 @dataclass(frozen=True)
@@ -313,30 +309,6 @@ def load_llama_artifact(
     )
 
 
-def _target_tensors(model: PlainTinyCausalLM) -> Dict[str, torch.Tensor]:
-    return {
-        **dict(model.named_parameters()),
-        **dict(model.named_buffers()),
-    }
-
-
-def _copy_tensor(
-    source: torch.Tensor,
-    target: torch.Tensor,
-    *,
-    source_name: str,
-) -> None:
-    if tuple(source.shape) != tuple(target.shape):
-        raise ValueError(
-            "%s shape mismatch: checkpoint=%s target=%s"
-            % (source_name, tuple(source.shape), tuple(target.shape))
-        )
-    if not source.is_floating_point() or not target.is_floating_point():
-        raise ValueError("%s must be floating point" % source_name)
-    with torch.no_grad():
-        target.copy_(source.to(device=target.device, dtype=target.dtype))
-
-
 def _llama_mapping(config: ModelConfig) -> Dict[str, str]:
     mapping = {
         "model.embed_tokens.weight": "embedding.weight",
@@ -395,25 +367,13 @@ def load_llama_plain(
     weight_map = _weight_map(root)
     mapping = _llama_mapping(artifact.model_config)
 
-    old_default_dtype = torch.get_default_dtype()
-    torch.set_default_dtype(dtype)
-    try:
-        with torch.device("meta"):
-            model = PlainTinyCausalLM(
-                artifact.model_config, seed=seed, debug_enabled=debug_enabled
-            )
-    finally:
-        torch.set_default_dtype(old_default_dtype)
-    model = model.to_empty(device=device)
-    for block in model.blocks:
-        block.kv_index.copy_(
-            torch.arange(
-                artifact.model_config.num_attention_heads,
-                device=block.kv_index.device,
-            )
-            // artifact.model_config.query_heads_per_kv_head
-        )
-    model.eval()
+    model = build_meta_model(
+        artifact.model_config,
+        seed=seed,
+        debug_enabled=debug_enabled,
+        dtype=dtype,
+        device=device,
+    )
     targets = _target_tensors(model)
 
     # Group target loads by shard for one open per file.
