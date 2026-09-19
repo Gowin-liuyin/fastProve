@@ -14,28 +14,28 @@ import yaml
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = PROJECT_ROOT / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
 
 from fastprove.structured import reduction_compute_dtype_name
 from fastprove.hashing import sha256_file as _sha256_file
 from fastprove.config import load_config  # noqa: E402
 from fastprove.evaluation.artifacts import (  # noqa: E402
+    _exact_gate_skip_record,
+    _failure_record,
     append_jsonl_record,
-    build_run_record,
     require_fresh_jsonl_destination,
     validate_run_record,
 )
 from fastprove.evaluation.sweep import (  # noqa: E402
-    SweepSpec,
+    _load_selected_run_ids,
+    _order_specs_for_exact_gate,
+    _resolve,
+    _spec_payload,
     enumerate_sweep_specs,
 )
 from fastprove.evaluation.pretrained import (  # noqa: E402
     token_cache_evidence_scope,
     token_cache_provenance_issues,
 )
-from fastprove.pretrained.qwen2 import Qwen2Artifact  # noqa: E402
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -150,10 +150,6 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _resolve(path: Path) -> Path:
-    return path.expanduser().resolve()
-
-
 def _load_sweep(path: Path) -> Dict[str, Any]:
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
@@ -171,50 +167,6 @@ def _load_sweep(path: Path) -> Dict[str, Any]:
 def _project_path(value: str | Path) -> Path:
     path = Path(value).expanduser()
     return path.resolve() if path.is_absolute() else (PROJECT_ROOT / path).resolve()
-
-
-def _spec_payload(spec: SweepSpec) -> dict:
-    return {"run_id": spec.run_id, **spec.as_config()}
-
-
-def _order_specs_for_exact_gate(specs: Sequence[SweepSpec]) -> list[SweepSpec]:
-    """Put the exact-gate baselines before every approximate point.
-
-    The default sweep enumerator already emits this order, but a selected
-    candidate manifest may have been produced from an out-of-order or
-    parallel JSONL file.  Approximate records must never be skipped merely
-    because their entry appeared before the exact baseline; they are ordered
-    deterministically here and retain their relative order within each mode.
-    """
-
-    priority = {
-        "plaintext": 0,
-        "exact": 1,
-        "topk_preserving": 2,
-        "free_bounded": 3,
-    }
-    return [
-        spec
-        for _, spec in sorted(
-            enumerate(specs),
-            key=lambda item: (priority.get(item[1].mode, 99), item[0]),
-        )
-    ]
-
-
-def _config_provenance(experiment: Dict[str, Any]) -> Dict[str, Any]:
-    """Return configuration paths/hashes without inserting null placeholders."""
-
-    return {
-        key: experiment[key]
-        for key in (
-            "base_config_path",
-            "base_config_sha256",
-            "sweep_config_path",
-            "sweep_config_sha256",
-        )
-        if experiment.get(key) is not None
-    }
 
 
 def _planned_runtime_metadata(
@@ -248,227 +200,6 @@ def _planned_runtime_metadata(
         }
     )
     return enriched
-
-
-def _load_selected_run_ids(path: Path) -> list[str]:
-    """Load candidate IDs and require a ready selection manifest when present."""
-
-    source = _resolve(path)
-    if not source.is_file():
-        raise FileNotFoundError("spec IDs file does not exist: %s" % source)
-    text = source.read_text(encoding="utf-8")
-    try:
-        value = json.loads(text)
-    except json.JSONDecodeError:
-        ids = [line.strip() for line in text.splitlines() if line.strip()]
-    else:
-        if isinstance(value, dict):
-            if value.get("status") != "ready_for_full_evaluation":
-                raise ValueError(
-                    "candidate manifest status must be ready_for_full_evaluation"
-                )
-            ids = value.get("selected_run_ids")
-        else:
-            ids = value
-    if not isinstance(ids, list) or not ids or any(
-        not isinstance(item, str) or not item.strip() for item in ids
-    ):
-        raise ValueError("spec IDs file must contain a non-empty unique string list")
-    normalized = [item.strip() for item in ids]
-    if len(set(normalized)) != len(normalized):
-        raise ValueError("spec IDs file must contain unique run IDs")
-    return normalized
-
-
-def _failure_record(
-    *,
-    spec: SweepSpec,
-    experiment: Dict[str, Any],
-    environment: Dict[str, Any],
-    error: Exception,
-    runtime_override: Optional[Dict[str, Any]] = None,
-    record_stage: str = "tiny_sweep_point",
-    pretrained_artifact: Optional[Qwen2Artifact] = None,
-) -> dict:
-    evaluation_scope = str(
-        experiment.get("evaluation_scope", "language_model_accuracy")
-    )
-    return build_run_record(
-        run_id=spec.run_id,
-        status="failure",
-        config={
-            **spec.as_config(),
-            **_config_provenance(experiment),
-            "experiment_name": experiment.get("name", "unnamed"),
-            "stage": experiment.get("stage", "tiny_reference"),
-            "evaluation_stage": experiment.get(
-                "evaluation_stage", "unspecified"
-            ),
-            "effective_sample_count": int(
-                experiment.get("effective_sample_count", 0)
-            ),
-            **(
-                {"evidence": experiment["evidence"]}
-                if experiment.get("evidence") is not None
-                else {}
-            ),
-            "expected_run_ids": list(
-                experiment.get("expected_run_ids", [spec.run_id])
-            ),
-            "runtime_override": runtime_override or {},
-            "selected_spec_ids_file": experiment.get("selected_spec_ids_file"),
-            "evaluation_debug_capture": spec.mode != "plaintext",
-        },
-        seed=int(experiment["seed"]),
-        model={
-            "id": str(experiment["model_id"]),
-            "revision": str(experiment.get("source_revision", "unavailable")),
-            "pretrained": bool(experiment.get("pretrained", False)),
-            "evidence_scope": (
-                evaluation_scope
-                if experiment.get("pretrained", False)
-                else "correctness_only_random_tiny"
-            ),
-            **(
-                {"path": str(experiment["model_path"])}
-                if experiment.get("model_path") is not None
-                else {}
-            ),
-            **(
-                {
-                    "checkpoint_manifest": pretrained_artifact.to_dict(),
-                    "weight_sha256": pretrained_artifact.weights_sha256,
-                    "config_sha256": pretrained_artifact.config_sha256,
-                    "tokenizer_sha256": pretrained_artifact.tokenizer_sha256,
-                    "tokenizer_config_sha256": pretrained_artifact.tokenizer_config_sha256,
-                }
-                if pretrained_artifact is not None
-                else {}
-            ),
-        },
-        dataset={
-            "id": str(experiment["dataset_id"]),
-            "evaluation_scope": evaluation_scope,
-            "meaningful_lm_evidence": bool(
-                experiment.get("meaningful_lm_evidence", False)
-            ),
-            **(
-                {"path": str(experiment["dataset_cache_path"])}
-                if experiment.get("dataset_cache_path") is not None
-                else {}
-            ),
-            **(
-                {"cache_content_sha256": str(experiment["dataset_cache_sha256"])}
-                if experiment.get("dataset_cache_sha256") is not None
-                else {}
-            ),
-        },
-        environment=environment,
-        sample_count=0,
-        metrics={},
-        elapsed_seconds=0.0,
-        error={
-            "type": type(error).__name__,
-            "message": str(error),
-        },
-        stage=record_stage,
-        last_completed_sample_id=None,
-        partial_metrics_available=False,
-    )
-
-
-def _exact_gate_skip_record(
-    *,
-    spec: SweepSpec,
-    experiment: Dict[str, Any],
-    environment: Dict[str, Any],
-    reasons: Sequence[str],
-    runtime_override: Optional[Dict[str, Any]] = None,
-    pretrained_artifact: Optional[Qwen2Artifact] = None,
-) -> dict:
-    evaluation_scope = str(
-        experiment.get("evaluation_scope", "language_model_accuracy")
-    )
-    return build_run_record(
-        run_id=spec.run_id,
-        status="skipped",
-        config={
-            **spec.as_config(),
-            **_config_provenance(experiment),
-            "blocked_by": "mandatory_exact_gate",
-            "experiment_name": experiment.get("name", "unnamed"),
-            "stage": experiment.get("stage", "tiny_reference"),
-            "evaluation_stage": experiment.get(
-                "evaluation_stage", "unspecified"
-            ),
-            "effective_sample_count": int(
-                experiment.get("effective_sample_count", 0)
-            ),
-            **(
-                {"evidence": experiment["evidence"]}
-                if experiment.get("evidence") is not None
-                else {}
-            ),
-            "expected_run_ids": list(
-                experiment.get("expected_run_ids", [spec.run_id])
-            ),
-            "runtime_override": runtime_override or {},
-            "selected_spec_ids_file": experiment.get("selected_spec_ids_file"),
-            "evaluation_debug_capture": False,
-        },
-        seed=int(experiment["seed"]),
-        model={
-            "id": str(experiment["model_id"]),
-            "revision": str(experiment.get("source_revision", "unavailable")),
-            "pretrained": bool(experiment.get("pretrained", False)),
-            "evidence_scope": (
-                evaluation_scope
-                if experiment.get("pretrained", False)
-                else "correctness_only_random_tiny"
-            ),
-            **(
-                {"path": str(experiment["model_path"])}
-                if experiment.get("model_path") is not None
-                else {}
-            ),
-            **(
-                {
-                    "checkpoint_manifest": pretrained_artifact.to_dict(),
-                    "weight_sha256": pretrained_artifact.weights_sha256,
-                    "config_sha256": pretrained_artifact.config_sha256,
-                    "tokenizer_sha256": pretrained_artifact.tokenizer_sha256,
-                    "tokenizer_config_sha256": pretrained_artifact.tokenizer_config_sha256,
-                }
-                if pretrained_artifact is not None
-                else {}
-            ),
-        },
-        dataset={
-            "id": str(experiment["dataset_id"]),
-            "evaluation_scope": evaluation_scope,
-            "meaningful_lm_evidence": bool(
-                experiment.get("meaningful_lm_evidence", False)
-            ),
-            **(
-                {"path": str(experiment["dataset_cache_path"])}
-                if experiment.get("dataset_cache_path") is not None
-                else {}
-            ),
-            **(
-                {"cache_content_sha256": str(experiment["dataset_cache_sha256"])}
-                if experiment.get("dataset_cache_sha256") is not None
-                else {}
-            ),
-        },
-        environment=environment,
-        sample_count=0,
-        metrics={},
-        elapsed_seconds=0.0,
-        reason={
-            "code": "exact_gate_blocked",
-            "message": "; ".join(reasons),
-        },
-    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:

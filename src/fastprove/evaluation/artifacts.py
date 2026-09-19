@@ -8,7 +8,12 @@ import math
 from collections.abc import Mapping
 from numbers import Real
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence, Tuple
+
+from .sweep import SweepSpec
+
+if TYPE_CHECKING:
+    from ..pretrained.qwen2 import Qwen2Artifact
 
 SCHEMA_VERSION = "fastprove.run.v1"
 REQUIRED_FIELDS = {
@@ -457,3 +462,209 @@ def append_jsonl_record(path: Path, record: Dict[str, Any]) -> None:
             )
             + "\n"
         )
+
+
+def _config_provenance(experiment: Dict[str, Any]) -> Dict[str, Any]:
+    """Return configuration paths/hashes without inserting null placeholders."""
+
+    return {
+        key: experiment[key]
+        for key in (
+            "base_config_path",
+            "base_config_sha256",
+            "sweep_config_path",
+            "sweep_config_sha256",
+        )
+        if experiment.get(key) is not None
+    }
+
+
+def _failure_record(
+    *,
+    spec: SweepSpec,
+    experiment: Dict[str, Any],
+    environment: Dict[str, Any],
+    error: Exception,
+    runtime_override: Optional[Dict[str, Any]] = None,
+    record_stage: str = "tiny_sweep_point",
+    pretrained_artifact: Optional[Qwen2Artifact] = None,
+) -> dict:
+    evaluation_scope = str(
+        experiment.get("evaluation_scope", "language_model_accuracy")
+    )
+    return build_run_record(
+        run_id=spec.run_id,
+        status="failure",
+        config={
+            **spec.as_config(),
+            **_config_provenance(experiment),
+            "experiment_name": experiment.get("name", "unnamed"),
+            "stage": experiment.get("stage", "tiny_reference"),
+            "evaluation_stage": experiment.get(
+                "evaluation_stage", "unspecified"
+            ),
+            "effective_sample_count": int(
+                experiment.get("effective_sample_count", 0)
+            ),
+            **(
+                {"evidence": experiment["evidence"]}
+                if experiment.get("evidence") is not None
+                else {}
+            ),
+            "expected_run_ids": list(
+                experiment.get("expected_run_ids", [spec.run_id])
+            ),
+            "runtime_override": runtime_override or {},
+            "selected_spec_ids_file": experiment.get("selected_spec_ids_file"),
+            "evaluation_debug_capture": spec.mode != "plaintext",
+        },
+        seed=int(experiment["seed"]),
+        model={
+            "id": str(experiment["model_id"]),
+            "revision": str(experiment.get("source_revision", "unavailable")),
+            "pretrained": bool(experiment.get("pretrained", False)),
+            "evidence_scope": (
+                evaluation_scope
+                if experiment.get("pretrained", False)
+                else "correctness_only_random_tiny"
+            ),
+            **(
+                {"path": str(experiment["model_path"])}
+                if experiment.get("model_path") is not None
+                else {}
+            ),
+            **(
+                {
+                    "checkpoint_manifest": pretrained_artifact.to_dict(),
+                    "weight_sha256": pretrained_artifact.weights_sha256,
+                    "config_sha256": pretrained_artifact.config_sha256,
+                    "tokenizer_sha256": pretrained_artifact.tokenizer_sha256,
+                    "tokenizer_config_sha256": pretrained_artifact.tokenizer_config_sha256,
+                }
+                if pretrained_artifact is not None
+                else {}
+            ),
+        },
+        dataset={
+            "id": str(experiment["dataset_id"]),
+            "evaluation_scope": evaluation_scope,
+            "meaningful_lm_evidence": bool(
+                experiment.get("meaningful_lm_evidence", False)
+            ),
+            **(
+                {"path": str(experiment["dataset_cache_path"])}
+                if experiment.get("dataset_cache_path") is not None
+                else {}
+            ),
+            **(
+                {"cache_content_sha256": str(experiment["dataset_cache_sha256"])}
+                if experiment.get("dataset_cache_sha256") is not None
+                else {}
+            ),
+        },
+        environment=environment,
+        sample_count=0,
+        metrics={},
+        elapsed_seconds=0.0,
+        error={
+            "type": type(error).__name__,
+            "message": str(error),
+        },
+        stage=record_stage,
+        last_completed_sample_id=None,
+        partial_metrics_available=False,
+    )
+
+
+def _exact_gate_skip_record(
+    *,
+    spec: SweepSpec,
+    experiment: Dict[str, Any],
+    environment: Dict[str, Any],
+    reasons: Sequence[str],
+    runtime_override: Optional[Dict[str, Any]] = None,
+    pretrained_artifact: Optional[Qwen2Artifact] = None,
+) -> dict:
+    evaluation_scope = str(
+        experiment.get("evaluation_scope", "language_model_accuracy")
+    )
+    return build_run_record(
+        run_id=spec.run_id,
+        status="skipped",
+        config={
+            **spec.as_config(),
+            **_config_provenance(experiment),
+            "blocked_by": "mandatory_exact_gate",
+            "experiment_name": experiment.get("name", "unnamed"),
+            "stage": experiment.get("stage", "tiny_reference"),
+            "evaluation_stage": experiment.get(
+                "evaluation_stage", "unspecified"
+            ),
+            "effective_sample_count": int(
+                experiment.get("effective_sample_count", 0)
+            ),
+            **(
+                {"evidence": experiment["evidence"]}
+                if experiment.get("evidence") is not None
+                else {}
+            ),
+            "expected_run_ids": list(
+                experiment.get("expected_run_ids", [spec.run_id])
+            ),
+            "runtime_override": runtime_override or {},
+            "selected_spec_ids_file": experiment.get("selected_spec_ids_file"),
+            "evaluation_debug_capture": False,
+        },
+        seed=int(experiment["seed"]),
+        model={
+            "id": str(experiment["model_id"]),
+            "revision": str(experiment.get("source_revision", "unavailable")),
+            "pretrained": bool(experiment.get("pretrained", False)),
+            "evidence_scope": (
+                evaluation_scope
+                if experiment.get("pretrained", False)
+                else "correctness_only_random_tiny"
+            ),
+            **(
+                {"path": str(experiment["model_path"])}
+                if experiment.get("model_path") is not None
+                else {}
+            ),
+            **(
+                {
+                    "checkpoint_manifest": pretrained_artifact.to_dict(),
+                    "weight_sha256": pretrained_artifact.weights_sha256,
+                    "config_sha256": pretrained_artifact.config_sha256,
+                    "tokenizer_sha256": pretrained_artifact.tokenizer_sha256,
+                    "tokenizer_config_sha256": pretrained_artifact.tokenizer_config_sha256,
+                }
+                if pretrained_artifact is not None
+                else {}
+            ),
+        },
+        dataset={
+            "id": str(experiment["dataset_id"]),
+            "evaluation_scope": evaluation_scope,
+            "meaningful_lm_evidence": bool(
+                experiment.get("meaningful_lm_evidence", False)
+            ),
+            **(
+                {"path": str(experiment["dataset_cache_path"])}
+                if experiment.get("dataset_cache_path") is not None
+                else {}
+            ),
+            **(
+                {"cache_content_sha256": str(experiment["dataset_cache_sha256"])}
+                if experiment.get("dataset_cache_sha256") is not None
+                else {}
+            ),
+        },
+        environment=environment,
+        sample_count=0,
+        metrics={},
+        elapsed_seconds=0.0,
+        reason={
+            "code": "exact_gate_blocked",
+            "message": "; ".join(reasons),
+        },
+    )

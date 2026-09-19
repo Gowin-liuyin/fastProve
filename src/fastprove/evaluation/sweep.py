@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import product
+import json
 import math
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 import yaml
 
@@ -92,3 +93,66 @@ def enumerate_sweep_specs(path: Path) -> List[SweepSpec]:
     if len({spec.run_id for spec in specs}) != len(specs):
         raise ValueError("sweep generated duplicate run IDs")
     return specs
+
+
+def _resolve(path: Path) -> Path:
+    return path.expanduser().resolve()
+
+
+def _spec_payload(spec: SweepSpec) -> dict:
+    return {"run_id": spec.run_id, **spec.as_config()}
+
+
+def _order_specs_for_exact_gate(specs: Sequence[SweepSpec]) -> list[SweepSpec]:
+    """Put the exact-gate baselines before every approximate point.
+
+    The default sweep enumerator already emits this order, but a selected
+    candidate manifest may have been produced from an out-of-order or
+    parallel JSONL file.  Approximate records must never be skipped merely
+    because their entry appeared before the exact baseline; they are ordered
+    deterministically here and retain their relative order within each mode.
+    """
+
+    priority = {
+        "plaintext": 0,
+        "exact": 1,
+        "topk_preserving": 2,
+        "free_bounded": 3,
+    }
+    return [
+        spec
+        for _, spec in sorted(
+            enumerate(specs),
+            key=lambda item: (priority.get(item[1].mode, 99), item[0]),
+        )
+    ]
+
+
+def _load_selected_run_ids(path: Path) -> list[str]:
+    """Load candidate IDs and require a ready selection manifest when present."""
+
+    source = _resolve(path)
+    if not source.is_file():
+        raise FileNotFoundError("spec IDs file does not exist: %s" % source)
+    text = source.read_text(encoding="utf-8")
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        ids = [line.strip() for line in text.splitlines() if line.strip()]
+    else:
+        if isinstance(value, dict):
+            if value.get("status") != "ready_for_full_evaluation":
+                raise ValueError(
+                    "candidate manifest status must be ready_for_full_evaluation"
+                )
+            ids = value.get("selected_run_ids")
+        else:
+            ids = value
+    if not isinstance(ids, list) or not ids or any(
+        not isinstance(item, str) or not item.strip() for item in ids
+    ):
+        raise ValueError("spec IDs file must contain a non-empty unique string list")
+    normalized = [item.strip() for item in ids]
+    if len(set(normalized)) != len(normalized):
+        raise ValueError("spec IDs file must contain unique run IDs")
+    return normalized
