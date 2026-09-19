@@ -219,7 +219,7 @@ class StructuredBasis:
         =============== =================
 
         The deployed noise scales must therefore keep ``||e|| / ||h||`` bounded;
-        :func:`auxiliary_magnitude_bound` and the conversion-time check in
+        :data:`AUXILIARY_MAGNITUDE_BOUND` and the conversion-time check in
         ``layers/deployed.py`` enforce it. Raising the auxiliary magnitude for
         stronger obfuscation degrades the accuracy of ``rho`` and hence the
         signal path. Do not silently widen this bound.
@@ -505,12 +505,6 @@ def structured_condition_number(basis: StructuredBasis) -> float:
 #: see :meth:`StructuredBasis.signal_norm_squared` and
 #: ``tests/test_structured_basis.py::test_gram_accuracy_degrades_with_noise``.
 AUXILIARY_MAGNITUDE_BOUND = 30.0
-
-
-def auxiliary_magnitude_bound() -> float:
-    """Return the validated ``||e||/||h||`` bound for FP32 Gram reduction."""
-
-    return AUXILIARY_MAGNITUDE_BOUND
 
 
 def check_auxiliary_magnitude(

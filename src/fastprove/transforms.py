@@ -1,5 +1,9 @@
 """Generation and validation of well-conditioned mixing transforms."""
 
+# 参考路径说明：dense 族（generate_transform / generate_two_sided_transform）仅用于验收门、
+# 数学等价性测试与侧路核实验；生产路径使用 generate_orthogonal / generate_signed_permutation
+# 与 structured.StructuredBasis，以及 BasisDescriptor / BasisTransform 的元数据。
+
 from __future__ import annotations
 
 import hashlib

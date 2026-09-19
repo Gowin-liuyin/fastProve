@@ -1,5 +1,8 @@
 """Offline row-math to PyTorch-layout conversion helpers."""
 
+# REFERENCE PATH — 一般增广仿射的离线转换参考实现，仅被 ChainLinear 与数学等价性测试使用。
+# 生产权重的离线融合见 layers/deployed.py 与 models/obfuscated.py。
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -134,26 +134,6 @@ def compute_topk_budget(
     )
 
 
-def _coordinate_value(
-    context: RequestContext,
-    layer_id: str,
-    batch_index: int,
-    head_index: int,
-    query_position: int,
-    key_position: int,
-) -> float:
-    seed = context.seed_for(
-        "attention-logit-noise",
-        layer_id,
-        batch_index,
-        head_index,
-        query_position,
-        key_position,
-    )
-    mantissa = seed & ((1 << 53) - 1)
-    return 2.0 * (mantissa / float(1 << 53)) - 1.0
-
-
 def _sample_bounded_noise(
     *,
     logits: torch.Tensor,

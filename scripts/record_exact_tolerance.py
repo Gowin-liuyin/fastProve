@@ -25,13 +25,14 @@ from fastprove.seed import RequestContext
 
 
 def _checkpoint_dtype_label() -> str:
-    """Report the checkpoint arithmetic dtype without hard-coding it."""
+    """Report the checkpoint arithmetic dtype without hard-coding it.
 
-    try:
-        from fastprove.models.obfuscated import _checkpoint_compute_dtype
-    except ImportError:
-        return "absent (Stage B removed the checkpoint arithmetic)"
-    return str(_checkpoint_compute_dtype("cpu"))
+    Stage B removed the checkpoint arithmetic, so there is no compute dtype to
+    probe; the label is fixed instead of importing a symbol that no longer
+    exists.
+    """
+
+    return "absent (Stage B removed the checkpoint arithmetic)"
 
 
 def main() -> None:

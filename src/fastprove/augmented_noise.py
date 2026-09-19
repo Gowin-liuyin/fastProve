@@ -16,6 +16,10 @@ operation, head_id)`` and is reproducible experiment randomness, not a
 deployment secrecy mechanism (plan 7.4).
 """
 
+# 侧路实验 / 参考路径：除 deployed_free_noise_sigma（生产 forward 使用）外，本模块的采样、
+# 传播子、record_generator 与覆盖度函数只服务于侧路核实验和数学等价性测试，
+# 部署 forward 不调用。
+
 from __future__ import annotations
 
 import math

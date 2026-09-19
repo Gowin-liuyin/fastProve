@@ -16,6 +16,8 @@ shared hidden basis; combining them is a gate-weighted sum validated through
 ``MixedState.add``.
 """
 
+# REFERENCE PATH — 参与验收门与数学等价性测试；当前 tiny LM 生产 forward 不调用本模块。
+
 from __future__ import annotations
 
 from dataclasses import dataclass

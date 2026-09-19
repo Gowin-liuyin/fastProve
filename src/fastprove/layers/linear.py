@@ -1,5 +1,8 @@
 """Converted affine layer with chained auxiliary-noise refresh."""
 
+# REFERENCE PATH — 参与验收门与数学等价性测试，部署 forward 不调用本模块。
+# 生产路径见 layers/deployed.py（离线融合权重）与 models/obfuscated.py（无解码 forward）。
+
 from __future__ import annotations
 
 import math

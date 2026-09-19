@@ -1,5 +1,8 @@
 """SwiGLU permutation/scaling covariance and auxiliary refresh."""
 
+# 参考/测试路径：convert_swiglu_weights 与 refresh_swiglu_noise 仅用于验收门与数学
+# 等价性测试；生产路径使用 generate_swiglu_transform 与 layers/deployed.py 的融合 FFN。
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -17,7 +17,6 @@ from .artifacts import validate_run_record
 
 
 SELECTION_SCHEMA_VERSION = "fastprove.sweep_selection.v1"
-REQUIRED_BASELINE_MODES = frozenset({"plaintext", "exact"})
 APPROXIMATE_MODES = frozenset({"topk_preserving", "free_bounded"})
 
 
