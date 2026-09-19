@@ -1,0 +1,297 @@
+{
+  "schema": "fastprove.expanded_concat_v2.math_examples.v2",
+  "timestamp_utc": "2026-09-16T11:07:01.536217+00:00",
+  "seed": 20260916,
+  "python": "3.13.12 | packaged by Anaconda, Inc. | (main, Feb 24 2026, 16:07:20) [Clang 20.1.8 ]",
+  "executable": "/Users/yin/miniconda3/bin/python",
+  "numpy": "2.4.4",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "device": "cpu",
+  "script_sha256": "758275ac5a46f6fe4f75c18b087c5e2f87266f0566d61da9e45624fe6196ffaa",
+  "meaningful_lm_evidence": false,
+  "actual_bundle_attack": false,
+  "scope": "expanded-then-concatenated-noise numerical examples; not runtime or security acceptance",
+  "status": "passed",
+  "checks": [
+    {
+      "name": "P1_expanded_concat_decode",
+      "value": 2.6645352591003757e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P1_expanded_concat_noise_read",
+      "value": 2.4424906541753444e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P1_expanded_concat_cov_rank",
+      "value": 6.0,
+      "bound": 6,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P1_expanded_concat_nullity",
+      "value": 4.0,
+      "bound": 4,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P1_fixed_signal_cov_rank",
+      "value": 2.0,
+      "bound": 2,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P2_complement_annihilation",
+      "value": 8.326672684688674e-17,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P2_legacy_decode",
+      "value": 3.635980405647388e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P2_compact_equivalence",
+      "value": 2.220446049250313e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P2_filled_cov_rank",
+      "value": 8.0,
+      "bound": 8,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P3_expanded_rectangular_affine_refresh",
+      "value": 1.0658141036401503e-14,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P3_actual_FP32_signal_gate",
+      "value": 1.1920928955078125e-06,
+      "bound": 1e-05,
+      "relation": "<=",
+      "dtype": "float32",
+      "passed": true
+    },
+    {
+      "name": "P4_deterministic_noise_bound",
+      "value": 0.30991302745183513,
+      "bound": 0.5999755859375001,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P4_covariance_identity",
+      "value": 0.0,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P5_expanded_cross_basis_residual",
+      "value": 5.329070518200751e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P5_missing_basis_change_detected",
+      "value": 1.0,
+      "bound": 1,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P6_RMS_gamma_bias",
+      "value": 1.3322676295501878e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P6_whole_state_RMS_counterexample",
+      "value": 1.0,
+      "bound": 1,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P6_rho_perturbation_bound_excess",
+      "value": -1.062116246260689e-08,
+      "bound": 1e-12,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P7_RoPE_GQA_score_identity",
+      "value": 1.6653345369377348e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P7_causal_mixed_value_identity",
+      "value": 6.106226635438361e-16,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P8_SwiGLU_identity",
+      "value": 8.881784197001252e-16,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P8_router_tie_priority",
+      "value": 1.0,
+      "bound": 1,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P10_topk_failures",
+      "value": 0.0,
+      "bound": 0,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P10_mask_failures",
+      "value": 0.0,
+      "bound": 0,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P11_L1_bound_excess",
+      "value": 0.0,
+      "bound": 1e-12,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P11_bidir_KL_bound_excess",
+      "value": 0.0,
+      "bound": 1e-12,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P11_value_bound_excess",
+      "value": 0.0,
+      "bound": 1e-12,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P11_examples_checked",
+      "value": 96.0,
+      "bound": 96,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P13_public_projection_recovery",
+      "value": 4.218847493575595e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P13_noise_elimination",
+      "value": 1.7763568394002505e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P13_remaining_signal_rank",
+      "value": 4.0,
+      "bound": 4,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P13_Gram_identity",
+      "value": 1.7763568394002505e-14,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P14_RMS_epsilon_inversion",
+      "value": 3.4638958368304884e-14,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P14_epsilon_zero_normalized_collision",
+      "value": 0.0,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P14_residual_diff_despite_norm_collision",
+      "value": 1.0,
+      "bound": 1,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    }
+  ]
+}

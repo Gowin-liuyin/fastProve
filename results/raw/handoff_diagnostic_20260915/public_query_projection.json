@@ -1,0 +1,43 @@
+{
+  "schema": "fastprove.handoff.public_query_projection.v1",
+  "scope": "existing structured tiny deployment, NOT new two-sided basis",
+  "observation_view": "cloud_coa public base weights plus server table and deployed_q",
+  "attack_input_fields": [
+    "public_embedding",
+    "public_gamma",
+    "public_q_math",
+    "server_deployed_q",
+    "server_embedding_table"
+  ],
+  "attack_uses_target_pairs_or_secret_basis": false,
+  "isolation": "separate child process and explicit tensor input; no OS sandbox",
+  "device": "cpu",
+  "deployed_tensor_dtype": "float32",
+  "attack_arithmetic_dtype": "float64",
+  "model": "random PlainTinyCausalLM",
+  "model_seed": 1,
+  "conversion_seed": 20260731,
+  "config_path": "configs/tiny_exact.yaml",
+  "config_overrides": {
+    "refresh_mode": "per_request",
+    "debug_enabled": false,
+    "device": "cpu",
+    "activation_dtype": "float32"
+  },
+  "config_sha256": "0baafa48c76266cd6af93ab32aa42c5d54d2b812183e993756f992feeae93e77",
+  "hidden_size": 32,
+  "noise_dim": 8,
+  "vocabulary_size": 64,
+  "sample_count": 64,
+  "observation_unit": "all rows of server-visible embedding table",
+  "public_projection_rank": 32,
+  "public_projection_condition": 30.447417219501162,
+  "fit_residual_max": 3.3306690738754696e-16,
+  "signal_max_abs_error": 8.379150591153461e-07,
+  "signal_relative_l2": 1.4232730055691728e-07,
+  "token_top1_fraction": 1.0,
+  "torch_version": "2.11.0",
+  "python": "3.13.12 | packaged by Anaconda, Inc. | (main, Feb 24 2026, 16:07:20) [Clang 20.1.8 ]",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "limitation": "one synthetic key/model; no pretrained, transcript-only, or new two-sided attack claim"
+}

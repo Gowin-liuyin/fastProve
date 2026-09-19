@@ -188,3 +188,33 @@ PYTHONPATH=src python scripts/record_performance_D2.py --output results/raw/perf
 - `results/raw/performance_D2.json`
 - `results/raw/recoverability_bound.json`（既有，5bis 复核）
 - 源码测试：`tests/`（297 项，覆盖 A5–D1 全部数学恒等式与方向测试）
+
+## 6. 部署折衷（`per_request` ξ + 有界 ρ 噪声）
+
+原始协变内核保持不动：`rho_noise_bound: 0` 时 Gram `ρ` 仍等于 `rms(h)`（容差
+内），生产 `forward` 仍不物化解码后的 `h`。这是正确性路径
+（`configs/tiny_exact.yaml`）。
+
+部署路径（`configs/tiny_approx.yaml`）保留手册里的实时仿射刷新
+`e' = hC + eG + ξ`（`refresh_mode: per_request`），并**只**在 RMS 标量 `ρ`
+上加请求种子派生的有界扰动。`ξ` 走噪声子空间，不进入 `ρ`。这是在「输出
+精确」和「隐藏 `‖h‖`」不能同时成立时，对原始方案的最小扩展：线性层恒等式
+与 exact 注意力不变，放弃的是部署路径上 bit-exact 的 `ρ`。
+
+非声称：
+
+- 不是 LWE / FHE / MPC / TEE，也不是端到端加密。
+- `per_request` 的 `ξ` 本身不隐藏 `ρ`（`docs/threat_model.md` 5bis.4）。
+- 词表置换在**公开基座 embedding** 下不能隐藏明文 token；基座不公开时置换
+  挡住明文，混淆 ID 的范数指纹仍在。
+- Gram 几何与 `M` 可逆恢复 `h` 仍是实数可逆构造的固有泄漏。
+- 没有新的全模型 PPL/MMLU；不得把随机 tiny 数字说成语言模型精度。
+- eager 参考实现的墙钟开销不是融合 kernel，也不是 ≤5% MAC 预算的证明。
+
+复现：
+
+```bash
+PYTHONPATH=src python -m pytest -q tests/test_rho_noise.py
+python docs/design_identity_check.py
+PYTHONPATH=src python scripts/measure_overhead.py --output results/raw/overhead_compromise.json
+```

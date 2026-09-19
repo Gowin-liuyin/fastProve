@@ -31,7 +31,18 @@
       "operations_needed": "one elementwise division and one median"
     }
   ],
+  "cost": {
+    "estimated_flops": 9535488.0,
+    "wall_clock_seconds": 0.03701729199383408,
+    "peak_memory_bytes": 491520,
+    "active_queries": 64,
+    "passive_observations": 64,
+    "training_data_records": 0,
+    "setup_seconds": 0.0,
+    "per_target_seconds": 0.00019279839580121916,
+    "model": "one elementwise division plus a median over the emitted Q for three emitted dtypes; no search, no queries beyond the observed tokens (analytic upper estimate)"
+  },
   "torch_version": "2.11.0",
-  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "seed": 0
 }

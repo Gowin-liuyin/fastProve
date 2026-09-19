@@ -42,7 +42,7 @@
       "dataset_cache": null,
       "model_manifest": null,
       "n_keys": 1,
-      "elapsed_seconds": 0.09241970800212584,
+      "elapsed_seconds": 0.09777820901945233,
       "per_key": [
         {
           "condition": {
@@ -76,7 +76,7 @@
           "device": "cpu",
           "plaintext_embedding_dtype": "torch.float32",
           "obfuscated_embedding_dtype": "torch.float32",
-          "conversion_time_seconds": 0.004750332998810336,
+          "conversion_time_seconds": 0.0044781669857911766,
           "structural_noise_zeroed": false,
           "model_manifest": null,
           "obfuscation_manifest": {

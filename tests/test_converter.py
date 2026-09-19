@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import torch
@@ -193,3 +194,38 @@ def test_converted_model_matches_plaintext_end_to_end(tmp_path) -> None:
             )
         )
     assert torch.equal(obf_gen, plain_gen)
+
+
+def test_converter_persists_compromise_rho_bound_and_per_request_refresh(
+    tmp_path,
+) -> None:
+    config = replace(
+        _config(),
+        obfuscation=replace(
+            _config().obfuscation,
+            refresh_mode="per_request",
+            rho_noise_bound=1.0e-5,
+        ),
+    )
+    plain = PlainTinyCausalLM(config.model, seed=1, debug_enabled=False).eval()
+    ModelConverter().convert(
+        plain,
+        config,
+        client_secret_dir=tmp_path / "client",
+        server_model_dir=tmp_path / "server",
+    )
+    runtime = json.loads(
+        (tmp_path / "server" / "runtime_config.json").read_text(encoding="utf-8")
+    )
+    assert runtime["obfuscation"]["refresh_mode"] == "per_request"
+    assert runtime["obfuscation"]["rho_noise_bound"] == 1.0e-5
+    module = load_server_model(tmp_path / "server")
+    assert module.obfuscation.refresh_mode == "per_request"
+    assert module.obfuscation.rho_noise_bound == 1.0e-5
+    ids = torch.tensor([[1, 2, 3, 4]])
+    with torch.no_grad():
+        logits = module(
+            ids, request_context=RequestContext(3, "compromise-server")
+        )
+    assert torch.isfinite(logits).all()
+    assert logits.shape == (1, 4, config.model.vocab_size)

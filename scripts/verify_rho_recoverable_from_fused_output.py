@@ -29,10 +29,12 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import time
 from pathlib import Path
 
 import torch
 
+from fastprove.evaluation.attack_records import cost_dict
 from fastprove.structured import generate_structured_basis
 
 _FP64 = torch.float64
@@ -107,6 +109,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     arguments = parser.parse_args()
 
+    started = time.perf_counter()
     cases = [
         _run_case(
             signal_dim=arguments.signal_dim,
@@ -120,6 +123,7 @@ def main() -> None:
         )
         for dtype in (torch.float64, torch.float32, torch.bfloat16)
     ]
+    attack_seconds = time.perf_counter() - started
 
     record = {
         "claim": (
@@ -141,6 +145,32 @@ def main() -> None:
         "tokens": arguments.tokens,
         "rms_epsilon": arguments.eps,
         "by_emitted_query_dtype": cases,
+        "cost": cost_dict(
+            estimated_flops=(
+                3.0 * arguments.tokens * arguments.signal_dim * arguments.head_dim
+                + 2.0 * arguments.tokens * arguments.signal_dim
+            )
+            * 3,
+            wall_clock_seconds=attack_seconds,
+            peak_memory_bytes=int(
+                8
+                * 3
+                * (
+                    arguments.tokens * arguments.head_dim
+                    + arguments.signal_dim * arguments.head_dim
+                )
+            ),
+            active_queries=arguments.tokens,
+            passive_observations=arguments.tokens,
+            setup_seconds=0.0,
+            per_target_seconds=attack_seconds
+            / max(3 * arguments.tokens, 1),
+            model=(
+                "one elementwise division plus a median over the emitted Q "
+                "for three emitted dtypes; no search, no queries beyond the "
+                "observed tokens (analytic upper estimate)"
+            ),
+        ),
         "torch_version": torch.__version__,
         "platform": platform.platform(),
         "seed": arguments.seed,

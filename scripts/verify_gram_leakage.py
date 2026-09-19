@@ -20,10 +20,12 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import time
 from pathlib import Path
 
 import torch
 
+from fastprove.evaluation.attack_records import cost_dict
 from fastprove.structured import generate_structured_basis
 
 _FP64 = torch.float64
@@ -72,7 +74,9 @@ def main() -> None:
     noise = torch.randn(arguments.samples, arguments.noise_dim, dtype=_FP64)
     mixed = basis.mix(torch.cat((signal, noise), dim=-1))
 
+    started = time.perf_counter()
     recovered = _recover_up_to_orthogonal(mixed, gram, signal_dim)
+    attack_seconds = time.perf_counter() - started
 
     norm_error = float(
         (recovered.norm(dim=-1) - signal.norm(dim=-1)).abs().max()
@@ -111,6 +115,24 @@ def main() -> None:
         "max_absolute_error_of_pairwise_inner_products": inner_error,
         "max_absolute_error_of_pairwise_distances": distance_error,
         "baseline_norm_error_without_using_the_gram": baseline_norm_error,
+        "cost": cost_dict(
+            estimated_flops=(
+                9.0 * basis.total_dim**3
+                + 2.0 * arguments.samples * basis.total_dim * signal_dim
+            ),
+            wall_clock_seconds=attack_seconds,
+            peak_memory_bytes=int(
+                8 * (basis.total_dim**2 + arguments.samples * basis.total_dim)
+            ),
+            active_queries=0,
+            passive_observations=arguments.samples,
+            setup_seconds=attack_seconds,
+            per_target_seconds=attack_seconds / max(arguments.samples, 1),
+            model=(
+                "symmetric eigendecomposition of the shipped Gram plus one "
+                "matmul; offline and query-free (analytic upper estimate)"
+            ),
+        ),
         "interpretation": (
             "errors at FP64 round-off level mean the geometry is exposed "
             "exactly, not approximately"

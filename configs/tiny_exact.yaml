@@ -15,6 +15,13 @@ obfuscation:
   noise_propagation_gamma: 0.5
   refresh_mode: fixed_debug
   basis_block_size: 8
+  rho_noise_bound: 0.0
+  # S1: channel-0 refresh sigma convention (see augmented_noise.py). 0.02
+  # reproduces the pre-S1 hard-coded scale bit-for-bit.
+  free_noise_energy_ratio: 0.02
+  # S1: linear coupling scale of e' = h C + e G + xi. 0.02 reproduces the
+  # pre-S1 hard-coded behavior; the dataclass default is the conservative 0.0.
+  signal_noise_coupling_scale: 0.02
 attention:
   mode: exact
   tau_max: 0.0

@@ -2,9 +2,90 @@
 
 from __future__ import annotations
 
-from typing import Tuple
+import math
+from typing import Optional, Tuple
 
 import torch
+
+from ..seed import RequestContext
+
+
+def perturb_rms_scale(
+    rho: torch.Tensor,
+    bound: float,
+    *,
+    context: RequestContext,
+    domain: str,
+    positions: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    """Add request-seeded bounded noise to a Gram RMS scale.
+
+    ``bound == 0`` is a no-op and returns ``rho`` unchanged. For ``bound > 0``
+    the added field ``η`` is generated in FP32 from the request-scoped seed
+    and satisfies ``||η||_∞ ≤ bound``. Each token is indexed by absolute
+    position so a cached decode agrees with the matching prefill slot.
+
+    The noise is independent of the auxiliary state. Centering across the
+    current chunk is deliberately not used: a singleton decode would then
+    receive zero noise, and prefill/decode ρ would disagree.
+    """
+
+    if not math.isfinite(bound) or bound < 0:
+        raise ValueError("rho noise bound must be finite and non-negative")
+    if bound == 0.0:
+        return rho
+    if rho.ndim < 2:
+        raise ValueError("rho must have batch and sequence axes")
+    noise = _sample_bounded_scalar_noise(
+        rho, bound, context=context, domain=domain, positions=positions
+    )
+    perturbed = rho.to(dtype=torch.float32) + noise
+    return perturbed.clamp_min(torch.finfo(torch.float32).tiny)
+
+
+def _sample_bounded_scalar_noise(
+    reference: torch.Tensor,
+    bound: float,
+    *,
+    context: RequestContext,
+    domain: str,
+    positions: Optional[torch.Tensor],
+) -> torch.Tensor:
+    """Coordinate-stable scalar field with infinity-norm at most ``bound``."""
+
+    batch, sequence = reference.shape[0], reference.shape[1]
+    tail = reference.shape[2:]
+    if positions is None:
+        positions = torch.arange(sequence, dtype=torch.long)
+    if positions.shape != (sequence,):
+        raise ValueError("positions must have shape [sequence]")
+    seed = context.seed_for("rho-noise", domain)
+    cpu = torch.device("cpu")
+    batch_index = torch.arange(batch, dtype=torch.int64, device=cpu).view(
+        batch, 1
+    )
+    pos_index = positions.detach().to(device=cpu, dtype=torch.int64).view(1, sequence)
+    coordinate = (
+        torch.full((1, 1), seed, dtype=torch.int64, device=cpu)
+        + batch_index * 6364136223846793005
+        + pos_index * 1442695040888963407
+    )
+    coordinate = coordinate * 6364136223846793005 + 1442695040888963407
+    coordinate = coordinate ^ (coordinate >> 33)
+    coordinate = coordinate * 3202034522624059733 + 1442695040888963407
+    coordinate = coordinate ^ (coordinate >> 29)
+    mantissa = torch.bitwise_and(coordinate, (1 << 53) - 1)
+    raw = (2.0 * mantissa.to(dtype=torch.float64) / float(1 << 53) - 1.0).to(
+        dtype=torch.float32
+    )
+    for _ in tail:
+        raw = raw.unsqueeze(-1)
+    raw = raw.to(device=reference.device)
+    bound_fp32 = torch.tensor(
+        bound, device=reference.device, dtype=torch.float32
+    )
+    safe_bound = torch.nextafter(bound_fp32, torch.zeros_like(bound_fp32))
+    return raw * safe_bound
 
 
 def rms_no_gamma_fp32(x: torch.Tensor, eps: float) -> torch.Tensor:

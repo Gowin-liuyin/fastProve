@@ -1,0 +1,241 @@
+{
+  "created_utc": "2026-09-15T14:08:36.668550+00:00",
+  "repo_root": "/Users/yin/code/fastProve",
+  "head": "1083729a46c113c90335c5a23c8ca0fc4f19ed72",
+  "dirty_worktree_warning": "HEAD alone does not reproduce this working tree; include untracked files and ignored raw JSONL. Hashes cover selected relevant files, not every project dependency.",
+  "git_status_porcelain": " M configs/eval_sweep.yaml\n M configs/tiny_approx.yaml\n M configs/tiny_exact.yaml\n M docs/PROBLEMS.md\n M docs/implementation_notes.md\n M docs/threat_model.md\n M results/REPORT.md\n M scripts/measure_overhead.py\n M src/fastprove/config.py\n M src/fastprove/converter.py\n M src/fastprove/layers/rmsnorm.py\n M src/fastprove/models/obfuscated.py\n M src/fastprove/transforms.py\n M tests/test_converter.py\n?? .workbuddy/\n?? configs/augmented_noise_kernel.yaml\n?? docs/AUGMENTED_NOISE_HANDOFF_20260915.md\n?? docs/augmented_noise_stage_a_review.md\n?? docs/augmented_noisy_obfuscation_plan.md\n?? docs/handoff_evidence/\n?? docs/literature-review/reports/2026-09-09_five_papers_inspiration.md\n?? docs/literature-review/reports/2026-09-09_nine_obfuscation_defenses.md\n?? docs/problem_analysis.md\n?? docs/scheme_vs_impl_verdict.md\n?? results/raw/handoff_diagnostic_20260915/\n?? results/raw/pretrained_exact_mode_qwen_L4.json\n?? results/raw/pretrained_exact_mode_qwen_L8.json\n?? scripts/run_augmented_noise_kernel.py\n?? scripts/verify_pretrained_exact_mode.py\n?? src/fastprove/augmented_noise.py\n?? src/fastprove/coa_views.py\n?? tests/test_augmented_noise_kernel.py\n?? tests/test_coa_view_contract.py\n?? tests/test_rho_noise.py\n",
+  "environment": {
+    "python": "3.13.12 | packaged by Anaconda, Inc. | (main, Feb 24 2026, 16:07:20) [Clang 20.1.8 ]",
+    "python_executable": "/Users/yin/miniconda3/bin/python",
+    "torch": "2.11.0",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "cuda_available": false,
+    "mps_available": true,
+    "nvidia_smi": null,
+    "ram_bytes": 17179869184,
+    "diagnostic_device": "cpu"
+  },
+  "stage_a_v1": {
+    "record_count": 13,
+    "unique_configs": 11,
+    "signal_error_range": [
+      1.021405182655144e-14,
+      1.7763568394002505e-14
+    ],
+    "known_invalid_interpretation": "fp32_signal_gate_pass is computed from FP64 reference error; beta calibration and RNG integration remain unfixed"
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 21294,
+      "sha256": "2b95c1ab03b847f074a26d26df131e427856a92d3a1f988ccfd2e7bfe99aa730"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 694,
+      "sha256": "fc4442fd356d7c6d9f2d4f19b39f6261c5302ea3d28c853b06832c7a4cff7c72"
+    },
+    {
+      "path": "configs/tiny_exact.yaml",
+      "bytes": 731,
+      "sha256": "0baafa48c76266cd6af93ab32aa42c5d54d2b812183e993756f992feeae93e77"
+    },
+    {
+      "path": "configs/augmented_noise_kernel.yaml",
+      "bytes": 662,
+      "sha256": "c6de20f0033432a00a1b9e7fbcf011ff23a0bb201c79f61f661e2a154b61eea2"
+    },
+    {
+      "path": "src/fastprove/transforms.py",
+      "bytes": 11621,
+      "sha256": "8aef9982a1da16a856b3e5d53bf6a7e2582fe96802ec8e3f998c607f51de291c"
+    },
+    {
+      "path": "src/fastprove/structured.py",
+      "bytes": 19425,
+      "sha256": "d5fa3e9202febc546566a861e00c7d60522a093de5938734d200de6875585f6d"
+    },
+    {
+      "path": "src/fastprove/augmented_noise.py",
+      "bytes": 8634,
+      "sha256": "573218566ba3a5a04b04df695f185699622b20bd444c55573cc9a97dfaa72710"
+    },
+    {
+      "path": "src/fastprove/coa_views.py",
+      "bytes": 4271,
+      "sha256": "e63843f887a6ea5a54d2fbdbb3c82f01fdf6240475fece8fac2eee221f6864a7"
+    },
+    {
+      "path": "src/fastprove/config.py",
+      "bytes": 8041,
+      "sha256": "591d86563e362d5819171395e6023ae1203422b22959d10f4ae4c31fcc229b6c"
+    },
+    {
+      "path": "src/fastprove/seed.py",
+      "bytes": 2412,
+      "sha256": "e119741f6146a3f791bd8ddc2165fd448dd8f77e162130c56607e4dc5b1891f1"
+    },
+    {
+      "path": "src/fastprove/state.py",
+      "bytes": 4222,
+      "sha256": "30c664f045865ab83fe19da204905178e52bfcbe794d633a68ca5628a28fc231"
+    },
+    {
+      "path": "src/fastprove/conversion.py",
+      "bytes": 4192,
+      "sha256": "ca0b7fe5840507b8ec4ce061b9bf6df812fa6486036b5d2b9b82ccb955fecb81"
+    },
+    {
+      "path": "src/fastprove/converter.py",
+      "bytes": 20839,
+      "sha256": "0c7a352a75d2f081b7adbf4e48508f931dd9626762f13806100e4edee1a6e98e"
+    },
+    {
+      "path": "src/fastprove/layers/deployed.py",
+      "bytes": 16428,
+      "sha256": "fcce523ca066ee940e11f8e28d16f5fe7c04379baa70c9874b7e2d391b125c95"
+    },
+    {
+      "path": "src/fastprove/layers/embedding.py",
+      "bytes": 3799,
+      "sha256": "dccc4e27ace54fd2dcd54792ec7f806b6d09b0d8cf98380e4538c3ca67b92954"
+    },
+    {
+      "path": "src/fastprove/layers/linear.py",
+      "bytes": 8006,
+      "sha256": "16df9be09d7784245516d4da461e79a112d8cee376d40546e1fe63ba0a67a832"
+    },
+    {
+      "path": "src/fastprove/layers/rmsnorm.py",
+      "bytes": 8451,
+      "sha256": "f8fc5be0daef126a4636bd2aaef73ee299d0f77687c8463a335b4dfa2ae27d16"
+    },
+    {
+      "path": "src/fastprove/models/obfuscated.py",
+      "bytes": 54030,
+      "sha256": "992a7f3e7d31275ca299fc6bdc63099c10a57590a7bf6e641b9a10a2b606a09d"
+    },
+    {
+      "path": "src/fastprove/models/plain.py",
+      "bytes": 15738,
+      "sha256": "1f93749ac5adc0a447caa31e73e81d3d9ba251a37d8983ec73632cdd71a184ee"
+    },
+    {
+      "path": "scripts/run_augmented_noise_kernel.py",
+      "bytes": 12729,
+      "sha256": "7210cb60ba0f61e54f594239d231899b8709bb95ba06a8c0833e97852a3ae686"
+    },
+    {
+      "path": "scripts/verify_token_recovery_from_rho.py",
+      "bytes": 7845,
+      "sha256": "a386fadf423f1d8adb4617875231a2e09f5d8c0193b772dad4c5db4676364447"
+    },
+    {
+      "path": "scripts/verify_gram_leakage.py",
+      "bytes": 4699,
+      "sha256": "13dad36e57128ddf8d1316289cf2a4cd475fba4387c4f46e78acc4920854ee46"
+    },
+    {
+      "path": "scripts/verify_rho_recoverable_from_fused_output.py",
+      "bytes": 5384,
+      "sha256": "b3a56d291f93b08a9cbc004a1d7a28bd42b6f6d4cdb16be5ba35bf038e0312bd"
+    },
+    {
+      "path": "scripts/verify_recoverability_bound.py",
+      "bytes": 17911,
+      "sha256": "e41b42c91aa6a6c86a6ae38665f7a714b231ca87e6a39eca2440820cb0573a5c"
+    },
+    {
+      "path": "tests/test_augmented_noise_kernel.py",
+      "bytes": 16130,
+      "sha256": "0dc72a6eb66133936b8f03a90632124d0e08067595759a41dd547a30e30b7755"
+    },
+    {
+      "path": "tests/test_coa_view_contract.py",
+      "bytes": 2947,
+      "sha256": "5e27c320107b85c6cf49337d17e5b8c136cf6cf14a773dc97dc50c448d0a5b19"
+    },
+    {
+      "path": "docs/augmented_noisy_obfuscation_plan.md",
+      "bytes": 26158,
+      "sha256": "0be7bd25fd3f6429d8a79678dc814a915f83f1c5b1145688e069f8b3ca4dd640"
+    },
+    {
+      "path": "docs/augmented_noise_stage_a_review.md",
+      "bytes": 8203,
+      "sha256": "827f17645a292e9af3fa8ddad13c5fcc94da7d19556faa6be3797f337d692521"
+    },
+    {
+      "path": "docs/scheme_vs_impl_verdict.md",
+      "bytes": 22089,
+      "sha256": "c684f165151eaa28d44249cb62ae4d48d5effba7ef4edadb67c2ca05d5aaf78e"
+    },
+    {
+      "path": "docs/problem_analysis.md",
+      "bytes": 19638,
+      "sha256": "ddb63e406bced1f547a142481184a192107cdad739d00b307bc7a1cb04ecd868"
+    },
+    {
+      "path": "docs/PROBLEMS.md",
+      "bytes": 30646,
+      "sha256": "bd5a82ca30875e61279fd6f6bf357b94838c9d348d506edc46c41426f9e7066c"
+    },
+    {
+      "path": "docs/threat_model.md",
+      "bytes": 31677,
+      "sha256": "bff066b4d6988575e5f03668ca138ea1f029ec9b7a7e93fb0f77e9afdb54efc9"
+    },
+    {
+      "path": "docs/implementation_notes.md",
+      "bytes": 27277,
+      "sha256": "da13e50707725f17d273dc7a7b4614376d67c467044d3f787fa07079db25f9ec"
+    },
+    {
+      "path": "results/raw/augmented_noise_kernel/kernel_records.jsonl",
+      "bytes": 17025,
+      "sha256": "00e1ba2fa871fa52a37dc7a1ed927d6215de40c6bc14535cb6bde77f83de1dcb"
+    },
+    {
+      "path": "results/raw/gram_leakage.json",
+      "bytes": 895,
+      "sha256": "cf1cca02d15a1b98b05c1cdceee92525276874f938db6c215c57d35b6c6fa4a0"
+    },
+    {
+      "path": "results/raw/token_recovery_from_rho.json",
+      "bytes": 2080,
+      "sha256": "ac01e311d9ec60a19069ca3b02acdd2758696e5ece9c0d3f386deec61d3913f6"
+    },
+    {
+      "path": "results/raw/token_recovery_from_rho_llama.json",
+      "bytes": 2045,
+      "sha256": "557a0b8b473cff55d2b85926b83956fe1d0c2808a9bf652ebfba2068bd600679"
+    },
+    {
+      "path": "results/raw/rho_recoverable_from_fused_output.json",
+      "bytes": 1366,
+      "sha256": "04685d6e5b7c4e6d5035df7aff74a4d8531f43671a58228bd6140fa45282342a"
+    },
+    {
+      "path": "results/raw/handoff_diagnostic_20260915/public_query_projection.json",
+      "bytes": 1676,
+      "sha256": "adbd794ccfeb9374a37ea6ee0158a8f18c0ad445e16b2a57d396626a596075ca"
+    },
+    {
+      "path": "docs/handoff_evidence/20260915/probe_public_query_projection.py",
+      "bytes": 6444,
+      "sha256": "0ac0b59885eb3e1040ac769f7a7fa057b3b5ee5214fd90d827b84eb99b913130"
+    },
+    {
+      "path": "docs/AUGMENTED_NOISE_HANDOFF_20260915.md",
+      "bytes": 34608,
+      "sha256": "365299d49b496cf1124aa1bee5c5b3e978a18647a64645a7e686af2028bea594"
+    }
+  ],
+  "not_executed": [
+    "stage A v2",
+    "new two-sided COA benchmark",
+    "pretrained evaluation",
+    "MPS tests",
+    "performance benchmark"
+  ]
+}

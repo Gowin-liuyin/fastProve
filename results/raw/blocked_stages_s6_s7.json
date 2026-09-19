@@ -1,0 +1,32 @@
+{
+  "schema": "fastprove.blocked_stage.v1",
+  "generated": "2026-09-19",
+  "stages": [
+    {
+      "stage": "S6",
+      "title": "candidate rescoring falsification experiment",
+      "status": "not_executed",
+      "blocked_reason": "the pretrained checkpoint named by results/raw/token_recovery_from_rho.json (deepseek-r1-distill-qwen-1.5b/base_model, vocab 151936 / hidden 1536 / 28 layers) is not present on this machine. The entire model_artifacts/raw_remote_pull/models directory is gone; scripts/audit_pretrained_assets.py reports checkpoint_bytes = 0; a filesystem search found no safetensors weights other than BERT. AGENTS.md forbids silently substituting a random tiny model for a measurement whose meaning depends on the pretrained embedding norm distribution (docs/PROBLEMS.md section 4.3).",
+      "would_require": [
+        "local copy of the Qwen2-1.5B base checkpoint (or an explicitly authorized download)",
+        "the existing scripts/verify_token_recovery_from_rho.py infrastructure"
+      ],
+      "recorded_partial_evidence": {
+        "rho_precision_channel": "results/raw/token_recovery_from_rho.json (93.8% -> 3.9% at tau=1e-5, recorded earlier on the now-absent checkpoint)",
+        "theorem_9_accounting": "results/raw/noise_ordering_analysis_20260919.json T9: 16.61 bits retained per coordinate at sigma_delta/sigma_h = 1e-5",
+        "gap": "no candidate-set + LM rescoring variant has been run; the falsification test for the tau=1e-5 operating point is therefore still open"
+      },
+      "decision": "user chose to skip and record the blockage rather than download a checkpoint"
+    },
+    {
+      "stage": "S7",
+      "title": "embedding norm equalisation feasibility probe",
+      "status": "not_executed",
+      "blocked_reason": "same absent checkpoint. The probe measures the logit error of a norm-equalised embedding table on a real base model; without the checkpoint there is no meaningful norm distribution or baseline to compare against.",
+      "would_require": [
+        "local copy of the Qwen2-1.5B base checkpoint (or an explicitly authorized download)"
+      ],
+      "decision": "user chose to skip and record the blockage rather than download a checkpoint"
+    }
+  ]
+}

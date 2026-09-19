@@ -1,0 +1,31 @@
+{
+  "claim": "ker(L) is an explicit subspace with dim == noise_dim in the current construction; it annihilates the semantic read matrix exactly, and its hiding contribution is exactly zero",
+  "channel_0_information_theoretic_hiding_bits": 0.0,
+  "torch_version": "2.11.0",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "seed": 17,
+  "arithmetic_dtype": "float64",
+  "geometry": {
+    "signal_dim": 64,
+    "noise_dim": 8,
+    "total_dim": 72,
+    "block_size": 8,
+    "condition_number": 9.253608497579854
+  },
+  "dim_ker_L": 8,
+  "max_semantic_leak": 4.4002861582640696e-16,
+  "subspace_principal_angle_rad": 2.1073424255447017e-08,
+  "pure_concat_noise": {
+    "free_fraction": 1.0,
+    "semantic_component_norm": 1.5592528295288956e-14
+  },
+  "generic_noise": {
+    "free_fraction": 0.1009871318984589,
+    "semantic_component_norm": 22.989585391026036,
+    "induced_semantic_error_norm": 35.07192054672045
+  },
+  "in_cone_noise_amplified_by": 1000000000000.0,
+  "in_cone_h_recovery_relative_error": 0.00032175026138954243,
+  "note_on_tolerance": "arccos near 1 is ill-conditioned: 3e-8 rad corresponds to 1 - cos = 5e-16, i.e. FP64 round-off",
+  "interpretation": "channel 0 is free of accuracy cost and free of hiding: it must be bookkept with information_theoretic_hiding_bits = 0, never presented as a privacy source"
+}

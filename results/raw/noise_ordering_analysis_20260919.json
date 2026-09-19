@@ -1,0 +1,668 @@
+{
+  "generated": "2026-09-19",
+  "seed": 20260919,
+  "dtype": "float64",
+  "environment": {
+    "python": "3.13.12",
+    "numpy": "2.4.4",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O"
+  },
+  "geometry": {
+    "d_semantic": 32,
+    "D_lifted": 48,
+    "r_concat_noise": 8,
+    "N_ambient": 56,
+    "cond_M": 3.0,
+    "cond_M_measured": 3.0
+  },
+  "T1_order_equivalence": {
+    "claim": "mix-then-add-outside equals add-inside-then-mix with delta = n M^-1",
+    "rel_error": 1.5667961009523544e-15
+  },
+  "T2_semantic_error_is_nL": {
+    "claim": "Dec(c + n) - h == n L exactly",
+    "rel_error": 3.7796339732103944e-15,
+    "semantic_error_norm": 1.7456354035743296,
+    "outside_noise_norm": 4.118309532595693,
+    "leverage_semantic_over_injected": 0.42387183133223316
+  },
+  "T3_kernel_saturation": {
+    "claim": "dim Ker(L) = N - d = (D-d) + r, and Ker(L) equals the expanded_full noise space span{[a B_comp, e] M}; the free channel is saturated",
+    "N": 56,
+    "d": 32,
+    "D": 48,
+    "r": 8,
+    "dim_ker_L": 24,
+    "expected_dim": 24,
+    "dim_expanded_full_noise_space": 24,
+    "max_principal_angle_rad": 3.332000937312528e-08,
+    "note_on_tolerance": "arccos near 1 is ill-conditioned: angle 3e-8 rad corresponds to 1 - cos = 5e-16, i.e. FP64 round-off",
+    "subspaces_identical": true,
+    "max_semantic_leak_from_ker_basis": 1.6334824636847424e-16,
+    "max_semantic_leak_from_expanded_full_basis": 6.69329023221512e-16
+  },
+  "T4_lossless_under_huge_inker_noise": {
+    "claim": "in-Ker(L) noise of any magnitude adds zero uncertainty about h once M is known; residual is float round-off only",
+    "rel_error_by_noise_scale": {
+      "noise_scale_1e+00": 1.8188917521294534e-15,
+      "noise_scale_1e+06": 1.063600051549012e-09,
+      "noise_scale_1e+12": 0.0006744389101632217
+    }
+  },
+  "T5_known_plaintext_break": {
+    "claim": "with known/chosen plaintext, the exact semantic decoder is recovered in closed form from O(d + nuisance_rank) samples; complement noise raises the sample count but not the asymptotic cost",
+    "cost_model": "O(T N^2) for QR + SVD; no search, no training",
+    "results": {
+      "expanded_concat": {
+        "theoretical_min_samples": 41,
+        "nuisance_rank": 8,
+        "trials": {
+          "T=39": {
+            "recovered": false,
+            "reason": "insufficient samples for rank condition"
+          },
+          "T=41": {
+            "recovered": true,
+            "heldout_rel_error": 5.072560650749463e-15,
+            "decoder_rel_error_vs_true_L": 0.3282506044148574
+          },
+          "T=48": {
+            "recovered": true,
+            "heldout_rel_error": 2.4386066099282742e-15,
+            "decoder_rel_error_vs_true_L": 0.3282506044148574
+          },
+          "T=160": {
+            "recovered": true,
+            "heldout_rel_error": 2.108821886833991e-15,
+            "decoder_rel_error_vs_true_L": 0.3282506044148575
+          }
+        }
+      },
+      "expanded_full": {
+        "theoretical_min_samples": 57,
+        "nuisance_rank": 24,
+        "trials": {
+          "T=55": {
+            "recovered": false,
+            "reason": "insufficient samples for rank condition"
+          },
+          "T=57": {
+            "recovered": true,
+            "heldout_rel_error": 5.6839258746880355e-15,
+            "decoder_rel_error_vs_true_L": 6.2469221260903815e-15
+          },
+          "T=64": {
+            "recovered": true,
+            "heldout_rel_error": 3.371696513154898e-15,
+            "decoder_rel_error_vs_true_L": 3.717529959061798e-15
+          },
+          "T=224": {
+            "recovered": true,
+            "heldout_rel_error": 2.0941289001265236e-15,
+            "decoder_rel_error_vs_true_L": 2.4296066613432943e-15
+          }
+        }
+      }
+    }
+  },
+  "T6_outside_noise_statistics": {
+    "claim": "outside noise does NOT hide the secret (A recovered at rate T^-1/2 with no modular reduction), but it does create a per-sample error floor that is exactly linear in the injected noise",
+    "sigma_n_for_key_recovery": 0.05,
+    "key_recovery_vs_T": {
+      "T=64": {
+        "rel_error_A_hat": 0.5266849332372656,
+        "times_sqrt_T": 4.213479465898125
+      },
+      "T=256": {
+        "rel_error_A_hat": 0.17744042615993394,
+        "times_sqrt_T": 2.839046818558943
+      },
+      "T=1024": {
+        "rel_error_A_hat": 0.08996899648321412,
+        "times_sqrt_T": 2.8790078874628517
+      },
+      "T=4096": {
+        "rel_error_A_hat": 0.049067434794236676,
+        "times_sqrt_T": 3.1403158268311473
+      },
+      "T=16384": {
+        "rel_error_A_hat": 0.022851104867255303,
+        "times_sqrt_T": 2.9249414230086788
+      }
+    },
+    "per_sample_decode_floor": {
+      "in_ker_noise_only": {
+        "rel_decode_error": 1.392983815709767e-15
+      },
+      "outside_noise": {
+        "rel_decode_error": 0.03186551583701538
+      }
+    },
+    "floor_linear_in_sigma": {
+      "sigma_n=1e-04": {
+        "rel_decode_error": 6.449540215937e-05,
+        "error_over_sigma": 0.6449540215937
+      },
+      "sigma_n=1e-03": {
+        "rel_decode_error": 0.0006373899797581545,
+        "error_over_sigma": 0.6373899797581545
+      },
+      "sigma_n=1e-02": {
+        "rel_decode_error": 0.00643215085089612,
+        "error_over_sigma": 0.643215085089612
+      },
+      "sigma_n=1e-01": {
+        "rel_decode_error": 0.06373953166818552,
+        "error_over_sigma": 0.6373953166818552
+      }
+    }
+  },
+  "T7_nonlinear_non_equivariance": {
+    "claim": "exact covariance across a nonlinear checkpoint requires an h-independent matrix Phi with F(h+delta) = F(h) + delta Phi; no such Phi exists",
+    "varying_h_delta_scale_1e-01": {
+      "best_fit_relative_residual": 0.21863509471696205
+    },
+    "varying_h_delta_scale_1e-03": {
+      "best_fit_relative_residual": 0.21659790164910356
+    },
+    "in_ker_noise_invisible_to_checkpoint": {
+      "rel_error_F_of_decoded": 1.1575607510752797e-14,
+      "in_ker_noise_norm": 279.0934292673273
+    }
+  },
+  "T8a_linear_chain_conserves_relative_error": {
+    "claim": "through a purely linear deployed chain, in-Ker(L) noise stays exact and a generic outside perturbation keeps an approximately CONSTANT relative semantic error: linear propagation does not amplify",
+    "depth": 28,
+    "injected_relative_noise": 1e-05,
+    "in_ker_rel_semantic_error_first_last": [
+      1.5767841066809798e-15,
+      3.4319809393380475e-15
+    ],
+    "generic_rel_semantic_error_first_last": [
+      8.528470804268725e-06,
+      4.474871796845586e-06
+    ],
+    "generic_rel_semantic_error_by_depth": [
+      8.528470804268725e-06,
+      7.2686290219442184e-06,
+      7.194922935908577e-06,
+      7.571687092488547e-06,
+      5.9846260436092504e-06,
+      5.430590815739631e-06,
+      5.78161701437687e-06,
+      5.42132727664936e-06,
+      6.546308150366652e-06,
+      6.113075486189861e-06,
+      5.122363645480401e-06,
+      4.616477447607063e-06,
+      4.855921072351089e-06,
+      4.20165722538734e-06,
+      3.560846919519871e-06,
+      4.0643562876779465e-06,
+      4.070522216115676e-06,
+      4.221662140393654e-06,
+      3.718228566300353e-06,
+      3.390879222705018e-06,
+      3.2904527054537093e-06,
+      3.270262995262244e-06,
+      3.6160594530254823e-06,
+      3.5646399010877716e-06,
+      3.5173662519089986e-06,
+      3.917395114297974e-06,
+      4.7687167747237226e-06,
+      4.474871796845586e-06
+    ],
+    "linear_amplification_last_over_first": 0.5246980261227833
+  },
+  "T8b_nonlinear_amplification": {
+    "claim": "a semantic perturbation delta_h IS amplified by the nonlinear stack (RMSNorm / softmax / SwiGLU); the amplification grows with depth",
+    "surrogate": "random-weight transformer-like stack, NOT a pretrained model",
+    "d": 32,
+    "depth": 28,
+    "seq": 16,
+    "results": {
+      "input_rel_delta_1e-05": {
+        "by_depth": [
+          {
+            "depth": 1,
+            "rel_hidden_error": 1.120332179063369e-05,
+            "rel_logit_error": 1.1664447224451891e-05,
+            "amplification_vs_input": 1.166444722445189
+          },
+          {
+            "depth": 2,
+            "rel_hidden_error": 1.298575747427526e-05,
+            "rel_logit_error": 1.3389643422575028e-05,
+            "amplification_vs_input": 1.3389643422575026
+          },
+          {
+            "depth": 3,
+            "rel_hidden_error": 1.3949139344697109e-05,
+            "rel_logit_error": 1.4062417212588284e-05,
+            "amplification_vs_input": 1.4062417212588283
+          },
+          {
+            "depth": 4,
+            "rel_hidden_error": 1.4981582807166811e-05,
+            "rel_logit_error": 1.5495603119768446e-05,
+            "amplification_vs_input": 1.5495603119768444
+          },
+          {
+            "depth": 5,
+            "rel_hidden_error": 1.4980671296423169e-05,
+            "rel_logit_error": 1.557023061911766e-05,
+            "amplification_vs_input": 1.5570230619117658
+          },
+          {
+            "depth": 6,
+            "rel_hidden_error": 1.6066415243973553e-05,
+            "rel_logit_error": 1.6517311448946458e-05,
+            "amplification_vs_input": 1.6517311448946457
+          },
+          {
+            "depth": 7,
+            "rel_hidden_error": 1.616977204266465e-05,
+            "rel_logit_error": 1.624696842191354e-05,
+            "amplification_vs_input": 1.624696842191354
+          },
+          {
+            "depth": 8,
+            "rel_hidden_error": 1.8081853794864383e-05,
+            "rel_logit_error": 1.797084952569125e-05,
+            "amplification_vs_input": 1.797084952569125
+          },
+          {
+            "depth": 9,
+            "rel_hidden_error": 1.813601236116704e-05,
+            "rel_logit_error": 1.790180018459329e-05,
+            "amplification_vs_input": 1.7901800184593288
+          },
+          {
+            "depth": 10,
+            "rel_hidden_error": 1.6756461230023145e-05,
+            "rel_logit_error": 1.6339770344321638e-05,
+            "amplification_vs_input": 1.6339770344321636
+          },
+          {
+            "depth": 11,
+            "rel_hidden_error": 1.8616619177038345e-05,
+            "rel_logit_error": 1.8343938926014642e-05,
+            "amplification_vs_input": 1.834393892601464
+          },
+          {
+            "depth": 12,
+            "rel_hidden_error": 2.0166983627314202e-05,
+            "rel_logit_error": 2.1284114073261194e-05,
+            "amplification_vs_input": 2.1284114073261193
+          },
+          {
+            "depth": 13,
+            "rel_hidden_error": 2.090731609165805e-05,
+            "rel_logit_error": 2.1464127063038063e-05,
+            "amplification_vs_input": 2.1464127063038063
+          },
+          {
+            "depth": 14,
+            "rel_hidden_error": 2.1480165168759764e-05,
+            "rel_logit_error": 2.228751077509674e-05,
+            "amplification_vs_input": 2.2287510775096737
+          },
+          {
+            "depth": 15,
+            "rel_hidden_error": 2.232631728031952e-05,
+            "rel_logit_error": 2.27849187737552e-05,
+            "amplification_vs_input": 2.27849187737552
+          },
+          {
+            "depth": 16,
+            "rel_hidden_error": 2.282321573146599e-05,
+            "rel_logit_error": 2.303104798249967e-05,
+            "amplification_vs_input": 2.303104798249967
+          },
+          {
+            "depth": 17,
+            "rel_hidden_error": 2.2708760763455043e-05,
+            "rel_logit_error": 2.286303924589158e-05,
+            "amplification_vs_input": 2.286303924589158
+          },
+          {
+            "depth": 18,
+            "rel_hidden_error": 2.3548461796385347e-05,
+            "rel_logit_error": 2.4479797052780026e-05,
+            "amplification_vs_input": 2.4479797052780023
+          },
+          {
+            "depth": 19,
+            "rel_hidden_error": 2.3065941822147588e-05,
+            "rel_logit_error": 2.453958954371683e-05,
+            "amplification_vs_input": 2.4539589543716827
+          },
+          {
+            "depth": 20,
+            "rel_hidden_error": 2.3675062848611294e-05,
+            "rel_logit_error": 2.4552081872206475e-05,
+            "amplification_vs_input": 2.4552081872206473
+          },
+          {
+            "depth": 21,
+            "rel_hidden_error": 2.270830606288682e-05,
+            "rel_logit_error": 2.3631803376276045e-05,
+            "amplification_vs_input": 2.3631803376276044
+          },
+          {
+            "depth": 22,
+            "rel_hidden_error": 2.253920254518013e-05,
+            "rel_logit_error": 2.3368008396377147e-05,
+            "amplification_vs_input": 2.3368008396377147
+          },
+          {
+            "depth": 23,
+            "rel_hidden_error": 2.2901616517247623e-05,
+            "rel_logit_error": 2.336021643313847e-05,
+            "amplification_vs_input": 2.3360216433138468
+          },
+          {
+            "depth": 24,
+            "rel_hidden_error": 2.2631479828899972e-05,
+            "rel_logit_error": 2.2874521213025225e-05,
+            "amplification_vs_input": 2.2874521213025223
+          },
+          {
+            "depth": 25,
+            "rel_hidden_error": 2.3568041442579493e-05,
+            "rel_logit_error": 2.354426482199765e-05,
+            "amplification_vs_input": 2.3544264821997647
+          },
+          {
+            "depth": 26,
+            "rel_hidden_error": 2.408266271483913e-05,
+            "rel_logit_error": 2.36609587675299e-05,
+            "amplification_vs_input": 2.36609587675299
+          },
+          {
+            "depth": 27,
+            "rel_hidden_error": 2.4821643651770847e-05,
+            "rel_logit_error": 2.513965315420734e-05,
+            "amplification_vs_input": 2.5139653154207338
+          },
+          {
+            "depth": 28,
+            "rel_hidden_error": 2.496246338895022e-05,
+            "rel_logit_error": 2.5553070271314623e-05,
+            "amplification_vs_input": 2.555307027131462
+          }
+        ],
+        "final_amplification": 2.555307027131462
+      },
+      "input_rel_delta_1e-03": {
+        "by_depth": [
+          {
+            "depth": 1,
+            "rel_hidden_error": 0.0010452029462229646,
+            "rel_logit_error": 0.0010500111100546282,
+            "amplification_vs_input": 1.050011110054628
+          },
+          {
+            "depth": 2,
+            "rel_hidden_error": 0.0012417886693846286,
+            "rel_logit_error": 0.0012149555960513808,
+            "amplification_vs_input": 1.2149555960513807
+          },
+          {
+            "depth": 3,
+            "rel_hidden_error": 0.0013642134133073842,
+            "rel_logit_error": 0.0013309431420329358,
+            "amplification_vs_input": 1.3309431420329358
+          },
+          {
+            "depth": 4,
+            "rel_hidden_error": 0.0015320369301226996,
+            "rel_logit_error": 0.0015296807205804686,
+            "amplification_vs_input": 1.5296807205804686
+          },
+          {
+            "depth": 5,
+            "rel_hidden_error": 0.001465432388577724,
+            "rel_logit_error": 0.0015185854305094528,
+            "amplification_vs_input": 1.5185854305094528
+          },
+          {
+            "depth": 6,
+            "rel_hidden_error": 0.0015875907753505878,
+            "rel_logit_error": 0.0016238065302518544,
+            "amplification_vs_input": 1.6238065302518543
+          },
+          {
+            "depth": 7,
+            "rel_hidden_error": 0.001629592682656177,
+            "rel_logit_error": 0.0016754994047968401,
+            "amplification_vs_input": 1.6754994047968401
+          },
+          {
+            "depth": 8,
+            "rel_hidden_error": 0.0017143743287229567,
+            "rel_logit_error": 0.0017426620562780088,
+            "amplification_vs_input": 1.7426620562780089
+          },
+          {
+            "depth": 9,
+            "rel_hidden_error": 0.0017929117324602699,
+            "rel_logit_error": 0.001840285585779673,
+            "amplification_vs_input": 1.840285585779673
+          },
+          {
+            "depth": 10,
+            "rel_hidden_error": 0.0016175397737818755,
+            "rel_logit_error": 0.0016693686453962441,
+            "amplification_vs_input": 1.669368645396244
+          },
+          {
+            "depth": 11,
+            "rel_hidden_error": 0.0017414067119995318,
+            "rel_logit_error": 0.0017891700771612558,
+            "amplification_vs_input": 1.7891700771612558
+          },
+          {
+            "depth": 12,
+            "rel_hidden_error": 0.0018538408818375416,
+            "rel_logit_error": 0.002003981527723445,
+            "amplification_vs_input": 2.003981527723445
+          },
+          {
+            "depth": 13,
+            "rel_hidden_error": 0.0019675911128614366,
+            "rel_logit_error": 0.002119261050232433,
+            "amplification_vs_input": 2.119261050232433
+          },
+          {
+            "depth": 14,
+            "rel_hidden_error": 0.002048153023046325,
+            "rel_logit_error": 0.002263216444480083,
+            "amplification_vs_input": 2.2632164444800833
+          },
+          {
+            "depth": 15,
+            "rel_hidden_error": 0.0021133930636374134,
+            "rel_logit_error": 0.0022935710206277524,
+            "amplification_vs_input": 2.2935710206277524
+          },
+          {
+            "depth": 16,
+            "rel_hidden_error": 0.002137290501794031,
+            "rel_logit_error": 0.0023077263714161803,
+            "amplification_vs_input": 2.30772637141618
+          },
+          {
+            "depth": 17,
+            "rel_hidden_error": 0.002151748814567143,
+            "rel_logit_error": 0.0022792537007361247,
+            "amplification_vs_input": 2.2792537007361244
+          },
+          {
+            "depth": 18,
+            "rel_hidden_error": 0.002288185417558274,
+            "rel_logit_error": 0.0024536527605795925,
+            "amplification_vs_input": 2.4536527605795926
+          },
+          {
+            "depth": 19,
+            "rel_hidden_error": 0.00224154437288776,
+            "rel_logit_error": 0.002493151004765488,
+            "amplification_vs_input": 2.4931510047654877
+          },
+          {
+            "depth": 20,
+            "rel_hidden_error": 0.00231120196684882,
+            "rel_logit_error": 0.002536076443019141,
+            "amplification_vs_input": 2.536076443019141
+          },
+          {
+            "depth": 21,
+            "rel_hidden_error": 0.0022885962759028673,
+            "rel_logit_error": 0.0025139433829444212,
+            "amplification_vs_input": 2.5139433829444213
+          },
+          {
+            "depth": 22,
+            "rel_hidden_error": 0.0022825442890011685,
+            "rel_logit_error": 0.0024682766588124366,
+            "amplification_vs_input": 2.4682766588124365
+          },
+          {
+            "depth": 23,
+            "rel_hidden_error": 0.0024145557686593945,
+            "rel_logit_error": 0.002622126086647237,
+            "amplification_vs_input": 2.6221260866472367
+          },
+          {
+            "depth": 24,
+            "rel_hidden_error": 0.0023950323303247316,
+            "rel_logit_error": 0.0025892531108980205,
+            "amplification_vs_input": 2.5892531108980203
+          },
+          {
+            "depth": 25,
+            "rel_hidden_error": 0.002455080924879958,
+            "rel_logit_error": 0.0026160146100251474,
+            "amplification_vs_input": 2.6160146100251476
+          },
+          {
+            "depth": 26,
+            "rel_hidden_error": 0.0023668076255679107,
+            "rel_logit_error": 0.002432515857124322,
+            "amplification_vs_input": 2.432515857124322
+          },
+          {
+            "depth": 27,
+            "rel_hidden_error": 0.002400581431399754,
+            "rel_logit_error": 0.002553704633369501,
+            "amplification_vs_input": 2.553704633369501
+          },
+          {
+            "depth": 28,
+            "rel_hidden_error": 0.0024104672744389346,
+            "rel_logit_error": 0.002528341276391488,
+            "amplification_vs_input": 2.528341276391488
+          }
+        ],
+        "final_amplification": 2.528341276391488
+      }
+    }
+  },
+  "T9_snr_barrier": {
+    "claim": "information-theoretic hiding needs sigma_delta comparable to sigma_h; bits_retained = 0.5 log2(1 + SNR), SNR = (sigma_h/sigma_delta)^2",
+    "table": [
+      {
+        "sigma_delta_over_sigma_h": 1e-06,
+        "bits_retained_per_coord": 19.931568569324895
+      },
+      {
+        "sigma_delta_over_sigma_h": 1e-05,
+        "bits_retained_per_coord": 16.609640474508947
+      },
+      {
+        "sigma_delta_over_sigma_h": 0.0001,
+        "bits_retained_per_coord": 13.287712386762925
+      },
+      {
+        "sigma_delta_over_sigma_h": 0.001,
+        "bits_retained_per_coord": 9.965785006009247
+      },
+      {
+        "sigma_delta_over_sigma_h": 0.01,
+        "bits_retained_per_coord": 6.643928320920272
+      },
+      {
+        "sigma_delta_over_sigma_h": 0.1,
+        "bits_retained_per_coord": 3.3291057413758973
+      },
+      {
+        "sigma_delta_over_sigma_h": 0.577,
+        "bits_retained_per_coord": 1.0006567438459828
+      },
+      {
+        "sigma_delta_over_sigma_h": 1.0,
+        "bits_retained_per_coord": 0.5
+      },
+      {
+        "sigma_delta_over_sigma_h": 10.0,
+        "bits_retained_per_coord": 0.007177646488535027
+      }
+    ],
+    "sigma_for_1_bit_retained": 0.5773502691896258
+  },
+  "T10_modulus_is_what_creates_hardness": {
+    "claim": "least squares recovers the secret over R but not over Z_q; hardness comes from modular reduction, not from adding noise",
+    "q": 3329,
+    "sigma_noise": 2.0,
+    "d": 16,
+    "n": 16,
+    "results": {
+      "real": [
+        {
+          "T": 64,
+          "rel_error_M_hat": 1.6435154213921595e-07,
+          "rounded_entries_exactly_correct_fraction": 1.0
+        },
+        {
+          "T": 256,
+          "rel_error_M_hat": 7.14422803663819e-08,
+          "rounded_entries_exactly_correct_fraction": 1.0
+        },
+        {
+          "T": 1024,
+          "rel_error_M_hat": 3.444433851358866e-08,
+          "rounded_entries_exactly_correct_fraction": 1.0
+        },
+        {
+          "T": 4096,
+          "rel_error_M_hat": 1.604763282891154e-08,
+          "rounded_entries_exactly_correct_fraction": 1.0
+        }
+      ],
+      "mod_q": [
+        {
+          "T": 64,
+          "rel_error_M_hat": 0.999971423395908,
+          "rounded_entries_exactly_correct_fraction": 0.0
+        },
+        {
+          "T": 256,
+          "rel_error_M_hat": 0.9999710645724925,
+          "rounded_entries_exactly_correct_fraction": 0.0
+        },
+        {
+          "T": 1024,
+          "rel_error_M_hat": 0.9999718359210966,
+          "rounded_entries_exactly_correct_fraction": 0.0
+        },
+        {
+          "T": 4096,
+          "rel_error_M_hat": 0.999971700153009,
+          "rounded_entries_exactly_correct_fraction": 0.0
+        }
+      ]
+    },
+    "caveat": "this is a demonstration that the estimator breaks, not a hardness proof; actual LWE hardness rests on lattice reductions"
+  }
+}

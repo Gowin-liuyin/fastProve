@@ -1,0 +1,567 @@
+% 协变混淆中的噪声放置问题：通俗版说明
+% 编译：xelatex docs/noise_placement_explained.tex （跑两遍以生成目录和交叉引用）
+\documentclass[UTF8, fontset=macnew, 11pt]{ctexart}
+
+\usepackage{geometry}
+\geometry{a4paper, top=2.4cm, bottom=2.4cm, left=2.5cm, right=2.5cm}
+
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{plainbg}{RGB}{237,246,238}
+\definecolor{plainln}{RGB}{ 92,150,101}
+\definecolor{mathbg}{RGB}{240,243,250}
+\definecolor{mathln}{RGB}{ 86,110,168}
+\definecolor{warnbg}{RGB}{253,242,238}
+\definecolor{warnln}{RGB}{190,105, 80}
+\definecolor{numbg}{RGB}{248,248,245}
+\definecolor{numln}{RGB}{160,160,150}
+
+\newtcolorbox{plainbox}[1][大白话]{
+  enhanced, breakable, colback=plainbg, colframe=plainln,
+  boxrule=0.4pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries\small, title=#1, attach boxed title to top left={xshift=8pt, yshift=-7pt},
+  boxed title style={colback=plainln, colframe=plainln, boxrule=0pt, sharp corners}}
+
+\newtcolorbox{mathbox}[1][严格版]{
+  enhanced, breakable, colback=mathbg, colframe=mathln,
+  boxrule=0.4pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries\small, title=#1, attach boxed title to top left={xshift=8pt, yshift=-7pt},
+  boxed title style={colback=mathln, colframe=mathln, boxrule=0pt, sharp corners}}
+
+\newtcolorbox{numbox}[1][核验记录]{
+  enhanced, breakable, colback=numbg, colframe=numln,
+  boxrule=0.4pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries\small\color{black}, title=#1,
+  attach boxed title to top left={xshift=8pt, yshift=-7pt},
+  boxed title style={colback=numbg, colframe=numln, boxrule=0.4pt, sharp corners}}
+
+\newtcolorbox{warnbox}[1][注意]{
+  enhanced, breakable, colback=warnbg, colframe=warnln,
+  boxrule=0.4pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries\small, title=#1, attach boxed title to top left={xshift=8pt, yshift=-7pt},
+  boxed title style={colback=warnln, colframe=warnln, boxrule=0pt, sharp corners}}
+
+\newcommand{\kerL}{\ker L}
+\newcommand{\Ph}{\hat P}
+\newcommand{\Qh}{\hat Q}
+
+\setlist[itemize]{itemsep=2pt, topsep=4pt, parsep=0pt}
+\setlist[enumerate]{itemsep=2pt, topsep=4pt, parsep=0pt}
+
+\title{\bfseries 噪声该加在哪儿\\[4pt]
+\large 协变混淆里「先加噪再混淆」与「先混淆再加噪」之辨}
+\author{fastProve 项目内部技术说明}
+\date{2026 年 9 月 19 日}
+
+\begin{document}
+\maketitle
+
+\begin{tcolorbox}[enhanced, colback=white, colframe=black!55, boxrule=0.5pt,
+  left=10pt, right=10pt, top=8pt, bottom=8pt]
+\textbf{这份文档回答什么}
+
+我们的协变混淆已经做了「升维」。现在的问题是：到底应该\emph{先}做 LWE 式的增广矩阵加噪、\emph{再}做混淆，还是\emph{先}做协变混淆升维、\emph{再}在外面套一层动态噪声？
+
+\textbf{一句话答案}
+
+这是个伪二选一。数学上这两条路生成的是\emph{同一个}噪声族，顺序本身不是自由度。真正只有一个选择：噪声落在「盲区」里（免费、精确、但隐私值零），还是落在盲区外面（等于直接给明文加噪、要付精度、汇率极差）。你倾向的「先加噪再混淆」等于前者，在\emph{正确性}上确实是唯一可行的选择——但它不能被当成隐私来源。
+
+\textbf{怎么读}
+
+绿色框是大白话，蓝色框是严格推导，灰色框是数值核验。只想知道结论就读绿色框和第 \ref{sec:opinion} 节。
+\end{tcolorbox}
+
+\vspace{4pt}
+{\small 本文所有代数命题都在 FP64 下跑过数值核验，随机种子 \texttt{20260919}。核验脚本、原始记录路径与复现命令见附录 \ref{sec:repro}。\par}
+
+\tableofcontents
+
+% ============================================================
+\section{先把问题摆清楚}
+
+\subsection{我们现在在做的事}
+
+\begin{plainbox}
+把模型某一层的隐藏状态 $h$ 想成空间里的一个点。明文推理时，服务器直接看到这个点的坐标。我们的做法是给它\emph{换一套坐标架}：
+
+\begin{enumerate}[label=(\arabic*)]
+  \item \textbf{升维}：先用一个保密矩阵 $\Ph$ 把 $d$ 维的 $h$ 抬到更高的 $D$ 维（这是 AloePri 那套）；
+  \item \textbf{拼噪声}：再在后面拼一小段 $r$ 维的辅助噪声 $e$；
+  \item \textbf{混合}：整体乘一个保密可逆矩阵 $M$，得到服务器看到的 $c$。
+\end{enumerate}
+
+服务器看到的 $c$ 是「同一个点在另一套坐标架下的读数」。因为 $M$ 可逆，线性层可以整体换算，算出来的信号和明文\emph{一模一样}。这就是「协变」。
+\end{plainbox}
+
+\begin{mathbox}
+行向量约定。$h\in\mathbb R^{d}$，$\Ph\in\mathbb R^{d\times D}$ 且有右逆 $\Qh$ 满足 $\Ph\Qh=I_d$，$e\in\mathbb R^{r}$，$N=D+r$，$M\in\mathbb R^{N\times N}$ 可逆。
+\begin{align}
+c &= [\,h\Ph,\;e\,]\,M, \label{eq:enc}\\
+L &= M^{-1}\begin{bmatrix}\Qh\\0\end{bmatrix}\in\mathbb R^{N\times d},
+\qquad cL = h. \label{eq:dec}
+\end{align}
+$L$ 叫\textbf{语义读取矩阵}。$B_c\in\mathbb R^{(D-d)\times D}$ 是补空间噪声基，满足 $B_c\Qh=0$。
+\end{mathbox}
+
+\subsection{两个候选方案}
+
+\begin{plainbox}[两条路线]
+\textbf{方案 A（先加噪，再混淆）}：噪声作为\emph{拼进去的那几个坐标}，在乘 $M$ 之前就已经在里面了。
+$$c_A=[\,h\Ph+aB_c,\;e\,]M$$
+
+\textbf{方案 B（先混淆，再外面加动态噪声）}：先按老办法算出 $c$，然后在 $c$ 上直接加一个随机向量 $n$。
+$$c_B=[\,h\Ph,\;e\,]M+n$$
+
+直觉上 A 更「像 LWE 的增广矩阵」，B 更「像在密文上加噪」。下面会看到，这个直觉需要修正。
+\end{plainbox}
+
+% ============================================================
+\section{发现一：这其实不是两个方案}
+
+\begin{plainbox}
+\textbf{在外面加的噪声，等于在里面加的噪声。}
+
+因为 $M$ 可逆，你在外面加的任何一个 $n$，都可以「倒推」回去：它相当于在乘 $M$ 之前就加了 $nM^{-1}$。反过来也一样。所以「先后顺序」根本没有创造新东西——A 和 B 是同一个集合的两种参数化。
+
+用信封打比方：你可以在\emph{装进信封之前}往信纸上涂点东西，也可以在\emph{封好之后}往信封外面涂点东西。因为信封的封装规则（$M$）是已知且可逆的，这两种涂法能达到的所有效果是同一批，只不过「外面涂的图案」换算成「里面涂的图案」时要过一道换算。
+\end{plainbox}
+
+\begin{mathbox}[定理 1：共轭等价]
+令 $\delta=nM^{-1}=[\delta_x,\delta_e]$，则
+$$c_B=[\,h\Ph,\,e\,]M+n=\bigl([\,h\Ph,\,e\,]+nM^{-1}\bigr)M=[\,h\Ph+\delta_x,\;e+\delta_e\,]M.$$
+$M$ 可逆 $\Rightarrow$ $n\mapsto nM^{-1}$ 是 $\mathbb R^N$ 上的双射 $\Rightarrow$ 两个方案张成的可见状态集合完全相同。$\square$
+\end{mathbox}
+
+\begin{numbox}
+相对误差 $1.57\times10^{-15}$（FP64 舍入级）。
+\end{numbox}
+
+\begin{warnbox}[这一条把问题改写了]
+既然顺序不是自由度，那唯一剩下的问题是：\textbf{$\delta_x$（也就是噪声对语义那部分的影响）落在哪里？} 后面全部围绕这一点。
+\end{warnbox}
+
+% ============================================================
+\section{发现二：噪声只有两种，一种免费一种要钱}
+
+\subsection{「盲区」是什么}
+
+\begin{plainbox}
+解码就是拿 $c$ 乘一下 $L$。既然是矩阵乘法，就必然有一批方向\emph{乘完等于零}——往这些方向推多远，解码结果都一点不变。这批方向就是 $L$ 的核，记作 $\kerL$，我们叫它\textbf{盲区}。
+
+于是噪声只有两类：
+\begin{itemize}
+  \item \textbf{盲区内}：解码器完全看不见它。信号一点不受影响，\emph{免费}。
+  \item \textbf{盲区外}：解码出来的东西就是「真信号 + 一个误差」。这个误差就是精度损失，\emph{要付钱}。
+\end{itemize}
+
+而且付多少钱是可以精确算出来的，没有任何「被混淆矩阵打散、难以追踪」的模糊空间。
+\end{plainbox}
+
+\begin{mathbox}[定理 2：语义误差恒等式]
+$$\boxed{\;\operatorname{Dec}(c+n)-h=(c+n)L-h=nL\;}$$
+外加噪声 $n$ 对语义的\emph{全部}影响就是 $\delta_h:=nL$，精确线性。$\square$
+\end{mathbox}
+
+\begin{numbox}
+相对误差 $3.78\times10^{-15}$。$\|n\|=4.12$ 时 $\|\delta_h\|=1.75$。
+\end{numbox}
+
+\subsection{盲区有多大，而且已经被填满了}
+
+\begin{plainbox}
+盲区的大小刚好是 $(D-d)+r$：
+\begin{itemize}
+  \item 那个 $r$ 是拼进去的噪声维度；
+  \item 那个 $D-d$ 是\textbf{升维白送的}。
+\end{itemize}
+
+这就把「升维到底有什么用」讲清楚了：\textbf{升维唯一的数学作用，就是把免费噪声的额度从 $r$ 扩大到 $(D-d)+r$。}
+
+更关键的是：仓库里已有的 \texttt{expanded\_full} 方案（补空间噪声 $a$ 加拼接噪声 $e$）\textbf{恰好就是整个盲区}，不多不少。所以——
+
+\textbf{在保住精确性的前提下，「再在外面加一层动态噪声」严格地加不进任何东西。} 免费额度已经用完了。你要么落回盲区里（只是换了个写法），要么落到盲区外（开始付精度）。
+\end{plainbox}
+
+\begin{mathbox}[定理 3：免费噪声锥的饱和]
+$$\kerL=\bigl\{[\,aB_c,\;e\,]M \;:\; a\in\mathbb R^{D-d},\ e\in\mathbb R^r\bigr\}$$
+\textbf{证明.} $\operatorname{rank}L=\operatorname{rank}\Qh=d$，故 $\dim\kerL=N-d=(D-d)+r$。另一方面
+$$[\,aB_c,e\,]M\cdot M^{-1}\begin{bmatrix}\Qh\\0\end{bmatrix}=[\,aB_c,e\,]\begin{bmatrix}\Qh\\0\end{bmatrix}=aB_c\Qh=0,$$
+故右侧 $\subseteq\kerL$；$M$ 可逆且 $B_c$ 满行秩，右侧维数正是 $(D-d)+r$。包含关系加维数相等，得相等。$\square$
+\end{mathbox}
+
+\begin{numbox}
+$d{=}32$, $D{=}48$, $r{=}8$：$\dim\kerL=24=(48{-}32)+8$，与 \texttt{expanded\_full} 噪声空间的最大主角 $3.3\times10^{-8}$ rad（即 $1-\cos\approx5\times10^{-16}$，FP64 舍入级），两组基通过 $L$ 的最大泄漏分别为 $1.6\times10^{-16}$ 与 $6.7\times10^{-16}$。两个子空间数值上相同。
+\end{numbox}
+
+% ============================================================
+\section{发现三：免费的那种，隐私值零}
+
+\begin{plainbox}
+坏消息来了。$c=[h,e]M$ 是一个\emph{可逆}变换。可逆意味着：$h$ 是被\textbf{无损}编码在 $c$ 里的。只要知道 $M$，$h$ 就是 $c$ 的一个确定性函数，跟噪声加了多大、怎么刷新、用什么密钥派生，\emph{一点关系都没有}。
+
+我们把盲区噪声放大到一万亿倍（$10^{12}$）测过：$h$ 的恢复误差仍然只有 $6.7\times10^{-4}$，而且这个残差是浮点舍入造成的，不是噪声遮蔽造成的。
+
+也就是说：\textbf{方案 A 的机密性 100\% 压在「$M$ 保密」上，噪声一分钱不出。} 这正是「再多花点算力就能破」这个感觉的数学根源——而实际情况比「更多算力」还要糟，因为它是闭式的。
+\end{plainbox}
+
+\begin{mathbox}[定理 4：零条件熵]
+给定 $M$，由式 \eqref{eq:dec}，$h=c_AL$ 是 $c_A$ 的确定性函数，与 $a,e$ 的分布和幅度无关。故
+$$H(h\mid c_A,M)=0,\qquad I(h;c_A\mid M)=H(h).$$
+\end{mathbox}
+
+\begin{numbox}
+盲区噪声尺度 $10^0/10^6/10^{12}$，$h$ 恢复相对误差 $1.8\times10^{-15}/1.1\times10^{-9}/6.7\times10^{-4}$。与仓库 \texttt{PROBLEMS.md} §1.5 记录的 $5.7\times10^{-4}$ 一致。
+\end{numbox}
+
+\subsection{那「$M$ 保密」值多少钱}
+
+\begin{plainbox}
+基座模型是公开的（Llama、DeepSeek、Qwen 都开源），所以攻击者可以自己跑明文模型，拿到任意输入对应的真 $h$。手上有若干组「真 $h$ + 看到的 $c$」之后，恢复解码器\textbf{不需要搜索，也不需要训练}，一次 SVD 加一次最小二乘就出来了。
+
+需要多少组？大约等于\emph{环境维度加一}。把盲区填满（\texttt{expanded\_full}）能把这个数从 $d+r+1$ 抬到 $N+1$——这就是填满盲区的全部安全收益，一个加性常数。
+
+代入真实规模 $d=4096$、$N\approx4112$：约 4113 条样本，$7\times10^{10}$ 次浮点运算，单张卡亚秒级。
+\end{plainbox}
+
+\begin{mathbox}[已知明文闭式恢复]
+写 $c_t=h_tA+\nu_tB$，$A=\Ph M_x$，$\nu$ 为全部辅助自由度，$\rho:=\operatorname{rank}B$。
+\begin{enumerate}[label=\arabic*.]
+  \item $P_H^\perp=I_T-QQ^{\!\top}$，$Q$ 为 $H$ 的正交基；
+  \item $P_H^\perp C=P_H^\perp NB$ 秩 $\le\rho$，取其右零空间 $V$，$\dim V=N-\rho=\dim\ker B$；
+  \item 对 $v\in\ker B$ 有 $c_tv=h_t(Av)$，最小二乘得 $AV$；
+  \item 解码器 $\hat L=V(AV)^{+}$，满足 $c\hat L=h$。
+\end{enumerate}
+样本需求 $T^{*}=d+\rho+1$，准备代价 $O(TN^2)$，逐目标解码 $O(Nd)$。
+\end{mathbox}
+
+\begin{numbox}
+\begin{tabular}{@{}llll@{}}
+\toprule
+方案 & 辅助秩 $\rho$ & 所需样本 & 留出集恢复相对误差 \\
+\midrule
+\texttt{expanded\_concat} & $8$  & $T{=}39$ 失败，$T{=}41$ 成功 & $5.1\times10^{-15}$ \\
+\texttt{expanded\_full}   & $24$ & $T{=}55$ 失败，$T{=}57{=}N{+}1$ 成功 & $5.7\times10^{-15}$ \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+附注：\texttt{concat} 下恢复的 $\hat L\ne L$（矩阵相对差 $0.33$），但在可达状态集上逐点相等；\texttt{full} 下可达集满维，故 $\hat L=L$ 精确恢复。换句话说，填满盲区反而让攻击者拿到的是真解码器本身。
+\end{numbox}
+
+% ============================================================
+\section{发现四：但免费的那种，是唯一保得住正确性的}
+
+\begin{plainbox}
+Transformer 里不全是矩阵乘法。RMSNorm、Softmax、SiLU、Top-k 这些非线性运算\emph{不认识换坐标这回事}。
+
+盲区噪声能过这些关卡，因为解码器根本看不见它——喂给非线性层的东西一点没变。
+
+盲区外的噪声过不去。要让它过去，需要存在一个\emph{与 $h$ 无关}的矩阵，把「非线性前加的扰动」翻译成「非线性后加的扰动」（只有这样才能离线吸收进权重）。这样的矩阵不存在，因为 RMSNorm 的雅可比矩阵本身就依赖 $h$。我们拿 4000 组样本去最优拟合这个矩阵，不可约残差 $21.7\%$，而且在两个不同的扰动尺度下都是 $21.7\%$——说明这不是「高阶项太小」的问题，是结构性的不可能。
+
+\textbf{这是你的直觉真正成立的地方，而且是决定性的}：盲区噪声与所有非线性检查点严格交换，盲区外的噪声结构性地做不到。所以方案 A 是唯一能保住 exact 模式、能把变换离线吸收进权重、能守住 5\% 开销目标的选择。
+\end{plainbox}
+
+\begin{mathbox}[定理 5：非线性检查点的不可交换性]
+exact 协变要求存在与 $h$ 无关的 $\Phi$ 使 $F(h+\delta)=F(h)+\delta\Phi$。对 $F=\mathrm{RMSNorm}$，
+$$\frac{\partial F}{\partial h}=\frac{1}{\rho(h)}\Bigl(I-\frac{hh^{\!\top}}{d\,\rho(h)^2}\Bigr),
+\qquad \rho(h)=\sqrt{\tfrac1d\|h\|^2+\epsilon},$$
+显含 $h$，故无此 $\Phi$。反之 $n\in\kerL$ 时 $F\bigl((c+n)L\bigr)=F(cL)=F(h)$。$\square$
+\end{mathbox}
+
+\begin{numbox}
+$h$ 变化时最优 $\Phi$ 的不可约相对残差：扰动尺度 $10^{-1}$ 下 $21.86\%$，$10^{-3}$ 下 $21.66\%$。对照：范数 $279$ 的盲区噪声通过检查点后误差 $1.2\times10^{-14}$。
+\end{numbox}
+
+% ============================================================
+\section{发现五：要钱的那种，汇率很差}
+
+\begin{plainbox}
+方案 B 确实买到了真东西——这是方案 A 完全没有的：每条样本都有一个\emph{消不掉}的误差下限。就算攻击者知道全部密钥，他解出来的也只是「真值 + 你注入的那个误差」。
+
+但账要算清楚：
+\begin{itemize}
+  \item \textbf{密钥还是会泄漏}，而且是以 $1/\sqrt T$ 的速度。攻击者攒 $T$ 条样本做最小二乘，误差就按 $1/\sqrt T$ 缩小。噪声只是让他多攒点样本，不是让他做不到。
+  \item \textbf{每条样本的误差下限严格线性于你注入的量}。注入 $10^{-4}$，下限就是 $0.64\times10^{-4}$。没有任何放大效应帮你。
+  \item \textbf{动态刷新不防重复观测}。同一个 token 被看 $T$ 次、每次新鲜噪声，攻击者取个平均就把噪声压到 $1/\sqrt T$。看 100 次，就抹掉一个数量级。
+\end{itemize}
+\end{plainbox}
+
+\begin{numbox}
+$\sigma_n=0.05$ 时密钥恢复：$T=256/1024/4096/16384$ 对应相对误差 $0.177/0.090/0.049/0.023$，乘 $\sqrt T$ 后恒为 $2.8\!\sim\!3.1$，确认 $T^{-1/2}$ 速率。
+
+误差下限线性性：$\sigma_n=10^{-4}/10^{-3}/10^{-2}/10^{-1}$ 时，解码相对误差除以 $\sigma_n$ 恒为 $0.64$。盲区噪声对照：$1.4\times10^{-15}$（无下限）。
+\end{numbox}
+
+\subsection{真正的壁垒：信噪比，不是放大}
+
+\begin{plainbox}
+很多人以为问题是「噪声会在 28 层里被放大」。我实测了，不是这样：
+\begin{itemize}
+  \item 纯线性部署链 28 层，\emph{相对}误差基本不变（末/首 $=0.52$，甚至略降）；
+  \item 加上非线性栈（RMSNorm + softmax 注意力 + SwiGLU）28 层，放大约 $2.5\times$。
+\end{itemize}
+
+放大系数只有个位数。\textbf{真正的壁垒是信噪比本身}：要让泄漏降到「每个坐标只剩 1 bit」，你注入的噪声必须达到信号的 $58\%$。那时模型输出已经是噪声了。就算放大系数等于 1，这道墙也在。
+
+反过来看我们现在的操作点：$\tau=10^{-5}$ 时每个坐标还留着 $16.6$ bit，基本等于完整状态——可是已经付了 $2\times10^{-3}$ 的 logit 误差。这就是汇率差的意思。
+\end{plainbox}
+
+\begin{mathbox}[信噪比壁垒]
+高斯信道 $h\mapsto h+\delta_h$：
+$$\text{每坐标保留信息}=\tfrac12\log_2\Bigl(1+\tfrac{\sigma_h^2}{\sigma_\delta^2}\Bigr)\ \text{bit},
+\qquad \text{输出相对误差}\approx\Lambda\cdot\frac{\sigma_\delta}{\sigma_h}.$$
+\end{mathbox}
+
+\begin{center}
+\captionof{table}{信噪比壁垒：要真正藏住信息，噪声必须和信号同量级}
+\small
+\begin{tabular}{@{}rrl@{}}
+\toprule
+$\sigma_\delta/\sigma_h$ & 每坐标保留 bit & 备注 \\
+\midrule
+$10^{-5}$ & $16.6$ & 当前操作点附近，等于没藏 \\
+$10^{-3}$ & $10.0$ & \\
+$10^{-2}$ & $\phantom{0}6.6$ & \\
+$10^{-1}$ & $\phantom{0}3.3$ & \\
+$0.577$   & $\phantom{0}1.0$ & 模型已报废（$58\%$ 相对误差） \\
+$1.0$     & $\phantom{0}0.5$ & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warnbox}[这是 $\ell_2$ 几何的硬约束]
+换矩阵结构、调条件数、加大 $r$、改刷新策略，都绕不过这张表。因为它只用到「信号和噪声在同一个实数向量空间里」这一个事实。
+\end{warnbox}
+
+% ============================================================
+\section{发现六：LWE 的「难」不在噪声，在取模}
+
+\begin{plainbox}
+这一条直接回答「LWE 的增广矩阵加噪」。
+
+标准 LWE 是 $b=As+e \bmod q$。它之所以难，\textbf{是因为那个 $\bmod q$ 的回绕，不是因为加了噪声。} 同一个秘密、同一批噪声，换个代数环，难度天差地别：
+\begin{itemize}
+  \item 实数域上：$64$ 条样本，最小二乘取整后，秘密矩阵 $100\%$ 的条目完全正确；
+  \item $\mathbb Z_q$ 上：同样的估计量，$64$ 到 $4096$ 条样本，正确条目比例\emph{恒为} $0\%$。
+\end{itemize}
+
+而浮点 GEMM 管线里没有 $\bmod q$。所以：
+
+\textbf{「先做 LWE 增广矩阵加噪」里的「LWE」只是命名，不是机制。} 我们放在盲区里的 $e$、$\xi$，无论用 ML-KEM 建密钥还是 SHAKE256 派生，代数上都只是实数域上盲区里的一个元素，被 $L$ 一次矩阵乘法精确消掉。
+
+要真正拿到 LWE 的困难性，必须把代数结构换到 $\mathbb Z_q$。而那和「$\le 5\%$ 开销」「exact 模式」「TensorCore 浮点 GEMM」三条同时冲突。这是个需要项目层面决策的取舍，不是能在现有构造里打补丁解决的。
+\end{plainbox}
+
+\begin{numbox}
+$q=3329$（ML-KEM 模数，仅作代表性小素数），$\sigma=2$，$d=n=16$。
+
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+& $T=64$ & $T=1024$ & $T=4096$ \\
+\midrule
+实数域，$\|\hat M-M\|$ 相对误差 & $1.6\times10^{-7}$ & $3.4\times10^{-8}$ & $1.6\times10^{-8}$ \\
+实数域，取整后完全正确条目 & $100\%$ & $100\%$ & $100\%$ \\
+$\mathbb Z_q$，相对误差 & $\approx1.0$ & $\approx1.0$ & $\approx1.0$ \\
+$\mathbb Z_q$，取整后完全正确条目 & $0\%$ & $0\%$ & $0\%$ \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+这是「估计量失效」的演示，\emph{不是}困难性证明；真正的 LWE 困难性建立在格归约上。
+\end{numbox}
+
+% ============================================================
+\section{所以应该怎么做}\label{sec:opinion}
+
+\subsection{对你那个具体问题的回答}
+
+\begin{plainbox}
+\textbf{选 A（先加噪再混淆）。但理由要换成正确的那一个。}
+
+不是因为「更符合直观」或「更像 LWE」，而是因为：
+
+\begin{center}
+\emph{盲区是唯一与非线性检查点严格交换的噪声子空间（发现四），\\
+因此是唯一能离线吸收进权重、保住 exact 合同、保住 5\% 开销的选择。}
+\end{center}
+
+同时必须如实登记：\textbf{它的隐私贡献上界是零（发现三）。}
+
+而 B 不是一个「另一种机制」，它只是 A 再叠一个明文级扰动。把它当成「在密文外面加噪，像 LWE 那样」来理解，会导致高估它的安全收益、低估它的精度代价。
+\end{plainbox}
+
+\subsection{真正该做的：删掉「顺序」，改成「双通道预算」}
+
+\begin{plainbox}
+把整个空间按「盲区 $\oplus$ 语义」劈成两个通道，分别记账、分别定预算。这样每一分噪声花在哪、买到了什么、付了多少精度，全都可审计。
+\end{plainbox}
+
+\begin{center}
+\captionof{table}{双通道噪声预算}
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}L{2.3cm} L{5.4cm} L{5.4cm}@{}}
+\toprule
+& \textbf{通道 0：盲区内} & \textbf{通道 1：语义方向} \\
+\midrule
+维数 & $(D-d)+r$，已由 \texttt{expanded\_full} 打满 & $d$ \\
+正确性代价 & $0$（精确） & $\Lambda\cdot\sigma_\delta/\sigma_h$，$\Lambda\approx2.5$ \\
+信息论隐藏 & $\mathbf 0$ & 唯一来源 \\
+安全收益 & 把已知明文样本需求从 $d{+}r{+}1$ 抬到 $N{+}1$；打掉「token $\to$ 固定向量」字典 & 每样本误差下限 $\|\delta_h\|$ \\
+该放在哪 & 离线吸收进权重，逐请求刷新 & \textbf{非线性检查点、语义基底内}，用 $\Delta_k$ / $D_V$ / $\rho$ 定价 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warnbox}[通道 1 的关键工程判断]
+\textbf{如果要加语义噪声，就在语义基底的检查点里加，不要在混合坐标外面加。}
+
+两者由定理 1 严格等价，但只有在语义基底里你才有可定价的误差界（$\|q-p\|_1\le\tau$、$D_{KL}\le\tau^2/2$、$\|(q-p)V\|_2\le\tfrac{D_V}{2}\tau$，见 \texttt{DERIVATION\_PACKAGE.md} §5）。在混合坐标外面加，等于把同一个噪声搬到一个你\emph{写不出误差界}的坐标系里，还顺手污染了噪声链。
+
+\smallskip
+\textbf{这才是「顺序」唯一真正有内容的版本：相对\emph{非线性检查点}的位置，而不是相对 $M$ 的位置。}
+\end{warnbox}
+
+\subsection{项目口径}
+
+\begin{plainbox}
+「目标不是绝对安全」是对的，而且是这个方案唯一站得住的定位。但要变成可验收的东西，口径必须是 \texttt{work\_factor\_security.md} 那一套：\textbf{最小攻击成本曲线，而且由最便宜的那条攻击决定。}
+
+按本文推导，当前最便宜的三条是：
+\begin{enumerate}[label=\arabic*.]
+  \item $\rho=\mathrm{rms}(h)$ $\to$ 公开 embedding 行范数查表 $\to$ token。已实测 $92\!\sim\!93\%$，最便宜。
+  \item 已知明文闭式解码器恢复。$T^{*}=N+1$，$O(TN^2)$，无搜索无训练。（本文新增核验）
+  \item 重复观测取平均，$\sigma_\delta/\sqrt T$。
+\end{enumerate}
+
+\textbf{增大 $r$、增大 $D$、加大条件数、换刷新策略，对这三条都没有量级影响。}
+
+这一点必须和答辩 PPT 里「离线模型混淆」那一页一起讲清楚：我们真正的卖点是「在 $\le5\%$ 开销下把最便宜攻击的成本抬高 $G$ 倍，并且有实测曲线」，不是「数据被保护了」。
+\end{plainbox}
+
+\subsection{一个代价可能为零的方向}
+
+\begin{plainbox}
+目前通道 1 的预算几乎全花在扰动 $\rho$ 上。但 $\rho$ 泄漏的根源是「公开 embedding 的行范数几乎两两不同」——这是\textbf{基座模型的属性}，不是混淆构造的属性。
+
+如果离线把 embedding 做等范数化，把各行的范数差异吸收进第一层投影，第 0 层这条最便宜的通道可能以接近零精度代价关掉。
+
+这比继续往盲区里加噪的期望收益高得多——后者已被发现二、三证明为零。
+\end{plainbox}
+
+% ============================================================
+\section{一个能马上否证本文的实验}
+
+\begin{plainbox}
+按发现五的账，$\tau=10^{-5}$ 时每坐标仍保留 $16.6$ bit；而我们实测 token 恢复率从 $93.8\%$ 掉到 $3.9\%$。这两件事同时成立只有一个解释：
+
+\begin{center}
+\emph{掉的是那条查表攻击的脆弱性，不是信息量。}
+\end{center}
+
+\textbf{预测}：把「唯一匹配」换成「$\tau$ 邻域候选集 + 语言模型重排」，或者对同一 token 的多次观测取平均，在 $\tau=10^{-5}$ 下 token 恢复率应\emph{显著高于} $3.9\%$。
+
+这个实验能直接否证本文整套论证，也正好补上 \texttt{problem\_analysis.md} §5.3 的证据缺口。建议排在补测 PPL / MMLU \emph{之前}，因为它便宜，而且它的结果决定了要不要继续在 $\tau=10^{-5}$ 这个操作点上花精度预算：
+\begin{itemize}
+  \item 跑不出来 $\Rightarrow$ 本文的信息论记账在这个具体攻击面上过于悲观；
+  \item 跑出来了 $\Rightarrow$ $\tau=10^{-5}$ 不能作为隐私结论使用。
+\end{itemize}
+\end{plainbox}
+
+% ============================================================
+\section{核验记录一览}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}l L{6.6cm} l@{}}
+\toprule
+编号 & 命题 & 结果 \\
+\midrule
+T1  & 顺序等价（共轭） & rel err $1.57\times10^{-15}$ \\
+T2  & 语义误差 $=nL$ & rel err $3.78\times10^{-15}$ \\
+T3  & $\dim\kerL=(D{-}d){+}r$，且 $=$ \texttt{expanded\_full} 噪声空间 & 子空间数值相同 \\
+T4  & 盲区噪声 $\times10^{12}$ 仍可无损恢复 $h$ & rel err $6.7\times10^{-4}$ \\
+T5  & 已知明文闭式解码器恢复 & $T^{*}{=}41$ / $57$，rel err $\sim5\times10^{-15}$ \\
+T6  & 外加噪声：密钥仍以 $T^{-1/2}$ 泄漏；误差下限线性 & $\times\sqrt T$ 恒定；斜率 $0.64$ \\
+T7  & 非线性检查点无 $h$ 无关的 $\Phi$ & 不可约残差 $21.7\%$ \\
+T8a & 纯线性链不放大相对误差 & 末/首 $=0.52$ \\
+T8b & 非线性栈放大（随机权重代理） & $2.5\times$ @ 28 层 \\
+T9  & 信噪比壁垒 & $1$ bit 需 $\sigma_\delta/\sigma_h=0.577$ \\
+T10 & 困难性来自取模而非噪声 & 实数 $100\%$ vs $\mathbb Z_q$ $0\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ============================================================
+\section{不能声称的内容}
+
+\begin{warnbox}[边界]
+\begin{itemize}
+  \item 本文所有数值跑在小随机实例上（$d{=}32$, $D{=}48$, $r{=}8$）。定理 1--5、7 是代数恒等式，与规模无关；\textbf{但 T8b 的 $\Lambda\approx2.5$ 是随机权重代理，不是 Qwen2 / Llama 实测，不能当真实放大系数引用}。
+  \item T10 演示的是最小二乘估计量失效，\textbf{不是} LWE 困难性证明。
+  \item 全部结论限于诚实但好奇的观察者。可修改 kernel、dump 寄存器、读取全部客户端秘密的云端\textbf{不在保护范围内}。
+  \item 不声称 IND-CPA、信息论不可恢复、差分隐私、全同态、端到端加密，或任何密码学安全位数。
+  \item 不声称任何没有 recorded run 支撑的精度、延迟或隐私数字。
+\end{itemize}
+
+允许的措辞：增广协变混淆、链式辅助噪声、有界 logit 扰动、近似隐私保护推理原型、exact 模式 / approximate 模式，以及「在已评测攻击集合与恢复目标下的观测攻击工作因子」。
+\end{warnbox}
+
+% ============================================================
+\appendix
+\section{复现命令}\label{sec:repro}
+
+\begin{verbatim}
+cd /Users/yin/code/fastProve
+
+# 本文全部数值核验（T1--T10，FP64，种子 20260919）
+python docs/verification/verify_noise_ordering.py \
+    --output results/raw/noise_ordering_analysis_20260919.json
+
+# 编译本文档
+xelatex docs/noise_placement_explained.tex   # 跑两遍以生成目录
+\end{verbatim}
+
+\section{符号表}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}l l@{}}
+\toprule
+符号 & 含义 \\
+\midrule
+$h\in\mathbb R^d$ & 语义隐藏状态（要保护的东西） \\
+$\Ph\in\mathbb R^{d\times D}$，$\Qh\in\mathbb R^{D\times d}$ & 升维映射与其右逆，$\Ph\Qh=I_d$ \\
+$e\in\mathbb R^r$ & 拼接的辅助噪声 \\
+$a\in\mathbb R^{D-d}$ & 补空间噪声 \\
+$B_c\in\mathbb R^{(D-d)\times D}$ & 补空间噪声基，$B_c\Qh=0$ \\
+$M\in\mathbb R^{N\times N}$，$N=D+r$ & 保密可逆混合矩阵 \\
+$c\in\mathbb R^N$ & 服务器可见的混合状态 \\
+$L=M^{-1}[\Qh;0]$ & 语义读取矩阵，$cL=h$ \\
+$\kerL$ & 「盲区」：$\{n:nL=0\}$，维数 $(D-d)+r$ \\
+$n$ & 外加噪声 \\
+$\delta_h=nL$ & 外加噪声造成的语义误差 \\
+$\Lambda$ & 语义扰动经网络到输出的放大系数 \\
+$\tau$ & 扰动无穷范数上界 \\
+$T$ & 攻击者持有的样本数 \\
+$\rho(h)$ & RMSNorm 的归一化因子 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vfill
+\begin{center}\small\itshape
+本文是研究型原型的内部分析文档，不是安全认证。
+\end{center}
+
+\end{document}

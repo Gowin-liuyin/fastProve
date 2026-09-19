@@ -481,3 +481,15 @@ CPU，prefill，self CPU time，共 29.2ms）：
 - 本轮未接入 Transformer block（方案阶段 D 未开始）；未运行任何 COA 攻击实验；`attacker_views` 仅落配置与契约测试。
 - 双侧基对攻击难度的提升仍是待检验假设；当前数据仅证明数值正确性与坐标覆盖差异。
 - per_request ξ 动态注入已在闭环验证（`ξ @ M_out,n` 外加项），尚未接入 `ChainLinear` 的 per_request forward 路径。
+
+## v2 数学方案与实施指南环境记录（2026-09-16）
+
+本次为文档与独立 CPU 小矩阵检查，不是上述阶段 A runner 的修复或重新验收。阶段 A 历史记录的 dtype、β 标定、域分离、YAML 接入问题仍应参照 `docs/augmented_noise_stage_a_review.md` 和 `docs/AUGMENTED_NOISE_HANDOFF_20260915.md`，不能从本次检查推断已修复。
+
+- Python：`/Users/yin/miniconda3/bin/python`，3.13.12；NumPy 2.4.4；PyTorch 2.11.0。
+- OS：macOS 26.6.2 arm64；RAM 16 GiB；检查时磁盘剩余 178,448,125,952 字节。
+- CUDA 不可用，未找到 nvidia-smi；MPS 可用但本次没有使用。执行设备为 CPU。
+- 已确认本地 Qwen 1.5B 与 Llama 3.2 3B 的 base_model 目录及 `results/raw/real_scenario_prompts_1500.jsonl` 存在；未载入、校验权重或认定该语料适合正式评测。
+- 依赖计划：使用已有 NumPy 运行数学 oracle；后续实现复用现有 PyTorch/YAML/pytest，不新增依赖、不下载模型数据。
+- 新方案入口：`DERIVATION_PACKAGE.md`；证明：`PROOF_PACKAGE.md`；工程合同：`docs/augmented_covariant_implementation_v2.md`。
+- 新数学检查脚本：`docs/verification/verify_augmented_covariant_v2.py`；扩维后 concat/full 两个方案的更新记录：`results/raw/expanded_augmentation_v2_math_check_20260916.json`。该记录不代表 fastprove runtime 测试或模型/安全评测；此前 compact-primary 和 concat-only 记录保留为历史文件，不作为当前方案验收。

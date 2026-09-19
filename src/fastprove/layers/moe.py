@@ -29,6 +29,7 @@ from ..seed import RequestContext, make_generator
 from ..state import MixedState
 from ..structured import StructuredBasis
 from ..transforms import BasisDescriptor, generate_signed_permutation
+from ..augmented_noise import deployed_free_noise_sigma
 from .deployed import (
     DeployedFeedForwardWeights,
     build_deployed_feed_forward,
@@ -71,6 +72,8 @@ class _ExpertFFN(nn.Module):
         hidden_size: int,
         fixed_refresh: bool,
         noise_propagation_gamma: float,
+        signal_noise_coupling_scale: float,
+        free_noise_energy_ratio: float,
         dtype: torch.dtype = torch.float32,
     ) -> None:
         super().__init__()
@@ -79,6 +82,9 @@ class _ExpertFFN(nn.Module):
         self.hidden_noise_dim = hidden_noise_dim
         self.noise_injection_enabled = True
         self.refresh_noise_scale = 1.0
+        self._free_noise_sigma = float(
+            deployed_free_noise_sigma(free_noise_energy_ratio, hidden_noise_dim)
+        )
         swiglu_transform = generate_swiglu_transform(
             intermediate,
             seed=seed,
@@ -88,13 +94,13 @@ class _ExpertFFN(nn.Module):
             torch.randn(intermediate, hidden_noise_dim, generator=make_generator(
                 seed, "%s-Cz" % domain, intermediate, hidden_noise_dim
             ))
-            * 0.02
+            * signal_noise_coupling_scale
         )
         coupling_d = (
             torch.randn(hidden_size, hidden_noise_dim, generator=make_generator(
                 seed, "%s-Cd" % domain, hidden_size, hidden_noise_dim
             ))
-            * 0.02
+            * signal_noise_coupling_scale
         )
         propagator = noise_propagation_gamma * generate_signed_permutation(
             hidden_noise_dim,
@@ -103,7 +109,7 @@ class _ExpertFFN(nn.Module):
         )
         fixed = torch.randn(hidden_noise_dim, generator=make_generator(
             seed, "%s-xi" % domain, hidden_noise_dim
-        )) * 0.02 if fixed_refresh else torch.zeros(hidden_noise_dim)
+        )) * self._free_noise_sigma if fixed_refresh else torch.zeros(hidden_noise_dim)
         validate_auxiliary_budget(
             basis=basis,
             sample_signal=torch.randn(
@@ -169,7 +175,7 @@ class _ExpertFFN(nn.Module):
             self.hidden_noise_dim,
             generator=context.generator_for("moe", self.domain, "refresh"),
             dtype=torch.float32,
-        ) * (0.02 * self.refresh_noise_scale)
+        ) * (self._free_noise_sigma * self.refresh_noise_scale)
         rows = self._noise_rows.to(
             device=reference.device, dtype=reference.dtype
         )
@@ -226,6 +232,8 @@ class ObfuscatedMoE(nn.Module):
         debug_enabled: bool,
         noise_propagation_gamma: float,
         refresh_mode: str,
+        signal_noise_coupling_scale: float,
+        free_noise_energy_ratio: float,
         dtype: torch.dtype = torch.float32,
     ) -> None:
         super().__init__()
@@ -292,6 +300,8 @@ class ObfuscatedMoE(nn.Module):
                     hidden_size=hidden_size,
                     fixed_refresh=fixed_refresh,
                     noise_propagation_gamma=noise_propagation_gamma,
+                    signal_noise_coupling_scale=signal_noise_coupling_scale,
+                    free_noise_energy_ratio=free_noise_energy_ratio,
                     dtype=dtype,
                 )
                 for index, (gate, up, down) in enumerate(reordered)

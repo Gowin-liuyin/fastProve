@@ -1,0 +1,24 @@
+2026-09-15 fastProve handoff verification
+
+1. Full existing CPU test suite
+Command: python -m pytest tests/ -q --ignore=tests/test_mps_runtime.py
+Exit: 0
+Result: 338 passed in 19.12s
+Scope: existing tests, not proof that known Stage A runner gaps are fixed.
+
+2. New tiny exported-bundle diagnostic
+Command: PYTHONPATH=src python docs/handoff_evidence/20260915/probe_public_query_projection.py --output results/raw/handoff_diagnostic_20260915/public_query_projection.json
+First attempt: exit 1; fixed_debug refresh rejected with debug_enabled=False.
+Action: only diagnostic config explicitly overridden to per_request. Core code unchanged.
+Final attempt: exit 0. See raw JSON for all metrics and config overrides.
+Scope: one old structured tiny deployment, not the new two-sided scheme.
+
+3. Compute preflight
+Python 3.13.12, torch 2.11.0; CPU chosen for tiny diagnostic.
+MPS available; CUDA unavailable; no nvidia-smi; RAM 16 GiB.
+No pretrained evaluation, no downloads, no remote execution.
+
+4. Artifact preservation
+Old Stage A raw was read only. JSONL is ignored by .gitignore and must be handed over explicitly.
+Manifest hashes are for selected relevant files; HEAD does not contain uncommitted work.
+Attack/secret temporary bundles removed by TemporaryDirectory cleanup; retained script and raw result.

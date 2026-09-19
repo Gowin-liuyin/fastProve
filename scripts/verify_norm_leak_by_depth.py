@@ -37,11 +37,19 @@ import json
 import math
 import platform
 import random
+import sys
+import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
 from safetensors import safe_open
+
+_REPO = Path(__file__).resolve().parents[1]
+if str(_REPO / "src") not in sys.path:
+    sys.path.insert(0, str(_REPO / "src"))
+
+from fastprove.evaluation.attack_records import cost_dict
 
 
 def _load_weights(root: Path, layers: int) -> Tuple[Dict[str, torch.Tensor], dict]:
@@ -226,6 +234,7 @@ def main() -> None:
         {0, 1, 2, 3, 4, 6, 8, 12, 16, 20, 24, layers} & set(range(layers + 1))
     )
     by_layer = []
+    attack_started = time.perf_counter()
     strata_definitions = (
         (0, 0, "unseen"),
         (1, 2, "rare_1_2"),
@@ -256,6 +265,7 @@ def main() -> None:
             }
         )
 
+    attack_seconds = time.perf_counter() - attack_started
     distinct = sorted(collections.Counter(test_tokens.tolist()).values())
     entropy = -sum(
         (c / len(test_tokens)) * math.log2(c / len(test_tokens)) for c in distinct
@@ -289,6 +299,32 @@ def main() -> None:
         "uniform_entropy_bits": math.log2(len(set(test_tokens.tolist()))),
         "most_frequent_token_baseline": baseline,
         "by_layer": by_layer,
+        "cost": cost_dict(
+            estimated_flops=(
+                2.0
+                * len(probe_layers)
+                * int(train_tokens.numel())
+                * int(test_tokens.numel())
+            ),
+            wall_clock_seconds=attack_seconds,
+            peak_memory_bytes=int(
+                8
+                * len(probe_layers)
+                * (train_tokens.numel() + test_tokens.numel())
+            ),
+            active_queries=0,
+            passive_observations=int(
+                len(records) * arguments.max_tokens * (layers + 1)
+            ),
+            setup_seconds=0.0,
+            per_target_seconds=attack_seconds
+            / max(int(test_tokens.numel()), 1),
+            model=(
+                "per-layer scalar nearest-neighbour on collected hidden norms; "
+                "offline, query-free (the norm collection itself is inference "
+                "cost, recorded separately by measure_overhead)"
+            ),
+        ),
         "torch_version": torch.__version__,
         "platform": platform.platform(),
         "seed": arguments.seed,

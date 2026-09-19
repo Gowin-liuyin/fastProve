@@ -10,6 +10,7 @@ from typing import Any, Dict
 import yaml
 
 from .layers.attention import AttentionMode
+from .structured import AUXILIARY_MAGNITUDE_BOUND
 
 
 @dataclass(frozen=True)
@@ -76,6 +77,18 @@ class ObfuscationConfig:
     refresh_mode: str
     basis_block_size: int = 16
     lm_head_mode: str = "untied_deployed"
+    rho_noise_bound: float = 0.0
+    #: Channel-0 free noise: per-component sigma of the refresh ``xi`` under the
+    #: deployed path's normalized calibration (see
+    #: ``augmented_noise.deployed_free_noise_sigma``). Channel 0 has exactly
+    #: zero information-theoretic hiding (theorem 4); this knob only affects
+    #: numerical conditioning, never privacy.
+    free_noise_energy_ratio: float = 0.02
+    #: Channel-1-adjacent coupling ``C`` of ``e' = h C + e G + xi``. Nonzero C
+    #: makes the auxiliary state a linear image of the signal (the leak
+    #: recorded in docs/PROBLEMS.md 1.7); the conservative default is zero.
+    #: Config files that preserve pre-S1 behavior record the historical 0.02.
+    signal_noise_coupling_scale: float = 0.0
 
     def __post_init__(self) -> None:
         if self.hidden_noise_dim <= 0 or self.value_noise_dim_per_head <= 0:
@@ -90,6 +103,24 @@ class ObfuscationConfig:
             raise ValueError("noise propagation gamma must be in (0, 1)")
         if self.refresh_mode not in ("fixed_debug", "per_request"):
             raise ValueError("unsupported refresh_mode")
+        if not math.isfinite(self.rho_noise_bound) or self.rho_noise_bound < 0:
+            raise ValueError("rho_noise_bound must be finite and non-negative")
+        for name, value in (
+            ("free_noise_energy_ratio", self.free_noise_energy_ratio),
+            ("signal_noise_coupling_scale", self.signal_noise_coupling_scale),
+        ):
+            if not math.isfinite(value) or value < 0:
+                raise ValueError("%s must be finite and non-negative" % name)
+        # Explicit link to the measured numerical bound: past
+        # AUXILIARY_MAGNITUDE_BOUND the FP32 block Gram reduction of the RMS
+        # scale loses accuracy (structured.py:AUXILIARY_MAGNITUDE_BOUND), so
+        # this is a conditioning limit, not a security parameter.
+        if self.free_noise_energy_ratio > AUXILIARY_MAGNITUDE_BOUND:
+            raise ValueError(
+                "free_noise_energy_ratio %.3g exceeds the validated FP32 Gram "
+                "bound %.3g; raising it degrades rho, not just the noise path"
+                % (self.free_noise_energy_ratio, AUXILIARY_MAGNITUDE_BOUND)
+            )
 
 
 @dataclass(frozen=True)

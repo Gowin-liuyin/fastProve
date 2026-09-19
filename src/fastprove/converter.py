@@ -26,6 +26,7 @@ from typing import Any, Dict, Optional, Sequence, Tuple
 import torch
 import torch.nn as nn
 
+from .augmented_noise import deployed_free_noise_sigma
 from .config import PrototypeConfig
 from .layers.attention import ApproximationConfig, AttentionMode, ObfuscatedAttention
 from .layers.embedding import SecureEmbedding
@@ -36,6 +37,7 @@ from .models.obfuscated import (
     _rms_scale_from_factors,
 )
 from .models.plain import PlainTinyCausalLM
+from .noise_budget import DualChannelBudget
 from .state import MixedState
 from .structured import StructuredBasis
 from .transforms import BasisDescriptor
@@ -154,6 +156,14 @@ def _restore_block(
     block.debug_enabled = False
     block.noise_injection_enabled = True
     block.refresh_noise_scale = 1.0
+    # Same derivation as ``ObfuscatedDecoderBlock.__init__``; the server bundle
+    # records the scale in runtime_config.json, so this is FP-identical.
+    block._free_noise_sigma = float(
+        deployed_free_noise_sigma(
+            block.obfuscation.free_noise_energy_ratio,
+            block.obfuscation.hidden_noise_dim,
+        )
+    )
     block.hidden_basis = BasisDescriptor(**runtime["hidden_basis"])
     block.attention = ObfuscatedAttention(
         mode=block.mode,
@@ -209,6 +219,14 @@ def load_server_model(server_model_dir: str | Path) -> ObfuscatedTinyCausalLM:
     module.debug_enabled = False
     module.noise_injection_enabled = True
     module.initial_refresh_noise_scale = 1.0
+    # Derived exactly as in ``__init__`` from the recorded config; the server
+    # bundle alone is sufficient, no client material is read.
+    module._free_noise_sigma = float(
+        deployed_free_noise_sigma(
+            module.obfuscation.free_noise_energy_ratio,
+            module.obfuscation.hidden_noise_dim,
+        )
+    )
     module.hidden_basis = BasisDescriptor(**runtime["hidden_basis"])
     module.value_basis_condition_numbers = tuple(
         tuple(row) for row in runtime["value_basis_condition_numbers"]
@@ -368,6 +386,11 @@ class ModelConverter:
 
         state = module.state_dict()
         _assert_server_bundle_is_clean(state)
+        hidden_basis = _rebuild_hidden_basis(config, module)
+        # S2: the dual-channel ledger must agree with the configuration before
+        # any artifact is written; a mismatch fails conversion here.
+        noise_budget = DualChannelBudget.from_config(config, basis=hidden_basis)
+        noise_budget.assert_consistent_with(config, basis=hidden_basis)
         weights_format = "torch"
         try:
             import safetensors.torch  # type: ignore
@@ -416,6 +439,13 @@ class ModelConverter:
                 "refresh_mode": config.obfuscation.refresh_mode,
                 "basis_block_size": config.obfuscation.basis_block_size,
                 "lm_head_mode": config.obfuscation.lm_head_mode,
+                "rho_noise_bound": config.obfuscation.rho_noise_bound,
+                "free_noise_energy_ratio": (
+                    config.obfuscation.free_noise_energy_ratio
+                ),
+                "signal_noise_coupling_scale": (
+                    config.obfuscation.signal_noise_coupling_scale
+                ),
             },
             "hidden_basis": {
                 "signal_dim": module.hidden_basis.signal_dim,
@@ -443,6 +473,11 @@ class ModelConverter:
         runtime_path.write_text(
             json.dumps(runtime, indent=2) + "\n", encoding="utf-8"
         )
+        noise_budget_path = server_dir / "noise_budget.json"
+        noise_budget_path.write_text(
+            json.dumps(noise_budget.manifest(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         server_manifest = {
             "schema": "fastprove.server.manifest.v1",
             "fastprove_version": _fastprove_version(),
@@ -452,6 +487,7 @@ class ModelConverter:
             "tied_embedding": tied_embedding,
             "weights_format": weights_format,
             "runtime_config_sha256": _sha256_file(runtime_path),
+            "noise_budget_sha256": _sha256_file(noise_budget_path),
             "server_state_keys": list(state.keys()),
         }
         manifest_path = server_dir / "manifest.json"
@@ -461,7 +497,6 @@ class ModelConverter:
 
         # -- client bundle -------------------------------------------------
         token_codec.save_client_secret(secret_dir / "token_codec.pt")
-        hidden_basis = _rebuild_hidden_basis(config, module)
         value_bases = _rebuild_value_bases(model, config)
         torch.save(
             {

@@ -34,11 +34,14 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
 from safetensors import safe_open
+
+from fastprove.evaluation.attack_records import cost_dict
 
 _FP64 = torch.float64
 
@@ -158,10 +161,12 @@ def main() -> None:
         0, vocab_size, (arguments.sample_count,), generator=generator
     ).tolist()
 
+    started = time.perf_counter()
     results = [
         _attack(embedding, epsilon, token_ids, name)
         for name in ("float64", "float32", "bfloat16")
     ]
+    attack_seconds = time.perf_counter() - started
 
     record = {
         "claim": (
@@ -191,6 +196,26 @@ def main() -> None:
             ),
         },
         "by_rho_precision": results,
+        "cost": cost_dict(
+            estimated_flops=(
+                2.0 * vocab_size * hidden_dim
+                + 3.0 * arguments.sample_count * 20.0
+            ),
+            wall_clock_seconds=attack_seconds,
+            peak_memory_bytes=int(
+                8 * (vocab_size * hidden_dim + vocab_size)
+            ),
+            active_queries=arguments.sample_count,
+            passive_observations=0,
+            setup_seconds=attack_seconds,
+            per_target_seconds=attack_seconds
+            / max(arguments.sample_count, 1),
+            model=(
+                "offline norm table plus a binary-search candidate window per "
+                "observed rho, for three storage precisions (analytic upper "
+                "estimate; the FP32/FP64 rows share one table build)"
+            ),
+        ),
         "mitigation_note": (
             "storing rho in bfloat16 blocks this channel but violates "
             "AGENTS.md R5 and exceeds the exact-mode logit tolerance, so it "

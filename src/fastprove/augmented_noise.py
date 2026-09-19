@@ -30,6 +30,46 @@ from .transforms import generate_signed_permutation
 _SQRT3 = math.sqrt(3.0)
 
 
+def free_noise_sigma(
+    energy_ratio: float,
+    calibration_rms: float,
+    noise_dim: int,
+) -> float:
+    """Return the per-component noise scale ``sigma_e = beta * H / sqrt(r)``.
+
+    This is the single conversion entry point from an energy ratio ``beta`` to
+    a component standard deviation; both the stage-A kernel and the deployed
+    model path call it, so the formula cannot drift between them.
+
+    The parenthesization ``energy_ratio * (calibration_rms / sqrt(r))`` is
+    deliberate and part of the contract: the deployed path passes
+    ``calibration_rms = sqrt(noise_dim)`` (its public calibration normalizes
+    the hidden per-coordinate RMS to one in the noise coordinate system), and
+    ``x / x == 1.0`` exactly in IEEE arithmetic, so the deployed sigma equals
+    ``energy_ratio`` bit-for-bit with the pre-S1 hard-coded value.
+    """
+
+    if not math.isfinite(energy_ratio) or energy_ratio < 0.0:
+        raise ValueError("energy_ratio must be finite and non-negative")
+    if not math.isfinite(calibration_rms) or calibration_rms < 0.0:
+        raise ValueError("calibration_rms must be finite and non-negative")
+    if noise_dim <= 0:
+        raise ValueError("noise_dim must be positive")
+    return energy_ratio * (calibration_rms / math.sqrt(noise_dim))
+
+
+def deployed_free_noise_sigma(energy_ratio: float, noise_dim: int) -> float:
+    """Return the deployed-path ``sigma_e`` under the normalized calibration.
+
+    The deployed noise chain has no data-dependent calibration step, so it
+    fixes ``calibration_rms = sqrt(noise_dim)``. This makes explicit the
+    pre-S1 convention "component sigma == energy ratio"; changing the
+    convention is a behavior change and must be recorded as one.
+    """
+
+    return free_noise_sigma(energy_ratio, math.sqrt(noise_dim), noise_dim)
+
+
 @dataclass(frozen=True)
 class NoiseRefreshSpec:
     """Static parameters of the independent noise chain.
@@ -52,11 +92,14 @@ class NoiseRefreshSpec:
             raise ValueError("energy_ratio must be finite and non-negative")
 
     def component_sigma(self, calibration_rms: float) -> float:
-        """Return ``sigma_e`` for a public calibration RMS value."""
+        """Return ``sigma_e`` for a public calibration RMS value.
 
-        if not math.isfinite(calibration_rms) or calibration_rms < 0.0:
-            raise ValueError("calibration_rms must be finite and non-negative")
-        return self.energy_ratio * calibration_rms / math.sqrt(self.noise_dim)
+        Delegates to :func:`free_noise_sigma`; the formula lives there only.
+        """
+
+        return free_noise_sigma(
+            self.energy_ratio, calibration_rms, self.noise_dim
+        )
 
 
 def generate_propagator(

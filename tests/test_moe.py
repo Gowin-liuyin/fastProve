@@ -65,6 +65,10 @@ def _build(
         debug_enabled=True,
         noise_propagation_gamma=0.5,
         refresh_mode="fixed_debug",
+        # Pre-S1 equivalent scales: preserve the historical 0.02 behavior of
+        # this standalone layer; production configs carry the same values.
+        signal_noise_coupling_scale=0.02,
+        free_noise_energy_ratio=0.02,
     )
 
 

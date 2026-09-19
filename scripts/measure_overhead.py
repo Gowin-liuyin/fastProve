@@ -69,6 +69,7 @@ def main() -> None:
         noise_propagation_gamma=0.5,
         refresh_mode="per_request",
         basis_block_size=16,
+        rho_noise_bound=1.0e-5,
     )
     plain = PlainTinyCausalLM(
         config, seed=arguments.seed, debug_enabled=False
@@ -152,6 +153,8 @@ def main() -> None:
             "hidden_noise_dim": obfuscation.hidden_noise_dim,
             "value_noise_dim_per_head": obfuscation.value_noise_dim_per_head,
             "basis_block_size": obfuscation.basis_block_size,
+            "refresh_mode": obfuscation.refresh_mode,
+            "rho_noise_bound": obfuscation.rho_noise_bound,
         },
         "conversion_seconds": conversion_seconds,
         "prefill_plaintext_seconds": prefill_plain,

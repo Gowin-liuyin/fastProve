@@ -1,0 +1,289 @@
+{
+  "schema": "fastprove.augmented_covariant_v2.math_examples.v1",
+  "timestamp_utc": "2026-09-16T09:10:02.559041+00:00",
+  "seed": 20260916,
+  "python": "3.13.12 | packaged by Anaconda, Inc. | (main, Feb 24 2026, 16:07:20) [Clang 20.1.8 ]",
+  "executable": "/Users/yin/miniconda3/bin/python",
+  "numpy": "2.4.4",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "device": "cpu",
+  "script_sha256": "8de67bb2639b336b91615363f51107bf1105598bf4a36bf1bfddd09062731ad9",
+  "meaningful_lm_evidence": false,
+  "actual_bundle_attack": false,
+  "scope": "independent small numerical examples; not runtime or security acceptance",
+  "status": "passed",
+  "checks": [
+    {
+      "name": "P1_decode",
+      "value": 8.881784197001252e-16,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P1_total_cov_rank",
+      "value": 6.0,
+      "bound": 6,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P1_fixed_signal_cov_rank",
+      "value": 2.0,
+      "bound": 2,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P1_v1_rank_not_ambient",
+      "value": 6.0,
+      "bound": 6,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P2_complement_annihilation",
+      "value": 1.249000902703301e-16,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P2_legacy_decode",
+      "value": 4.440892098500626e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P2_compact_equivalence",
+      "value": 2.6645352591003757e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P2_filled_cov_rank",
+      "value": 8.0,
+      "bound": 8,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P3_rectangular_affine_refresh",
+      "value": 1.7763568394002505e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P3_actual_FP32_signal_gate",
+      "value": 9.5367431640625e-07,
+      "bound": 1e-05,
+      "relation": "<=",
+      "dtype": "float32",
+      "passed": true
+    },
+    {
+      "name": "P4_deterministic_noise_bound",
+      "value": 0.21943101369849244,
+      "bound": 0.5999755859375001,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P4_covariance_identity",
+      "value": 0.0,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P5_cross_basis_residual",
+      "value": 8.881784197001252e-16,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P5_missing_basis_change_detected",
+      "value": 1.0,
+      "bound": 1,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P6_RMS_gamma_bias",
+      "value": 1.1102230246251565e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P6_whole_state_RMS_counterexample",
+      "value": 1.0,
+      "bound": 1,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P6_rho_perturbation_bound_excess",
+      "value": -6.1373401563505955e-09,
+      "bound": 1e-12,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P7_RoPE_GQA_score_identity",
+      "value": 1.3322676295501878e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P7_causal_mixed_value_identity",
+      "value": 4.440892098500626e-16,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P8_SwiGLU_identity",
+      "value": 4.440892098500626e-16,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P8_router_tie_priority",
+      "value": 1.0,
+      "bound": 1,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P10_topk_failures",
+      "value": 0.0,
+      "bound": 0,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P10_mask_failures",
+      "value": 0.0,
+      "bound": 0,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P11_L1_bound_excess",
+      "value": 0.0,
+      "bound": 1e-12,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P11_bidir_KL_bound_excess",
+      "value": 0.0,
+      "bound": 1e-12,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P11_value_bound_excess",
+      "value": 0.0,
+      "bound": 1e-12,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P11_examples_checked",
+      "value": 96.0,
+      "bound": 96,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P13_public_projection_recovery",
+      "value": 9.547918011776346e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P13_noise_elimination",
+      "value": 8.881784197001252e-16,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P13_remaining_signal_rank",
+      "value": 4.0,
+      "bound": 4,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P13_Gram_identity",
+      "value": 4.440892098500626e-15,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P14_RMS_epsilon_inversion",
+      "value": 3.4638958368304884e-14,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P14_epsilon_zero_normalized_collision",
+      "value": 0.0,
+      "bound": 1e-11,
+      "relation": "<=",
+      "dtype": "float64",
+      "passed": true
+    },
+    {
+      "name": "P14_residual_diff_despite_norm_collision",
+      "value": 1.0,
+      "bound": 1,
+      "relation": "==",
+      "dtype": "float64",
+      "passed": true
+    }
+  ]
+}

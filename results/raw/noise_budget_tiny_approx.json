@@ -1,0 +1,47 @@
+{
+  "config": "configs/tiny_approx.yaml",
+  "noise_budget": {
+    "channel_1_hiding_bits_note": "left None in the config-derived ledger: it depends on the signal scale sigma_h and is computed per experiment via semantic_hiding_bits()",
+    "exact_signal_path": false,
+    "free": {
+      "accuracy_cost_bound": 0.0,
+      "bound_source": null,
+      "channel": 0,
+      "dimension": 8,
+      "energy_ratio": 0.02,
+      "information_theoretic_hiding_bits": 0.0,
+      "statement": "channel 0 (ker L): zero accuracy cost, zero information-theoretic hiding by theorem 4; not a privacy source"
+    },
+    "mode": "topk_preserving",
+    "schema": "fastprove.noise_budget.v1",
+    "semantic": {
+      "accuracy_cost_bound": 0.1,
+      "bound_source": "margin_delta_k",
+      "channel": 1,
+      "dimension": 32,
+      "energy_ratio": 1e-05,
+      "information_theoretic_hiding_bits": null,
+      "statement": "channel 1 (semantic direction): perturbs h by exactly n @ L (theorem 2); the bound source is margin_delta_k"
+    },
+    "semantic_sources": {
+      "margin_delta_k": 0.1,
+      "rho": 1e-05
+    }
+  },
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "runtime_config_obfuscation": {
+    "basis_block_size": 8,
+    "free_noise_energy_ratio": 0.02,
+    "hidden_noise_dim": 8,
+    "lm_head_mode": "untied_deployed",
+    "max_condition_number": 10.0,
+    "noise_propagation_gamma": 0.5,
+    "refresh_mode": "per_request",
+    "rho_noise_bound": 1e-05,
+    "signal_noise_coupling_scale": 0.02,
+    "value_noise_dim_per_head": 2
+  },
+  "schema": "fastprove.noise_budget_record.v1",
+  "seed": 20260731,
+  "torch_version": "2.11.0"
+}

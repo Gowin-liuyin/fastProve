@@ -274,6 +274,80 @@ class StructuredBasis:
 
         return self.dense()[self.signal_dim :]
 
+    def free_noise_basis(self, *, rank_tolerance: float = 1e-9) -> torch.Tensor:
+        """Return an orthonormal row basis of ``ker(L)`` in FP64.
+
+        ``ker(L) = {n : n @ signal_projection() == 0}`` is the only noise
+        subspace that commutes exactly with a nonlinear checkpoint: the
+        checkpoint consumes ``h = c @ L``, so any perturbation lying in this
+        subspace leaves its input unchanged (theorem 3 of
+        ``docs/noise_placement_explained.tex``). In the current production
+        construction ``D == signal_dim``, hence ``dim ker(L) == noise_dim`` and
+        this basis spans the same subspace as the rows of :meth:`noise_rows`.
+        The SVD construction stays correct if a lifting refactor later changes
+        that relation.
+
+        Information-theoretic status: noise in this subspace contributes
+        exactly zero conditional entropy about ``h`` to an observer who knows
+        ``L``, because ``h = c @ L`` is a deterministic function of ``c`` and
+        the perturbation cancels identically (theorem 4; T4 in
+        ``results/raw/noise_ordering_analysis_20260919.json`` recovers ``h`` to
+        FP round-off after scaling in-cone noise by 1e12). This subspace MUST
+        NOT be described as a privacy source anywhere.
+
+        Offline conversion/diagnostic path only; never called from ``forward``.
+        """
+
+        projection = self.signal_projection()
+        # SVD of the [n, d] read matrix: left singular vectors beyond its rank
+        # span {n : n @ L == 0} exactly, up to FP64 round-off.
+        left, singular, _ = torch.linalg.svd(projection, full_matrices=True)
+        scale = float(singular.max()) if singular.numel() else 0.0
+        threshold = rank_tolerance * max(1.0, scale)
+        rank = int((singular > threshold).sum())
+        return left[:, rank:].T.contiguous()
+
+    def channel_decomposition(self, noise: torch.Tensor) -> dict[str, float]:
+        """Split a noise vector into channel 0 (``ker L``) and channel 1.
+
+        Diagnostic only; never called from a forward pass. FP64 arithmetic,
+        consistent with :meth:`dense_inverse`.
+
+        Returns Frobenius norms of the two orthogonal components, the induced
+        semantic error ``||n @ L||`` (theorem 2 of
+        ``docs/noise_placement_explained.tex``: outside noise perturbs the
+        decoded signal by exactly ``n L``), and ``free_fraction``, the energy
+        fraction lying in ``ker(L)``.
+
+        Bookkeeping rule: the channel 0 component buys no hiding whatsoever
+        (theorem 4); only channel 1 noise costs accuracy, and any channel 1
+        accuracy claim must carry a bound whose source (``margin_delta_k``,
+        ``value_diameter_D_V`` or ``rho``) is recorded by ``noise_budget.py``.
+        """
+
+        if noise.shape[-1] != self.total_dim:
+            raise ValueError("noise width does not match basis")
+        if not noise.is_floating_point():
+            raise ValueError("noise must have a floating dtype")
+        vector = noise.detach().to(dtype=_FP64)
+        basis = self.free_noise_basis()
+        free = (vector @ basis.T) @ basis
+        semantic = vector - free
+        induced = vector @ self.signal_projection()
+        free_norm = float(free.norm())
+        semantic_norm = float(semantic.norm())
+        total_energy = free_norm * free_norm + semantic_norm * semantic_norm
+        if total_energy == 0.0:
+            free_fraction = 0.0
+        else:
+            free_fraction = free_norm * free_norm / total_energy
+        return {
+            "free_component_norm": free_norm,
+            "semantic_component_norm": semantic_norm,
+            "induced_semantic_error_norm": float(induced.norm()),
+            "free_fraction": free_fraction,
+        }
+
     def validate_integrity(self) -> None:
         """Re-check factors and the dense round trip after construction.
 

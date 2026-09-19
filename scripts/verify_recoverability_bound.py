@@ -28,6 +28,7 @@ import argparse
 import json
 import platform
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
@@ -37,6 +38,7 @@ _REPO = Path(__file__).resolve().parents[1]
 if str(_REPO / "src") not in sys.path:
     sys.path.insert(0, str(_REPO / "src"))
 
+from fastprove.evaluation.attack_records import cost_dict
 from fastprove.transforms import generate_transform
 
 
@@ -343,6 +345,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         },
     }
 
+    started = time.perf_counter()
     known = attack_known_basis(
         signal_dim=args.signal_dim,
         noise_dim=args.noise_dim,
@@ -378,6 +381,27 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     payload["attacks"] = [known, projection, kp, geom]
     payload["sweeps"] = [r_sweep, xi_sweep]
+    attack_seconds = time.perf_counter() - started
+    ambient = args.signal_dim + args.noise_dim
+    observations = 128 * 7 + 256 * 3
+    payload["cost"] = cost_dict(
+        estimated_flops=(
+            2.0 * 128 * args.signal_dim * ambient * 7
+            + 2.0 * 256 * args.signal_dim * ambient
+            + 4.0 * 256 * ambient * ambient
+            + 2.0 * 128 * 128 * ambient
+        ),
+        wall_clock_seconds=attack_seconds,
+        peak_memory_bytes=int(8 * (128 * ambient + 256 * ambient + ambient**2)),
+        active_queries=0,
+        passive_observations=observations,
+        setup_seconds=attack_seconds,
+        per_target_seconds=attack_seconds / observations,
+        model=(
+            "known-basis matmuls + known-plaintext least squares + geometry "
+            "sweep; offline, query-free (coarse analytic upper estimate)"
+        ),
+    )
 
     print("== A. known basis (attacker holds M) ==")
     for row in known["measurements"]:

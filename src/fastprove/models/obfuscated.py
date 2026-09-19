@@ -13,6 +13,7 @@ import torch.nn.functional as F
 
 from ..config import ModelConfig, ObfuscationConfig
 from ..codec import TokenCodec, generate_token_codec
+from ..augmented_noise import deployed_free_noise_sigma
 from ..evaluation.metrics import tensor_error_metrics
 from ..layers.attention import (
     ApproximationConfig,
@@ -31,6 +32,7 @@ from ..layers.head import build_secure_lm_head
 from ..layers.rmsnorm import (
     apply_qk_orthogonal_after_rope,
     apply_rope,
+    perturb_rms_scale,
     rms_norm_fp32,
 )
 from ..layers.swiglu import generate_swiglu_transform
@@ -309,6 +311,16 @@ class ObfuscatedDecoderBlock(nn.Module):
         )
 
         gamma = obfuscation.noise_propagation_gamma
+        # Channel-0 refresh sigma and the (channel-1-adjacent) linear coupling
+        # scale now come from configuration; see
+        # ``augmented_noise.deployed_free_noise_sigma`` for the calibration
+        # convention that keeps ``free_noise_energy_ratio: 0.02`` bit-exact
+        # with the pre-S1 hard-coded value.
+        free_sigma = deployed_free_noise_sigma(
+            obfuscation.free_noise_energy_ratio, hidden_noise
+        )
+        coupling_scale = float(obfuscation.signal_noise_coupling_scale)
+        self._free_noise_sigma = float(free_sigma)
         self.register_buffer(
             "attention_noise_propagator",
             gamma
@@ -336,7 +348,7 @@ class ObfuscatedDecoderBlock(nn.Module):
                 hidden_noise,
                 seed=seed,
                 domain="block-%d-attention-noise-C" % self.layer_id,
-                scale=0.02,
+                scale=coupling_scale,
             ),
             persistent=False,
         )
@@ -358,7 +370,7 @@ class ObfuscatedDecoderBlock(nn.Module):
                 hidden_noise,
                 seed=seed,
                 domain="block-%d-swiglu-noise-C" % self.layer_id,
-                scale=0.02,
+                scale=coupling_scale,
             ),
             persistent=False,
         )
@@ -369,7 +381,7 @@ class ObfuscatedDecoderBlock(nn.Module):
                 hidden_noise,
                 seed=seed,
                 domain="block-%d-down-noise-C" % self.layer_id,
-                scale=0.02,
+                scale=coupling_scale,
             ),
             persistent=False,
         )
@@ -381,7 +393,7 @@ class ObfuscatedDecoderBlock(nn.Module):
                 hidden_noise,
                 seed=seed,
                 domain="block-%d-attention-xi" % self.layer_id,
-                scale=0.02,
+                scale=free_sigma,
             ).squeeze(0)
             if fixed
             else torch.zeros(hidden_noise),
@@ -394,7 +406,7 @@ class ObfuscatedDecoderBlock(nn.Module):
                 hidden_noise,
                 seed=seed,
                 domain="block-%d-down-xi" % self.layer_id,
-                scale=0.02,
+                scale=free_sigma,
             ).squeeze(0)
             if fixed
             else torch.zeros(hidden_noise),
@@ -679,11 +691,30 @@ class ObfuscatedDecoderBlock(nn.Module):
             self.obfuscation.hidden_noise_dim,
             generator=generator,
             dtype=torch.float32,
-        ) * (0.02 * self.refresh_noise_scale)
+        ) * (self._free_noise_sigma * self.refresh_noise_scale)
         rows = self._noise_rows.to(
             device=reference.device, dtype=reference.dtype
         )
         return sampled.to(device=reference.device, dtype=reference.dtype) @ rows
+
+    def _perturbed_rms_scale(
+        self,
+        mixed: torch.Tensor,
+        context: RequestContext,
+        domain: str,
+        positions: torch.Tensor,
+    ) -> torch.Tensor:
+        """Gram ρ plus optional bounded ρ noise; never reconstructs ``h``."""
+
+        clean = self._rms_scale(mixed, self.config.rms_epsilon)
+        perturbed = perturb_rms_scale(
+            clean,
+            self.obfuscation.rho_noise_bound,
+            context=context,
+            domain="block-%d-%s" % (self.layer_id, domain),
+            positions=positions,
+        )
+        return perturbed.to(device=mixed.device, dtype=mixed.dtype)
 
     def _run(
         self,
@@ -719,8 +750,8 @@ class ObfuscatedDecoderBlock(nn.Module):
             return tensor.to(device=mixed.device, dtype=mixed.dtype)
 
         # rho carries the RMSNorm statistic; FP32 reduction per AGENTS.md.
-        scale = self._rms_scale(mixed, self.config.rms_epsilon).to(
-            device=mixed.device, dtype=mixed.dtype
+        scale = self._perturbed_rms_scale(
+            mixed, request_context, "attn", positions
         )
         q_flat = (mixed @ cast("deployed_q")) / scale + cast("deployed_q_bias")
         k_flat = (mixed @ cast("deployed_k")) / scale + cast("deployed_k_bias")
@@ -873,8 +904,8 @@ class ObfuscatedDecoderBlock(nn.Module):
 
         # FFN segment, also without decoding.
         post_mixed = post_attention_state.mixed
-        scale_ffn = self._rms_scale(post_mixed, self.config.rms_epsilon).to(
-            device=post_mixed.device, dtype=post_mixed.dtype
+        scale_ffn = self._perturbed_rms_scale(
+            post_mixed, request_context, "ffn", positions
         )
         gate_prime = (post_mixed @ cast("deployed_gate")) / scale_ffn
         up_prime = (post_mixed @ cast("deployed_up")) / scale_ffn
@@ -1032,6 +1063,12 @@ class ObfuscatedTinyCausalLM(nn.Module):
         self.debug_enabled = bool(debug_enabled)
         self.noise_injection_enabled = True
         self.initial_refresh_noise_scale = 1.0
+        self._free_noise_sigma = float(
+            deployed_free_noise_sigma(
+                obfuscation.free_noise_energy_ratio,
+                obfuscation.hidden_noise_dim,
+            )
+        )
         if obfuscation.refresh_mode == "fixed_debug" and not self.debug_enabled:
             raise ValueError(
                 "fixed_debug refresh is debug-only; use per_request in production"
@@ -1053,7 +1090,7 @@ class ObfuscatedTinyCausalLM(nn.Module):
             obfuscation.hidden_noise_dim,
             seed=seed,
             domain="tiny-lm-noise-embedding",
-            scale=0.02,
+            scale=self._free_noise_sigma,
         )
         embedding_table = build_secure_embedding(
             embedding_math=plain.embedding.weight.detach().cpu().to(torch.float64),
@@ -1208,11 +1245,29 @@ class ObfuscatedTinyCausalLM(nn.Module):
             self.obfuscation.hidden_noise_dim,
             generator=generator,
             dtype=torch.float32,
-        ) * (0.02 * self.initial_refresh_noise_scale)
+        ) * (self._free_noise_sigma * self.initial_refresh_noise_scale)
         rows = self._noise_rows.to(
             device=reference.device, dtype=reference.dtype
         )
         return sampled.to(device=reference.device, dtype=reference.dtype) @ rows
+
+    def _perturbed_rms_scale(
+        self,
+        mixed: torch.Tensor,
+        context: RequestContext,
+        positions: torch.Tensor,
+    ) -> torch.Tensor:
+        """Final-norm Gram ρ plus optional bounded ρ noise."""
+
+        clean = self._rms_scale(mixed, self.config.rms_epsilon)
+        perturbed = perturb_rms_scale(
+            clean,
+            self.obfuscation.rho_noise_bound,
+            context=context,
+            domain="tiny-lm-final",
+            positions=positions,
+        )
+        return perturbed.to(device=mixed.device, dtype=mixed.dtype)
 
     def _run(
         self,
@@ -1305,8 +1360,8 @@ class ObfuscatedTinyCausalLM(nn.Module):
                     state = block_result
         # Final norm + head without decoding: rho from the blockwise Gram, and
         # P diag(gamma_final) folded into the head.
-        scale = self._rms_scale(state.mixed, self.config.rms_epsilon).to(
-            device=state.mixed.device, dtype=state.mixed.dtype
+        scale = self._perturbed_rms_scale(
+            state.mixed, request_context, positions
         )
         head = self.deployed_head.to(
             device=state.mixed.device, dtype=state.mixed.dtype

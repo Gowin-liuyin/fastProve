@@ -3,7 +3,7 @@
   "environment": {
     "python_version": "3.13.12",
     "torch_version": "2.11.0",
-    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
     "arithmetic_dtype": "float64"
   },
   "config": {
@@ -72,7 +72,7 @@
         {
           "n_pairs": 256,
           "augmented_dim": 264,
-          "held_out_relative_l2_error": 0.2606026014344968
+          "held_out_relative_l2_error": 0.2606026014344966
         },
         {
           "n_pairs": 264,
@@ -160,6 +160,17 @@
       ]
     }
   ],
+  "cost": {
+    "estimated_flops": 235732992.0,
+    "wall_clock_seconds": 0.20876387500902638,
+    "peak_memory_bytes": 1368576,
+    "active_queries": 0,
+    "passive_observations": 1664,
+    "training_data_records": 0,
+    "setup_seconds": 0.20876387500902638,
+    "per_target_seconds": 0.0001254590595006168,
+    "model": "known-basis matmuls + known-plaintext least squares + geometry sweep; offline, query-free (coarse analytic upper estimate)"
+  },
   "bound_reproduced": true,
   "failures": []
 }
