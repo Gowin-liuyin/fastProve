@@ -1,5 +1,10 @@
 # fastProve 混淆推理精度评测方案（终版）
 
+状态：CURRENT
+日期：2026-08-01
+上游依据：AGENTS.md、docs/CLEANUP_PLAN.md
+适用范围：fastProve 实验验收的权威评测方案
+
 > **隶属项目**：fastProve（协变混淆 Transformer 推理原型）
 > **创建日期**：2026-08-01
 > **地位**：本文件是 fastProve 实验验收的**权威评测方案**，替代文献调研文档 `plaintext_vs_obfuscated_accuracy_survey.md` 第 8 节的通用骨架。

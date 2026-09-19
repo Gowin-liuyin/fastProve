@@ -1,6 +1,13 @@
+> 旧框架，禁止复活：生产路径是 D = d；不得引用 expanded_concat/expanded_full/P̂/a/B_comp。
+
+状态：HISTORICAL-已归档
+日期：2026-09-16
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # 增广协变推理 v2：工程实施与验收指南
 
-日期：2026-09-16。对应 [方案](../DERIVATION_PACKAGE.md)、[证明 P1–P15](../PROOF_PACKAGE.md) 与 [攻击工作因子合同](work_factor_security.md)。
+日期：2026-09-16。对应 [方案](2026-09-16_DERIVATION_PACKAGE.md)、[证明 P1–P15](2026-09-16_PROOF_PACKAGE.md) 与 [攻击工作因子合同](../work_factor_security.md)。
 
 本文是后续实现合同，不表示下列新接口已经存在。本次只交付设计、证明和独立小矩阵检查；没有替换生产 forward、修复历史 runner 或执行预训练模型评测。
 
@@ -131,7 +138,7 @@ Top-k 的数学 margin 保证针对参与预算计算的分数。FP32 先记录�
 
 ### G1：修复阶段 A，完成矩阵与刷新闭环
 
-先修 [旧复核 A1–A4](augmented_noise_stage_a_review.md)：
+先修 [旧复核 A1–A4](2026-09-14_augmented_noise_stage_a_review.md)：
 
 1. 每个配置实际执行 FP64 reference 与 FP32 deployment，两条记录分别给 dtype 和误差，FP32 gate 只能读取后者。
 2. $H=\sqrt{\operatorname{mean}\sum h_{cal}^2}$，$\sigma_e=\beta H/\sqrt r$；输入/输出噪声比例分别用同检查点的信号，不混用输入 $h$ 与输出 $e'$。
@@ -180,7 +187,7 @@ Qwen/Llama 实际模型先与官方实现比较 logits/cache/RoPE/偏置/权重�
 
 统计 token top-1/5、候选集合覆盖与大小、序列恢复、相对频率基线和不确定性；多个 token 属于同一 prompt 时，优先按 prompt/密钥聚类 bootstrap，不把所有位置当完全独立样本。不同视图分别报告，不能用 transcript 防御代表 cloud 防御。
 
-按 [工作因子合同](work_factor_security.md) 对每个攻击拆分 `setup` 与 `per_target` 成本，报告 $m\in\{1,10^2,10^4\}$ 或冻结后的实际业务规模。成本原始向量至少含 FLOPs/MACs、参考硬件时间、峰值内存、查询、观测和攻击训练数据；主比较在相同恢复目标 $\rho$ 上计算 $\widehat W$、倍率 $G$ 和 $\log_2G$。未在预算内达到目标的点标为右删失，不能把预算上限写成实际攻击成本。
+按 [工作因子合同](../work_factor_security.md) 对每个攻击拆分 `setup` 与 `per_target` 成本，报告 $m\in\{1,10^2,10^4\}$ 或冻结后的实际业务规模。成本原始向量至少含 FLOPs/MACs、参考硬件时间、峰值内存、查询、观测和攻击训练数据；主比较在相同恢复目标 $\rho$ 上计算 $\widehat W$、倍率 $G$ 和 $\log_2G$。未在预算内达到目标的点标为右删失，不能把预算上限写成实际攻击成本。
 
 攻击调度顺序固定为 Tier 0 代数/统计、Tier 1 优化、Tier 2 学习型。每一层都允许攻击者选择本层最优方法，最终取所有层中成本最低者。超参搜索、失败初始化和训练数据生成均计入攻击总成本；预训练通用公开攻击器的成本另列，并报告其是否能跨 key 迁移。
 
@@ -239,7 +246,7 @@ success/failure/skipped 每个期望 spec 都有一条终态记录。私有种�
 
 文件已存在时重放不指定输出即可，不删除原始记录。原始记录含 seed、解释器、NumPy 版本、实际 dtype、逐项数值与脚本 SHA256。实际执行结果以该 JSON 为准；不沿用旧“338 passed”作为本次结果。
 
-本次实际结果：[数学检查 raw](../results/raw/expanded_augmentation_v2_math_check_20260916.json)，40 项全部通过，包含 96 组 Softmax 扰动实例。示例取 $d=4,D=8,r=2$：concat 的总体秩为 $6=d+r$、零空间维度为 $4=D-d$；full 加入 $k=4$ 个补空间自由度后总体秩为 $10=D+r$，语义读取最大误差 `2.6645352591003757e-15`。扩维线性层 FP64 最大误差为 `1.0658141036401503e-14`、实际 FP32 signal max abs error 为 `1.1920928955078125e-6`；跨基残差 FP64 最大误差为 `5.329070518200751e-15`。这些数值只适用于脚本中的尺寸、种子和计算路径。
+本次实际结果：[数学检查 raw../../results/raw/expanded_augmentation_v2_math_check_20260916.json)，40 项全部通过，包含 96 组 Softmax 扰动实例。示例取 $d=4,D=8,r=2$：concat 的总体秩为 $6=d+r$、零空间维度为 $4=D-d$；full 加入 $k=4$ 个补空间自由度后总体秩为 $10=D+r$，语义读取最大误差 `2.6645352591003757e-15`。扩维线性层 FP64 最大误差为 `1.0658141036401503e-14`、实际 FP32 signal max abs error 为 `1.1920928955078125e-6`；跨基残差 FP64 最大误差为 `5.329070518200751e-15`。这些数值只适用于脚本中的尺寸、种子和计算路径。
 
 未执行：生产 backend 回归、完整 Transformer/LM 运行、真实 bundle 攻击、预训练模型 accuracy、MPS/CUDA 测试和性能基准。P9 的完整网络结论依靠文中的模块归纳证明，本次数值脚本只检查局部构件；P12 的全网误差常数仍未认证。
 

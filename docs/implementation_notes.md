@@ -1,10 +1,15 @@
 # Implementation Notes
 
+状态：CURRENT
+日期：2026-09-19
+上游依据：AGENTS.md、docs/CLEANUP_PLAN.md
+适用范围：环境审计与分阶段实现记录
+
 ## Phase 0 environment audit
 
 Audit date: 2026-07-31 (Asia/Shanghai).
 
-The repository started with only `AGENTS.md` and `START_PROMPT.md`. It was not a
+The repository started with only `AGENTS.md` and `docs/archive/2026-09-19_START_PROMPT.md`. It was not a
 Git repository, so there is no commit or dirty-worktree state to report. The
 implementation is being created in place without silently initializing Git.
 
@@ -126,7 +131,7 @@ covariant scheme. Such weights must **never** be reported as fastProve
 structural/full/exact results. Primary evaluation must start from **plaintext
 base weights**, convert with **this repository’s** conversion path and master
 keys, then compare under the protocol F0–P3 matrix. See
-`docs/experiment_plan.md` §1.0.
+`docs/archive/2026-09-19_experiment_plan.md` §1.0.
 
 Also note in README/evals reports: terminology remains *obfuscated-state relative
 to plaintext* (real-valued augmented covariant obfuscation), not ciphertext.
@@ -268,7 +273,7 @@ fails before writing a ready manifest.
 The runtime checkpoint path is device-aware: offline transform generation and
 inversion remain FP64, CPU checkpoints may use FP64 arithmetic, and MPS/CUDA
 checkpoints use FP32 because MPS rejects FP64 tensors. The MPS path is covered
-by `tests/test_mps_runtime.py`; this prevents a no-weight preflight from
+by `tests/models/test_mps_runtime.py`; this prevents a no-weight preflight from
 mistaking an unsupported FP64 checkpoint operation for a usable accelerator.
 
 The current no-weight admission manifests are the explicit-device refreshes
@@ -290,8 +295,9 @@ does not count as a model evaluation or populate any accuracy table.
 
 Packaging audit: the stock Xcode Python environment has pip 21.2.4 and
 setuptools 58.0.4. Its editable PEP 660 path fails (and legacy `develop`
-tries to write the system framework directory), so `setup.py` now carries
-explicit legacy metadata and the supported installation command on this host
+tries to write the system framework directory), so a legacy setup.py shim
+carried explicit metadata until P1 removed it (metadata now lives in
+`pyproject.toml`), and the supported installation command on this host
 is `python3 -m pip install --user --no-build-isolation '.[test,pretrained-lite]'`. A regular user install was
 built and imported successfully; modern virtualenvs may continue to use
 editable mode.
@@ -463,7 +469,7 @@ CPU，prefill，self CPU time，共 29.2ms）：
 - `src/fastprove/coa_views.py`（新文件）：`transcript_coa` / `cloud_coa` 两视图输入白名单契约与 manifest 落盘（方案 4.3 节）。
 - `configs/augmented_noise_kernel.yaml`：内核实验配置草案（矩阵族、r、κ、β、γ、攻击视图清单）。
 - `scripts/run_augmented_noise_kernel.py`：阶段 A 闭环脚本，写 `results/raw/augmented_noise_kernel/kernel_records.jsonl`。
-- `tests/test_augmented_noise_kernel.py`（18 项）与 `tests/test_coa_view_contract.py`（7 项）。
+- `tests/math/test_augmented_noise_kernel.py`（18 项）与 `tests/security/test_coa_view_contract.py`（7 项）。
 
 ### 数值验证结果（CPU、FP64 转换、FP32 部署门禁）
 
@@ -484,14 +490,14 @@ CPU，prefill，self CPU time，共 29.2ms）：
 
 ## v2 数学方案与实施指南环境记录（2026-09-16）
 
-本次为文档与独立 CPU 小矩阵检查，不是上述阶段 A runner 的修复或重新验收。阶段 A 历史记录的 dtype、β 标定、域分离、YAML 接入问题仍应参照 `docs/augmented_noise_stage_a_review.md` 和 `docs/AUGMENTED_NOISE_HANDOFF_20260915.md`，不能从本次检查推断已修复。
+本次为文档与独立 CPU 小矩阵检查，不是上述阶段 A runner 的修复或重新验收。阶段 A 历史记录的 dtype、β 标定、域分离、YAML 接入问题仍应参照 `docs/archive/2026-09-14_augmented_noise_stage_a_review.md` 和 `docs/archive/2026-09-15_AUGMENTED_NOISE_HANDOFF_20260915.md`，不能从本次检查推断已修复。
 
 - Python：`/Users/yin/miniconda3/bin/python`，3.13.12；NumPy 2.4.4；PyTorch 2.11.0。
 - OS：macOS 26.6.2 arm64；RAM 16 GiB；检查时磁盘剩余 178,448,125,952 字节。
 - CUDA 不可用，未找到 nvidia-smi；MPS 可用但本次没有使用。执行设备为 CPU。
 - 已确认本地 Qwen 1.5B 与 Llama 3.2 3B 的 base_model 目录及 `results/raw/real_scenario_prompts_1500.jsonl` 存在；未载入、校验权重或认定该语料适合正式评测。
 - 依赖计划：使用已有 NumPy 运行数学 oracle；后续实现复用现有 PyTorch/YAML/pytest，不新增依赖、不下载模型数据。
-- 新方案入口：`DERIVATION_PACKAGE.md`；证明：`PROOF_PACKAGE.md`；工程合同：`docs/augmented_covariant_implementation_v2.md`。
+- 新方案入口（旧框架，已归档）：`docs/archive/2026-09-16_DERIVATION_PACKAGE.md`；证明：`docs/archive/2026-09-16_PROOF_PACKAGE.md`；工程合同：`docs/archive/2026-09-16_augmented_covariant_implementation_v2.md`。
 - 新数学检查脚本：`docs/verification/verify_augmented_covariant_v2.py`；扩维后 concat/full 两个方案的更新记录：`results/raw/expanded_augmentation_v2_math_check_20260916.json`。该记录不代表 fastprove runtime 测试或模型/安全评测；此前 compact-primary 和 concat-only 记录保留为历史文件，不作为当前方案验收。
 
 ## 代码结构梳理 P0：环境审计与数值基线（2026-09-19）

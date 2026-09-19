@@ -1,5 +1,10 @@
 # fastProve 问题清单
 
+状态：CURRENT
+日期：2026-09-19
+上游依据：AGENTS.md、docs/IMPLEMENTATION_PROMPT_dual_channel.md
+适用范围：全部已知问题的正式清单：构造固有泄漏 / 实现缺陷 / 证据链缺口
+
 > 本文档记录实现过程中发现的**全部问题**，按严重度排序。每条包含：现象、根因、
 > 实测数据、复现命令、工程可消除性、以及它落在哪一层（数学 / 实现 / 目标）。
 >
@@ -9,7 +14,9 @@
 > - 我自己在分析过程中犯的错误也记录在案（§7），因为它们影响过判断。
 >
 > 最后更新：部署折衷为 `per_request` ξ 刷新 + 有界 `ρ` 噪声；exact 仍是
-> `rho_noise_bound: 0` 的正确性路径。
+> `rho_noise_bound: 0` 的正确性路径。P8a（2026-09-19）新增 §3.5：72 点 sweep
+> 的 plaintext/exact 点会从 `base_config: configs/tiny_approx.yaml` 继承
+> `rho_noise_bound: 1e-5` 与 `per_request`，exact 正确性仍只对 `tiny_exact`（ρ=0）成立。
 
 ---
 
@@ -20,7 +27,7 @@
 | 类别 | 数量 | 是否可修 | 说明 |
 |---|---:|---|---|
 | **A. 构造的固有泄漏** | 7 条 | ❌ 不可用工程手段消除 | 由「输出精确 + 低开销 + 无可信边界」三个约束强制 |
-| **B. 实现缺陷** | 4 条 | ✅ 3 条已修复；1 条待决策（§3.4） | 普通 bug，含一条我自己文档引入的 |
+| **B. 实现缺陷** | 5 条 | ✅ 3 条已修复；2 条待决策（§3.4、§3.5） | 普通 bug，含一条我自己文档引入的 |
 | **C. 证据链缺口** | 4 条 | ⏳ 待补 | 不是错误，是尚未验证的部分 |
 
 **最重要的一条**（§1.1）：服务端要算对 RMSNorm 就必须算对 `ρ`，而 `ρ` 代数上就是
@@ -367,7 +374,7 @@ PYTHONPATH=src python scripts/verify_gram_leakage.py \
 它在 RoPE 之后应用，无法吸收进任何部署权重。后果：`Q'K'ᵀ = QKᵀ` 的几何
 （分数多集与排序结构）对服务端可见。
 
-已在 `runtime_config.json` 的 `server_visible_key_material` 中显式标注
+已在转换产物的 runtime_config.json 的 `server_visible_key_material` 中显式标注
 （**不允许改名规避检查**）。
 
 ### 2.4 tied embedding 使峰值内存超出 5% 目标
@@ -384,7 +391,7 @@ Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重。`untied_deployed` 模�
 
 ---
 
-## 3. 类别 B：实现缺陷（3 条已修复，1 条待决策）
+## 3. 类别 B：实现缺陷（3 条已修复，2 条待决策）
 
 ### 3.1 【我的文档引入】`test_no_decode_in_forward.py` 是空测试
 
@@ -395,7 +402,7 @@ Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重。`untied_deployed` 模�
 
 **根因**
 
-`docs/IMPLEMENTATION_PLAN.md` 早期版本给出的静态 AST 实现有两处缺陷：
+`docs/archive/2026-09-19_IMPLEMENTATION_PLAN.md` 早期版本给出的静态 AST 实现有两处缺陷：
 1. 最后那行宽泛过滤 `if "_debug_unmix" not in item` 把真正的泄漏也一起放过
 2. 实际方法名 `_debug_basis_unmix` 根本不在禁止列表里
 
@@ -498,7 +505,7 @@ n ∈ {500, 1000, 1838, 4000, 10000} 的抽样 k，共 21253 个 `(k, n)`）
   `evals.stats.wilson_interval`，则 `accuracy_ci95` 数值改变 ~1e-10，历史工件不动；
 - 方案 2：让 `evals.stats` 改用 `z=1.959963985`，改变的是 evals 统计用户；
 - 方案 3：两边新增共享函数并让 `scoring` 单向复用 `evals.stats`，同时把定义写进
-  README/`docs/IMPLEMENTATION_PLAN.md`。
+  README/`docs/archive/2026-09-19_IMPLEMENTATION_PLAN.md`。
 
 在决策落地前，禁止在报告或测试中假设两份定义逐位一致。
 
@@ -517,6 +524,98 @@ PY
 
 **工程可消除性**：✅ 可消除，但必须是一次显式取舍——改任何一边都会让已记录工件
 在 1e-10 量级上变化，因此不允许在结构重构里静默统一。
+
+### 3.5 【待决策，未修复】sweep 的 plaintext/exact 点继承非零 `ρ` 噪声与 `per_request` 刷新
+
+**现象**
+
+`configs/eval_sweep.yaml` 的 `base_config` 指向 `configs/tiny_approx.yaml`（部署
+折衷配置）。`src/fastprove/evaluation/spec_config.py:13 _config_for_spec()` 只替换
+`attention`（mode/tau/alpha/top_k）、`evaluation`、`runtime` 三块，**不重置**
+`obfuscation.rho_noise_bound` 与 `obfuscation.refresh_mode`。于是所有 72 个 sweep
+spec 都继承基座的 ρ=1e-5、`per_request`，`plaintext` 与 `exact` 两个基线点也不例外。
+
+**实测数据**（2026-09-19，Python 3.13.12 / torch 2.11.0；遍历
+`enumerate_sweep_specs(configs/eval_sweep.yaml)` 全部 72 条后调用 `_config_for_spec`，
+打印 `(mode, rho_noise_bound, refresh_mode)`）
+
+| mode | `rho_noise_bound` | `refresh_mode` | 条数 |
+|---|---:|---|---:|
+| `plaintext` | `1e-05` | `per_request` | 1 |
+| `exact` | `1e-05` | `per_request` | 1 |
+| `topk_preserving` | `1e-05` | `per_request` | 63 |
+| `free_bounded` | `1e-05` | `per_request` | 7 |
+
+exact 正确性合同规定 `rho_noise_bound: 0`，且 `configs/tiny_exact.yaml` 用的是
+`fixed_debug`。已落盘的 exact 门禁（`results/raw/exact_gate_D1.json`）走的是
+`tiny_exact`，不受本条影响；受影响的只是：**任何按当前配置重跑的 72 点 sweep，
+其 plaintext/exact 基线点都不是 exact 正确性意义上的 ρ=0 配置**。
+
+对已落盘的历史 sweep 记录（`results/raw/eval_sweep.jsonl`、
+`eval_sweep_dtype_fixed.jsonl`），无需改判：`eval_sweep.yaml` 的注释自述该记录产生于
+`rho_noise_bound` 字段出现之前（该字段由 5e19c43「S0–S5」引入），且 run record 的
+`config` 只带 `base_config_sha256`，不带 ρ 值本身。
+
+**根因**
+
+两处叠加：
+
+1. `_config_for_spec` 的替换范围只有 attention/evaluation/runtime，`obfuscation`
+   整体来自 base_config；
+2. `eval_sweep.yaml` 的注释「Exact correctness uses configs/tiny_exact.yaml
+   (rho_noise_bound: 0)」描述的是**正确性门禁**的配置来源，而不是 sweep 基线的
+   构造链；注释与 `base_config` 的实际继承行为因此表面冲突。
+
+**同一文件的两个待查项**
+
+- `execution.run_in_current_prototype_pass: false` 是过期门标志（原型 pass 早已执行）。
+  `evaluation/sweep.py` 的枚举器不读 `execution` 段，因此它当前不产生行为，只是
+  历史注释；但如果将来有人按它判断「sweep 未运行」，会与已落盘的 72 条成功记录矛盾。
+- `base_config` 继承与 exact-rho 注释的冲突见上「根因」。
+
+**复现**
+
+```bash
+PYTHONPATH=src python - <<'PY'
+from pathlib import Path
+import yaml
+from fastprove.config import load_config
+from fastprove.evaluation.sweep import enumerate_sweep_specs
+from fastprove.evaluation.spec_config import _config_for_spec
+
+sweep = Path("configs/eval_sweep.yaml")
+root = yaml.safe_load(sweep.read_text())
+base = load_config(Path(root["base_config"]))
+seen = {}
+for spec in enumerate_sweep_specs(sweep):
+    cfg = _config_for_spec(base, spec, root.get("evaluation_override"))
+    key = (spec.mode, cfg.obfuscation.rho_noise_bound, cfg.obfuscation.refresh_mode)
+    seen[key] = seen.get(key, 0) + 1
+for key, count in sorted(seen.items()):
+    print(key, count)
+# ('exact', 1e-05, 'per_request') 1
+# ('free_bounded', 1e-05, 'per_request') 7
+# ('plaintext', 1e-05, 'per_request') 1
+# ('topk_preserving', 1e-05, 'per_request') 63
+PY
+```
+
+**选项（本条只登记，不修改任何 config 或代码）**
+
+1. 在 `_config_for_spec` 内按 mode 显式重置：`plaintext`/`exact` 强制
+   `rho_noise_bound=0`、`refresh_mode=fixed_debug`，近似点保留部署折衷；
+2. 新增 `configs/eval_sweep_exact_baseline.yaml`（ρ=0、`fixed_debug`）作 sweep 的
+   base，与 `tiny_approx` 解耦，run record 里已有 `base_config_sha256` 可区分；
+3. 维持现状，但在 README/report 中把 sweep 的 plaintext/exact 明确标注为
+   「部署模式（ρ=1e-5）基线」，并把 exact 正确性证据继续绑定到 `tiny_exact` 门禁；
+4. 若认为 ρ=1e-5 应当进入基线，则需要重跑受影响点并更新结果表——这是行为与数字
+   变更，不在文档重构范围内。
+
+在决策落地前，禁止把当前配置重跑出来的 plaintext/exact 点描述为「与
+`configs/tiny_exact.yaml` 等价的 ρ=0 基线」。
+
+**工程可消除性**：✅ 可消除（选项 1/2），但改变 sweep 的执行语义与已记录溯源，
+需要显式决策，不允许在文档清理里静默修改。
 
 ---
 

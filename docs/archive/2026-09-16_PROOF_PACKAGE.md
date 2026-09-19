@@ -1,6 +1,13 @@
+> 旧框架，禁止复活：生产路径是 D = d；不得引用 expanded_concat/expanded_full/P̂/a/B_comp。
+
+状态：HISTORICAL-已归档
+日期：2026-09-16
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # 增广协变推理 v2：数学证明包
 
-日期：2026-09-16。配套：[方案](DERIVATION_PACKAGE.md) · [实施指南](docs/augmented_covariant_implementation_v2.md)。
+日期：2026-09-16。配套：[方案](2026-09-16_DERIVATION_PACKAGE.md) · [实施指南](2026-09-16_augmented_covariant_implementation_v2.md)。
 
 ## Claim：准确命题
 

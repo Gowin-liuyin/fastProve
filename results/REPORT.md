@@ -1,6 +1,11 @@
 # fastProve 阶段 A–D 结果报告（2026-08-11）
 
-> 本报告覆盖 `docs/IMPLEMENTATION_PLAN.md` 阶段 A–D 的实测结果。所有数字
+状态：CURRENT
+日期：2026-08-11
+上游依据：docs/archive/2026-09-19_IMPLEMENTATION_PLAN.md、results/raw/
+适用范围：阶段 A–D 实测结果报告（随机 tiny 正确性证据，非语言能力证据）
+
+> 本报告覆盖 `docs/archive/2026-09-19_IMPLEMENTATION_PLAN.md` 阶段 A–D 的实测结果。所有数字
 > 均可由本仓库命令与 `results/raw/` 原始文件复现。**没有可用作语言模型
 > 精度证据的预训练 checkpoint**（本地仅有 BERT/GPT-2/whisper/clip 缓存，
 > Llama 系只有元数据桩）：本报告的全部端到端数字来自**随机 tiny 模型，
@@ -46,14 +51,14 @@ PYTHONPATH=src:evals python -m evals --base-config configs/tiny_exact.yaml \
 ```
 
 词表侧：100 条随机 prompt 的 greedy token 序列经逆置换后与明文
-**100% 一致**（`tests/test_secure_lm_head.py::test_greedy_token_sequence_matches_plaintext_after_decode`）。
-服务端目录可脱离客户端密钥独立运行（`tests/test_converter.py`）。
+**100% 一致**（`tests/models/test_secure_lm_head.py::test_greedy_token_sequence_matches_plaintext_after_decode`）。
+服务端目录可脱离客户端密钥独立运行（`tests/deployment/test_converter.py`）。
 
 ### 2.2 浮点偏差
 
 - 块对角 Gram 归约是精度瓶颈：`ρ` 的 FP32 相对误差 1.9e-7（FP64 对照
   2.4e-16），因此 block 恒等式的可达容差 ≈ 1e-5
-  （`tests/test_deployed_weights.py`，`_TOL = 1e-5` 为实测依据）。
+  （`tests/layers/test_deployed_weights.py`，`_TOL = 1e-5` 为实测依据）。
 - exact 模式 logits 偏差随阶段变化（`results/raw/exact_tolerance_*.json`，
   由 `scripts/record_exact_tolerance.py` 生成）：
 
@@ -141,8 +146,8 @@ decode +48.0%；TTFT（prefill 代理）25.9ms vs 19.3ms；TPOT 9.7ms vs
 1. 块对角基把已知明文恢复 `M` 的样本代价从 O(n) 降到 O(b)/块（A2）。
 2. `N` 进入部署权重：观察者可恢复噪声态 `e`（up to 可逆 r×r），
    不可规避（B1.3）。
-3. `common_qk` 服务端可见：QK 几何结构不受保护，`runtime_config.json`
-   显式标注（C4.3）。
+3. `common_qk` 服务端可见：QK 几何结构不受保护，服务端转换产物的
+   runtime_config.json（运行时生成、不入库）显式标注（C4.3）。
 4. `ρ` 的 FP32 精度上界 `‖e‖/‖h‖ ≤ 30`；加大噪声会污染信号路径（A2.4）。
 5. tied-embedding 内存取舍与 `fused_norm_head` 的显式拒绝（B4.2）。
 
@@ -158,7 +163,7 @@ decode +48.0%；TTFT（prefill 代理）25.9ms vs 19.3ms；TPOT 9.7ms vs
   均依赖它。
 - 融合 kernel（阶段 E）：未实现；所有性能数字是 eager 参考。
 - MPS/CUDA 上的性能记录：未做（MPS 有单测覆盖正确性；
-  `tests/test_mps_runtime.py` 通过）。
+  `tests/models/test_mps_runtime.py` 通过）。
 - BF16 门禁：按设计不作为 exact 门禁，仅作为独立 condition 记录
   （`exact_gate_D1_bf16.json`）。
 
@@ -166,7 +171,7 @@ decode +48.0%；TTFT（prefill 代理）25.9ms vs 19.3ms；TPOT 9.7ms vs
 
 ```bash
 python docs/design_identity_check.py                 # 13 项恒等式
-python -m pytest -q                                  # 297 passed
+python -m pytest -q                                  # 当时 297 passed（P7 重组后当前为 399 passed）
 PYTHONPATH=src:evals python -m evals --base-config configs/tiny_exact.yaml \
     --config evals/configs/P2.yaml --precision fp32 --keys 1 --layers 1,2,3,4 \
     --check-gates --output results/raw/exact_gate_D1.json
@@ -187,7 +192,8 @@ PYTHONPATH=src python scripts/record_performance_D2.py --output results/raw/perf
 - `results/raw/overhead_B7_d{512,1024,2048}.json`
 - `results/raw/performance_D2.json`
 - `results/raw/recoverability_bound.json`（既有，5bis 复核）
-- 源码测试：`tests/`（297 项，覆盖 A5–D1 全部数学恒等式与方向测试）
+- 源码测试：`tests/`（当时 297 项，覆盖 A5–D1 全部数学恒等式与方向测试；P7 重组后
+  当前为 399 项，目录见 `docs/STATUS.md`）
 
 ## 6. 部署折衷（`per_request` ξ + 有界 ρ 噪声）
 
@@ -214,7 +220,7 @@ PYTHONPATH=src python scripts/record_performance_D2.py --output results/raw/perf
 复现：
 
 ```bash
-PYTHONPATH=src python -m pytest -q tests/test_rho_noise.py
+PYTHONPATH=src python -m pytest -q tests/security/test_rho_noise.py
 python docs/design_identity_check.py
 PYTHONPATH=src python scripts/measure_overhead.py --output results/raw/overhead_compromise.json
 ```

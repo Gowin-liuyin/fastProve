@@ -1,3 +1,10 @@
+> HISTORICAL-已归档：阶段 A 复核记录，所述缺陷已修复或被后续交接覆盖；当前口径见 docs/INDEX.md。
+
+状态：HISTORICAL-已归档
+日期：2026-09-14
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # 增广噪声阶段 A 复核与 B/C 进入条件
 
 日期：2026-09-14。依据：当前代码、`results/raw/augmented_noise_kernel/kernel_records.jsonl` 和本次独立运行的 25 项新增测试。

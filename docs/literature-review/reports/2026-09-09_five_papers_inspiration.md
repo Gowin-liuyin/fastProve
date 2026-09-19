@@ -1,5 +1,10 @@
 # 五篇论文的启发分析（fastProve 视角）
 
+状态：CURRENT
+日期：2026-09-09
+上游依据：docs/literature-review/LITERATURE_INDEX.md
+适用范围：五篇论文对 fastProve 的启发分析（文献调研记录）
+
 日期：2026-09-09
 对象：covariant obfuscation of Transformer inference 原型
 
@@ -63,7 +68,7 @@
 DeepInvert 的 Lemma 1 本质是「各向同性零均值噪声 + 低秩信号 ⇒ 保留 top-K 主成分即可提 SNR」。而 fastProve 的结构恰恰是 \(c=[h,e]M\)，噪声只占 \(r\ll d\) 维子空间，信号占 \(d\) 维。攻击者只要能收集足够多 unlabeled 的 \(c\)，做一个 PCA/ICA 式子空间分离就能把 \(h\) 分量捞出来——甚至不需要知道 \(M\)（只需估计信号主子空间）。**这条必须立刻做实验验证**，因为它可能直接决定 approximate 模式的安全上限。
 
 **(b) 把 DeepInvert 改造成 fastProve 的自适应攻击基线。**
-你的威胁模型（honest-but-curious、可观测持久化张量）恰好满足它的前提：攻击者能拿到大量无标注混淆态。建议作为攻击强度上限写进 `threat_model.md` 与 `experiment_plan.md`。改造点很小：把「拿第 l 层 hidden state 预测 token id」换成「拿 checkpoint 处的 \(c\) 预测 token id / logits」。
+你的威胁模型（honest-but-curious、可观测持久化张量）恰好满足它的前提：攻击者能拿到大量无标注混淆态。建议作为攻击强度上限写进 `threat_model.md` 与 `docs/archive/2026-09-19_experiment_plan.md`。改造点很小：把「拿第 l 层 hidden state 预测 token id」换成「拿 checkpoint 处的 \(c\) 预测 token id / logits」。
 
 **(c) 评估指标体系照抄它。**
 top-1 token recovery（主指标）+ Sensitive Top-1（用 LLM 标注敏感 token，作为「是否真的保护了要保护的东西」的校验）+ ROUGE-L/BLEU（语义保真度）。并且**必须同时报告效用崩塌点**：抗攻击时的任务精度是否还非零。这正是审稿人会追问的对照实验，也是它整篇文章的立论方式。

@@ -1,6 +1,11 @@
 # fastProve v3：预算化恢复难度与攻击工作因子
 
-日期：2026-09-16。配套：[方案](../DERIVATION_PACKAGE.md) · [证明](../PROOF_PACKAGE.md) · [实施指南](augmented_covariant_implementation_v2.md)。
+状态：CURRENT
+日期：2026-09-16
+上游依据：AGENTS.md、docs/CLEANUP_PLAN.md
+适用范围：预算化恢复难度与攻击工作因子合同
+
+日期：2026-09-16。配套：[方案（已归档）](archive/2026-09-16_DERIVATION_PACKAGE.md) · [证明（已归档）](archive/2026-09-16_PROOF_PACKAGE.md) · [实施指南（已归档）](archive/2026-09-16_augmented_covariant_implementation_v2.md)。
 
 ## 1. Problem Anchor
 

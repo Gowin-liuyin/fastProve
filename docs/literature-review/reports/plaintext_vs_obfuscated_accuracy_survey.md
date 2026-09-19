@@ -1,5 +1,10 @@
 # Plaintext vs. Obfuscated Inference Accuracy: A Literature Survey
 
+状态：CURRENT（第 8 节通用骨架已被 evaluation_protocol_fastProve.md 取代）
+日期：2026-08-01
+上游依据：docs/literature-review/LITERATURE_INDEX.md
+适用范围：明文与混淆推理精度的文献综述
+
 > **Project:** fastProve — a covariant obfuscation prototype for Transformer inference  
 > **Date:** 2026-08-01  
 > **Data-source disclaimer:** All numbers in this report were extracted from local PDFs verified via `pdftotext`. No figures were fabricated. Where a PDF was unreadable or a datum could not be confirmed, it is marked `[unverified]` rather than invented.  

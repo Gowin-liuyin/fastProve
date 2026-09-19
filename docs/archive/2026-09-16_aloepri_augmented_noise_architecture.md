@@ -1,12 +1,19 @@
+> 旧框架，禁止复活：生产路径是 D = d；不得引用 expanded_concat/expanded_full/P̂/a/B_comp。
+
+状态：HISTORICAL-已归档
+日期：2026-09-16
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # 基于 AloePri 升维流形的增广带噪协变混淆架构技术报告与方案论证
 
 > **状态：已由 2026-09-16 修订方案取代。** 本文保留为历史设计稿，不再作为数学或工程验收依据。当前需求基线仍遵循本文提出的“先 AloePri 扩维、再拼接辅助噪声、最后联合混合”：
 >
 > $$c=[h\hat P,e]M_{aug}.$$
 >
-> 关键修正是：若 $D>d$，即使 $h$ 与 $e$ 的协方差均非退化，$c$ 在 $D+r$ 维环境中的协方差秩也只有 $d+r$，零空间维度仍为 $D-d$，不能称为环境满秩或据此宣称免疫 SVD。为真正消除该固定零空间，修订方案增加 `expanded_full` 候选 $c_{full}=[h\hat P+aB,e]M$，其中 $B\hat Q=0$ 且 $\dim a=D-d$；它能严格达到 $D+r$ 维总体满秩，但仍不能单凭满秩宣称云端输入保密。请以 [修订方案](../DERIVATION_PACKAGE.md)、[数学证明](../PROOF_PACKAGE.md) 和 [工程实施指南](augmented_covariant_implementation_v2.md) 为准。
+> 关键修正是：若 $D>d$，即使 $h$ 与 $e$ 的协方差均非退化，$c$ 在 $D+r$ 维环境中的协方差秩也只有 $d+r$，零空间维度仍为 $D-d$，不能称为环境满秩或据此宣称免疫 SVD。为真正消除该固定零空间，修订方案增加 `expanded_full` 候选 $c_{full}=[h\hat P+aB,e]M$，其中 $B\hat Q=0$ 且 $\dim a=D-d$；它能严格达到 $D+r$ 维总体满秩，但仍不能单凭满秩宣称云端输入保密。请以 [修订方案](2026-09-16_DERIVATION_PACKAGE.md)、[数学证明](2026-09-16_PROOF_PACKAGE.md) 和 [工程实施指南](2026-09-16_augmented_covariant_implementation_v2.md) 为准。
 >
-> 当前安全目标也已修正为“在相同恢复质量下提高最便宜攻击的计算成本”，不再要求不可恢复。正式指标、摊销模型和比较协议见 [攻击工作因子](work_factor_security.md)。
+> 当前安全目标也已修正为“在相同恢复质量下提高最便宜攻击的计算成本”，不再要求不可恢复。正式指标、摊销模型和比较协议见 [攻击工作因子](../work_factor_security.md)。
 
 **文档编号**：FP-ARCH-2026-09-16  
 **版本**：v1.0 (理论推导与工程设计基线)  
@@ -212,7 +219,7 @@ $$(c P_{\rm aug}) \hat{Q} = (h \hat{P}) \hat{Q} = h (\hat{P} \hat{Q}) = h$$
 * 确保服务端模型 Bundle 维持零解混、无明文矩阵泄露。
 
 ### 阶段三：端云切分与抗反演攻防验证
-* 编写攻击复核脚本 `scripts/verify_aloepri_subspace_attack.py`：
+* 编写攻击复核脚本 `scripts/verify_aloepri_subspace_attack.py`（从未实现，仓库中不存在；本仓库后来的可比较探针是 `scripts/verify_gram_leakage.py` 与 `scripts/verify_free_noise_cone.py`，但它们都不针对原版 AloePri 的 SVD 复核）：
   对比“原版 AloePri”与“本方案升维增广态”在 SVD 降维反演下的表现；
 * 分别测量切分前后 Token 恢复率、基线和置信区间；不预设 $<1\%$ 或其他未经定义的安全阈值。
 

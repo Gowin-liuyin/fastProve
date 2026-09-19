@@ -1,3 +1,10 @@
+> HISTORICAL-已归档：初版 TDD 实施计划，原型已完成且 tests/ 目录已重组；当前口径见 docs/INDEX.md。
+
+状态：HISTORICAL-已归档
+日期：2026-07-31
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # fastProve Prototype Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -266,7 +273,7 @@ Expected: exit 0; raw JSON/JSONL, CSV, PNG, and report are present.
 ### Task 9: Full verification and requirement audit
 
 **Files:**
-- Update: `docs/superpowers/plans/2026-07-31-fastprove-prototype.md`
+- Update: `docs/archive/2026-07-31_fastprove-prototype.md`
 - Update generated artifacts only by re-running their generators.
 
 - [ ] Re-index the final repository with codebase-memory-mcp and inspect architecture/call paths for production debug leakage and inverse calls.

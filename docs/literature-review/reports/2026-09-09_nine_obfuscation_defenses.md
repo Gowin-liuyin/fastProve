@@ -1,5 +1,10 @@
 # 九种混淆式 LLM 推理防御：机制、原理与工程落地
 
+状态：CURRENT
+日期：2026-09-09
+上游依据：docs/literature-review/LITERATURE_INDEX.md
+适用范围：九种混淆式 LLM 推理防御的机制与工程对照（文献调研记录）
+
 日期：2026-09-09
 配套：`2026-09-09_five_papers_inspiration.md`（DeepInvert 等五篇的启发分析）
 

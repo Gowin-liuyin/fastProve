@@ -1,5 +1,10 @@
 # fastProve evaluation suite
 
+状态：CURRENT
+日期：2026-09-19
+上游依据：docs/literature-review/reports/evaluation_protocol_fastProve.md、AGENTS.md
+适用范围：evals/ 第二套评测 harness 的使用说明与数据口径
+
 Protocol-aligned five-layer evaluation for **augmented covariant obfuscation** of Transformer inference.
 
 **Authoritative spec:** [`docs/literature-review/reports/evaluation_protocol_fastProve.md`](../docs/literature-review/reports/evaluation_protocol_fastProve.md)
@@ -180,5 +185,5 @@ evals/
 3. The current prototype LM head does not yet apply a vocab permutation \(\Pi_{\mathrm{voc}}\); Layer 4 uses the identity and notes this. Inverse-align is ready when the buffer is added.
 4. MoE is implemented as `StableRouter` but not wired into the tiny LM; Layer 3 reports N/A for the LM and runs a standalone router check.
 5. Threat model: honest-but-curious observer of persisted tensors / ordinary framework outputs. This suite does **not** claim protection against kernel hooks or register dumps (`docs/threat_model.md`).
-6. **Remote ModelSplit “obfuscated” checkpoints are NOT this scheme.** Weights under the lab `ModelSplit/models` trees that come from the previous ModelSplit obfuscation pipeline must not be scored as fastProve `structural` / `full` / exact results. For Llama runs: start from **plaintext** `Llama-3.2-3B-Instruct`, convert with **this repo**, then evaluate F0–P3. See `docs/experiment_plan.md` §1.0.
+6. **Remote ModelSplit “obfuscated” checkpoints are NOT this scheme.** Weights under the lab `ModelSplit/models` trees that come from the previous ModelSplit obfuscation pipeline must not be scored as fastProve `structural` / `full` / exact results. For Llama runs: start from **plaintext** `Llama-3.2-3B-Instruct`, convert with **this repo**, then evaluate F0–P3. See `docs/archive/2026-09-19_experiment_plan.md` §1.0.
 7. Remote package management is **conda** (create an env such as `fastprove`); do not mix system Python with ad-hoc global installs.

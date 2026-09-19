@@ -1,3 +1,10 @@
+> HISTORICAL-已归档：项目启动提示词，已被 AGENTS.md 与 docs/IMPLEMENTATION_PROMPT_dual_channel.md 取代；当前口径见 docs/INDEX.md。
+
+状态：HISTORICAL-已归档
+日期：2026-09-19
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # fastProve 启动提示词
 
 将下面整段提示词交给编码代理，并把工作目录设置为：

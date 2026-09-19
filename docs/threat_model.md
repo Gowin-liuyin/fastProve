@@ -1,5 +1,10 @@
 # fastProve 威胁模型与安全限制
 
+状态：CURRENT
+日期：2026-09-16
+上游依据：AGENTS.md、docs/PROBLEMS.md
+适用范围：威胁模型与安全限制的正式记录
+
 ## 1. 结论先行
 
 fastProve 是“增广协变混淆 + 有界 logit 扰动”的可复现研究原型，不是生产
@@ -247,7 +252,7 @@ h = c\,(M^{-1})_{[:,\,:d]}
 **状态更新（阶段 A/C）**：`attention_rotation`/`ffn_rotation` 在阶段 B
 被完全删除（其作用已吸收进部署权重，在线是恒等空转）；`common_qk` 在
 任务 C4 中被重新归类为**服务端必须持有的密钥**（RoPE 之后应用，无法
-吸收），在 `runtime_config.json` 中显式标注，见 5bis.8 条目 3。此条
+吸收），在转换产物的 runtime_config.json 中显式标注，见 5bis.8 条目 3。此条
 (a) 对 `common_qk` 的结论仍然成立且是有意为之。
 
 **(b) 辅助状态是信号的确定性仿射像，且 \(C,G,\xi\) 同样在 `state_dict` 中。**
@@ -304,7 +309,7 @@ PYTHONPATH=src python3 scripts/verify_recoverability_bound.py \
 分解的代价也成比例下降。
 复现：
 ```bash
-python -m pytest -q tests/test_structured_basis.py -v
+python -m pytest -q tests/math/test_structured_basis.py -v
 ```
 
 **2. 噪声读出矩阵 `N` 进入部署权重，观察者可恢复噪声态 `e`（任务 B1.3）。**
@@ -315,16 +320,16 @@ python -m pytest -q tests/test_structured_basis.py -v
 （up to 一个可逆 `r×r` 映射）。这不额外暴露 `h`，但使 5bis.6(b) 记录的
 `e ≈ hC` 通道直接可利用。唯一替代是令 `G = 0`（放弃链式衰减），本方案
 保留 `G = γP` 并接受此泄漏。
-复现：`tests/test_deployed_weights.py`（17 项，含秩/分解哨兵测试）。
+复现：`tests/layers/test_deployed_weights.py`（17 项，含秩/分解哨兵测试）。
 
 **3. `common_qk` 服务端可见，QK 几何结构不受保护（任务 C4.3）。**
 `common_qk` 在 RoPE 之后应用，无法吸收进任何部署权重，服务端必须在
-运行时持有它。它现在是持久 buffer 并在 `runtime_config.json` 的
+运行时持有它。它现在是持久 buffer 并在转换产物的 runtime_config.json 的
 `server_visible_key_material` 字段中显式标注（不允许改名规避检查）。
 后果：`Q'K'^T = QK^T` 的几何（分数多集与排序结构）对服务端可见。
 复现：
 ```bash
-PYTHONPATH=src python -m pytest -q tests/test_converter.py -v
+PYTHONPATH=src python -m pytest -q tests/deployment/test_converter.py -v
 grep server_visible_key_material <server_dir>/runtime_config.json
 ```
 
@@ -337,7 +342,7 @@ grep server_visible_key_material <server_dir>/runtime_config.json
 复现：
 ```bash
 python -m pytest -q \
-  tests/test_structured_basis.py::test_gram_accuracy_degrades_with_noise
+  tests/math/test_structured_basis.py::test_gram_accuracy_degrades_with_noise
 ```
 
 **5. tied-embedding 使词表侧峰值内存 +100%，超出手册 §69 的 5% 目标
@@ -353,7 +358,7 @@ Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重；`untied_deployed`
 ```bash
 PYTHONPATH=src python scripts/record_performance_D2.py \
     --output results/raw/performance_D2.json
-python -m pytest -q tests/test_secure_lm_head.py::test_fused_norm_head_raises_not_implemented
+python -m pytest -q tests/models/test_secure_lm_head.py::test_fused_norm_head_raises_not_implemented
 ```
 
 **6. 服务端必须持有 Gram 块，因此 `h` 的欧氏几何被精确暴露（阶段 B 的直接
@@ -361,7 +366,7 @@ python -m pytest -q tests/test_secure_lm_head.py::test_fused_norm_head_raises_no
 部署前向用 `A_gram = P Pᵀ` 的块对角形式计算 RMSNorm 标度 `ρ`
 （`structured.py:signal_norm_squared`），所以 `deployed_gram_blocks` 和
 `deployed_gram_perm` **必然**在服务端 bundle 中（已在
-`tests/test_converter.py` 的密钥扫描里显式归类为服务端可见）。
+`tests/deployment/test_converter.py` 的密钥扫描里显式归类为服务端可见）。
 
 后果：`A` 只把 `P` 确定到一个右正交因子——对任意满足 `A = R Rᵀ` 的
 `[n, d]` 因子 `R`（例如对称特征基），都有 `c R = h Q`，`Q` 正交。因此

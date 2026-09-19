@@ -1,22 +1,27 @@
 # AGENTS.md
 
-## Project Mission
+状态：CURRENT（上游规则，中文译本；与历史英文原文语义一致）
+日期：2026-09-19
+上游依据：用户需求与仓库历史（本文件为最高约束）
+适用范围：项目使命、数学规范、威胁模型、实现阶段与验收门
 
-This repository builds a reproducible research prototype for covariant obfuscation of Transformer inference.
+## 项目使命（Project Mission）
 
-The immediate objective is:
+本仓库构建一个用于 Transformer 推理协变混淆（covariant obfuscation）的可复现研究原型。
 
-1. implement a plaintext Transformer reference;
-2. implement an exact covariant-obfuscation path whose output should match the plaintext reference up to floating-point error;
-3. implement an approximate Softmax-obfuscation path with bounded logit noise;
-4. measure how much accuracy is lost relative to plaintext inference as the noise strength increases;
-5. produce reproducible code, raw metrics, plots, and a report.
+当前目标是：
 
-The prototype is intended to test mathematical and engineering feasibility. It is not a production cryptographic system.
+1. 实现一个明文 Transformer 参考实现；
+2. 实现一条精确协变混淆路径，其输出应与明文参考在浮点误差范围内一致；
+3. 实现一条带界 logit 噪声的近似 Softmax 混淆路径；
+4. 测量随噪声强度增加，相对明文推理损失了多少精度；
+5. 产出可复现的代码、原始指标、图表与报告。
 
-## Research Background
+该原型用于检验数学与工程可行性。它不是生产密码系统。
 
-The starting idea is an augmented-state covariant transform. A hidden state is extended with a low-dimensional noise state and then mixed by an invertible basis:
+## 研究背景（Research Background）
+
+研究起点是增广状态协变变换。隐藏状态被扩展一个低维噪声状态，然后由可逆基混合：
 
 \[
 h_\ell\in\mathbb R^{d_\ell},\qquad
@@ -29,112 +34,119 @@ z_\ell=[h_\ell,e_\ell],
 c_\ell=z_\ell M_\ell.
 \]
 
-Here:
+其中：
 
-- \(h_\ell\) is the model's semantic signal;
-- \(e_\ell\) is an auxiliary noise state;
-- \(r_\ell\ll d_\ell\);
-- \(M_\ell\in\mathbb R^{(d_\ell+r_\ell)\times(d_\ell+r_\ell)}\) is invertible;
-- \(c_\ell\) is the state exposed to the obfuscated server path.
+- \(h_\ell\) 是模型的语义信号；
+- \(e_\ell\) 是辅助噪声状态；
+- \(r_\ell\ll d_\ell\)；
+- \(M_\ell\in\mathbb R^{(d_\ell+r_\ell)\times(d_\ell+r_\ell)}\) 可逆；
+- \(c_\ell\) 是暴露给混淆服务端路径的状态。
 
-The older one-dimensional augmented-matrix construction is the special case \(r_\ell=1\). Its linear-chain algebra is useful, but its original nonlinear bridge is incomplete: once purely multiplicative noise is set to zero before a nonlinear layer, later nonzero multipliers cannot regenerate it. This project therefore uses affine noise refresh and explicit nonlinear checkpoints.
+较早的一维增广矩阵构造是 \(r_\ell=1\) 的特例。它的线性链代数是有效的，但其原始
+非线性桥不完整：一旦纯乘性噪声在非线性层之前被置零，后续非零乘子无法重新产生
+它。因此本项目使用仿射噪声刷新与显式非线性检查点。
 
-## Claims and Non-Claims
+## 可声明与不可声明（Claims and Non-Claims）
 
-The project may claim only what is demonstrated by mathematics or generated experiment artifacts.
+项目只能声明由数学或生成的实验工件所证明的内容。
 
-Allowed terminology:
+允许的术语：
 
-- augmented covariant obfuscation;
-- chained auxiliary noise;
-- bounded logit perturbation;
-- approximate privacy-preserving inference prototype;
-- exact mode and approximate mode.
+- 增广协变混淆（augmented covariant obfuscation）；
+- 链式辅助噪声（chained auxiliary noise）；
+- 有界 logit 扰动（bounded logit perturbation）；
+- 近似隐私保护推理原型（approximate privacy-preserving inference prototype）；
+- 精确模式与近似模式（exact mode and approximate mode）。
 
-Do not claim:
+不得声明：
 
-- that activations are standard LWE ciphertexts;
-- fully homomorphic or end-to-end encrypted inference;
-- LWE security merely because ML-KEM, an LWE-derived KDF, or an LWE-inspired seed is used;
-- protection against a server that can arbitrarily modify kernels and dump registers;
-- a performance, accuracy, or privacy number that was not produced by a recorded run.
+- 激活是标准 LWE 密文；
+- 全同态或端到端加密推理；
+- 仅因为使用了 ML-KEM、LWE 派生 KDF 或 LWE 启发的种子，就声称具备 LWE 安全性；
+- 能防御可任意修改内核并转储寄存器的服务端；
+- 任何未由记录在案的运行产生的性能、精度或隐私数字。
 
-If LWE/ML-KEM is added later, its role is key establishment or parameter derivation only unless a separate reduction proves more.
+若日后加入 LWE/ML-KEM，其角色仅是密钥建立或参数派生，除非有单独的归约证明更多。
 
-## Threat Model
+## 威胁模型（Threat Model）
 
-The initial prototype evaluates representation obfuscation against an honest-but-curious observer of persisted tensors and ordinary framework outputs.
+初始原型评估的是：针对持久化张量与普通框架输出的诚实但好奇（honest-but-curious）
+观察者的表示混淆。
 
-The prototype may assume that a designated fused operation does not return its internal clean temporary values. This is an implementation assumption, not a cryptographic guarantee.
+原型可以假设指定的融合操作不返回其内部干净临时值。这是一项实现假设，不是密码学
+保证。
 
-If an attacker can:
+若攻击者能够：
 
-- modify CUDA/Triton/PyTorch kernels;
-- attach arbitrary hooks;
-- dump registers or temporary buffers;
-- read all client secrets;
+- 修改 CUDA/Triton/PyTorch 内核；
+- 挂接任意 hook；
+- 转储寄存器或临时缓冲区；
+- 读取全部客户端秘密；
 
-then this prototype alone does not protect Softmax logits, probabilities, or extracted signal components. Stronger protection would require a trusted execution environment, MPC, HE, or another trusted boundary.
+则仅凭本原型无法保护 Softmax logits、概率或被提取的信号分量。更强的保护需要可信
+执行环境、MPC、HE 或另一个可信边界。
 
-Every report must state this limitation.
+每份报告都必须写明这一限制。
 
-## Canonical Mathematical Specification
+## 规范数学规格（Canonical Mathematical Specification）
 
-Use row-vector mathematics throughout:
+全文采用行向量数学：
 
 \[
 Y=XW+b.
 \]
 
-PyTorch `torch.nn.functional.linear` stores weights as `[out_features, in_features]`, so every conversion function must document whether a weight is in mathematical or PyTorch layout.
+PyTorch `torch.nn.functional.linear` 以 `[out_features, in_features]` 存储权重，
+因此每个转换函数都必须写明权重处于数学布局还是 PyTorch 布局。
 
-### Mixed State
+### 混合状态（Mixed State）
 
 \[
 c_{\rm in}=[h,e]M_{\rm in}.
 \]
 
-Default prototype dimensions:
+默认原型维度：
 
 ```text
 hidden noise dimension r: 8 or 16
 attention value noise per head r_h: 1, 2, or 4
 ```
 
-Use well-conditioned transforms. “Dense” or “all nonzero” does not imply secure or numerically stable.
+使用良态变换。“稠密”或“全非零”既不代表安全，也不代表数值稳定。
 
-Recommended structure:
+推荐结构：
 
 \[
 M=\Pi D B,
 \]
 
-where:
+其中：
 
-- \(\Pi\) is a permutation;
-- \(D\) is a bounded nonzero diagonal scaling;
-- \(B\) is an orthogonal or small block-orthogonal transform;
-- the condition number is checked and recorded.
+- \(\Pi\) 是排列；
+- \(D\) 是有界非零对角缩放；
+- \(B\) 是正交或小块正交变换；
+- 条件数被检查并记录。
 
-The default condition-number limit should be configurable and conservative, for example `max_condition_number: 10`.
+默认条件数上限应可配置且保守，例如 `max_condition_number: 10`。
 
-Never compute a matrix inverse in `forward`. Compute transforms offline in FP64 or FP32, validate them, and store converted weights.
+绝不在 `forward` 中计算矩阵逆。在 FP64 或 FP32 中离线计算变换、验证它们，并存储
+转换后的权重。
 
-### Affine Linear Layer and Noise Refresh
+### 仿射线性层与噪声刷新（Affine Linear Layer and Noise Refresh）
 
-For:
+对于：
 
 \[
 y=hW+b,
 \]
 
-define:
+定义：
 
 \[
 e'=hC+eG+\xi.
 \]
 
-Let:
+令：
 
 \[
 K=
@@ -144,7 +156,7 @@ W&C\\
 \end{bmatrix}.
 \]
 
-Deploy:
+部署：
 
 \[
 \widetilde W=M_{\rm in}^{-1}KM_{\rm out},
@@ -154,7 +166,7 @@ Deploy:
 \widetilde b=[b,\xi]M_{\rm out}.
 \]
 
-Then:
+于是：
 
 \[
 c_{\rm out}
@@ -164,41 +176,42 @@ c_{\rm in}\widetilde W+\widetilde b
 [hW+b,\;hC+eG+\xi]M_{\rm out}.
 \]
 
-This identity must have a direct unit test.
+这条恒等式必须有直接的单元测试。
 
-Use a stable noise propagator such as:
+使用稳定的噪声传播器，例如：
 
 \[
 G=\gamma P_e,\qquad 0<\gamma<1,
 \]
 
-where \(P_e\) is a permutation or signed permutation.
+其中 \(P_e\) 是排列或带符号排列。
 
-Two refresh modes must be distinguished:
+必须区分两种刷新模式：
 
-- `fixed_debug`: fixed \(\xi\) stored in the converted bias; used only for correctness tests;
-- `per_request`: \(\xi\) generated from a reproducible per-request, per-layer seed inside the designated fused operation.
+- `fixed_debug`：固定的 \(\xi\) 存入转换后的偏置；只用于正确性测试；
+- `per_request`：\(\xi\) 在指定融合操作内部由可复现的逐请求、逐层种子生成。
 
-Do not present deterministic fixed refresh as strong privacy.
+不得把确定性的固定刷新描述为强隐私。
 
-## Nonlinear Checkpoint Rule
+## 非线性检查点规则（Nonlinear Checkpoint Rule）
 
-General dense augmented transforms do not commute with nonlinear functions.
+一般稠密增广变换不与非线性函数交换。
 
-At a nonlinear checkpoint:
+在非线性检查点：
 
-1. derive the permitted transformed signal inside a reference or fused operation;
-2. keep the old noise on a side path rather than destroying it;
-3. apply the nonlinear function only to its mathematically valid signal representation;
-4. construct a refreshed noise state;
-5. return a newly mixed state;
-6. do not expose clean intermediate tensors through the public production-mode API.
+1. 在参考或融合操作内部导出被允许的变换后信号；
+2. 把旧噪声保留在旁路上，而不是销毁它；
+3. 只对数学上有效的信号表示应用非线性函数；
+4. 构造刷新后的噪声状态；
+5. 返回重新混合后的状态；
+6. 不通过公共生产模式 API 暴露干净的中间张量。
 
-Reference/debug code may expose decoded states for testing, but every such function must be clearly named and disabled in production-mode configuration.
+参考/调试代码可以为测试暴露解码状态，但每个这样的函数都必须命名清晰，并在生产
+模式配置下禁用。
 
 ## RMSNorm
 
-For a gamma-free RMS normalization and an orthogonal matrix \(R\):
+对于无 gamma 的 RMS 归一化与正交矩阵 \(R\)：
 
 \[
 u=hR,\qquad RR^T=I,
@@ -208,9 +221,10 @@ u=hR,\qquad RR^T=I,
 \operatorname{rms}(u)=\operatorname{rms}(h).
 \]
 
-The learned elementwise scale \(\Gamma=\operatorname{diag}(\gamma)\) does not generally commute with arbitrary \(R\). It must be absorbed into the following projection.
+学习到的逐元素缩放 \(\Gamma=\operatorname{diag}(\gamma)\) 通常不与任意 \(R\) 交换。
+它必须被吸收进后续投影。
 
-For Query:
+对于 Query：
 
 \[
 Q=
@@ -218,7 +232,7 @@ Q=
 \Gamma W_Q,
 \]
 
-and \(u=hR\), use:
+而 \(u=hR\) 时使用：
 
 \[
 Q'=
@@ -226,17 +240,17 @@ Q'=
 R^T\Gamma W_QC_Q.
 \]
 
-Equivalent formulas are required for Key, Value, Gate, and Up.
+Key、Value、Gate 与 Up 需要等价公式。
 
-RMS statistics, epsilon addition, and reductions must use FP32.
+RMS 统计、epsilon 加法与归约必须使用 FP32。
 
-## RoPE and Q/K
+## RoPE 与 Q/K（RoPE and Q/K）
 
-The preferred prototype ordering is:
+首选的原型顺序是：
 
-1. obtain the valid Query and Key projections inside the checkpoint;
-2. apply RoPE;
-3. apply a common orthogonal transform \(C\) after RoPE.
+1. 在检查点内获得有效的 Query 与 Key 投影；
+2. 应用 RoPE；
+3. 在 RoPE 之后应用共同正交变换 \(C\)。
 
 \[
 Q'=\operatorname{RoPE}(Q)C,
@@ -246,37 +260,38 @@ Q'=\operatorname{RoPE}(Q)C,
 K'=\operatorname{RoPE}(K)C.
 \]
 
-Therefore:
+因此：
 
 \[
 Q'K'^T=Q_{\rm rope}K_{\rm rope}^T.
 \]
 
-Applying \(C\) after RoPE avoids an unnecessary and often false commutation assumption.
+在 RoPE 之后应用 \(C\) 可以避免一个不必要且通常错误的交换假设。
 
-For grouped-query attention, every Query head sharing a KV head must use a transform compatible with that KV head. Add explicit tests for GQA mappings.
+对于分组查询注意力（GQA），每个共享同一 KV 头的 Query 头必须使用与该 KV 头兼容
+的变换。为 GQA 映射添加显式测试。
 
-## Value Path
+## Value 路径（Value Path）
 
-Value may carry an augmented noise state because attention probabilities multiply Value linearly from the left:
+Value 可以携带增广噪声状态，因为注意力概率从左侧线性乘 Value：
 
 \[
 c_V=[V,e_V]M_V.
 \]
 
-For any attention matrix \(A\):
+对任意注意力矩阵 \(A\)：
 
 \[
 Ac_V=[AV,Ae_V]M_V.
 \]
 
-This is the principal mechanism for carrying noise through the attention block.
+这是让噪声通过注意力块的主要机制。
 
-## Softmax Modes
+## Softmax 模式（Softmax Modes）
 
-Softmax is row-wise and does not commute with a general dense change of basis.
+Softmax 按行作用，不与一般稠密基变换交换。
 
-The exact covariance family is limited. For a column permutation \(P\) and row-dependent common offset \(a\mathbf 1^T\):
+精确协变族是有限的。对于列排列 \(P\) 与行相关公共偏移 \(a\mathbf 1^T\)：
 
 \[
 \operatorname{softmax}(SP+a\mathbf 1^T)
@@ -284,9 +299,10 @@ The exact covariance family is limited. For a column permutation \(P\) and row-d
 \operatorname{softmax}(S)P.
 \]
 
-Do not add a finite zero-valued dummy position to Softmax. It changes the normalization denominator. Any dummy or invalid position must remain masked as \(-\infty\).
+不要向 Softmax 添加有限值的零 dummy 位置。它会改变归一化分母。任何 dummy 或无效
+位置都必须保持被掩码为 \(-\infty\)。
 
-Implement three attention modes behind the same interface.
+在同一接口后实现三种注意力模式。
 
 ### `plaintext`
 
@@ -294,11 +310,11 @@ Implement three attention modes behind the same interface.
 A=\operatorname{softmax}(S).
 \]
 
-This is the reference baseline.
+这是参考基线。
 
 ### `exact`
 
-Use the common orthogonal Q/K transform, no logit perturbation, and the mixed Value path:
+使用共同正交 Q/K 变换、无 logit 扰动与混合 Value 路径：
 
 \[
 S=\frac{Q'K'^T}{\sqrt{d_h}},
@@ -310,16 +326,16 @@ O_{\rm exact}
 \operatorname{softmax}(S)c_V.
 \]
 
-This mode must match plaintext signal output up to numerical tolerance.
+该模式必须在数值容差内与明文信号输出一致。
 
-An optional key-position permutation may be added later:
+可选的位置键排列日后可以加入：
 
 \[
 \widetilde S=SP+a\mathbf 1^T,\qquad
 \widetilde V=P^Tc_V.
 \]
 
-Then:
+于是：
 
 \[
 \operatorname{softmax}(\widetilde S)\widetilde V
@@ -327,30 +343,31 @@ Then:
 \operatorname{softmax}(S)c_V.
 \]
 
-The mask and KV layout must be permuted consistently. This optional extension hides position labels only; it does not hide the score multiset or ranking structure.
+掩码与 KV 布局必须一致地排列。该可选扩展只隐藏位置标签；它不隐藏分数多重集合或
+排序结构。
 
 ### `approximate`
 
-Add bounded noise only to valid logits:
+只向有效 logits 添加有界噪声：
 
 \[
 \widehat S=S+\eta.
 \]
 
-Masked positions must remain exactly \(-\infty\).
+被掩码的位置必须保持精确的 \(-\infty\)。
 
-Implement two schedules:
+实现两种调度：
 
-1. `topk_preserving`: limits noise using the clean Top-k boundary margin;
-2. `free_bounded`: uses a fixed error budget and allows ranking changes.
+1. `topk_preserving`：使用干净的 Top-k 边界 margin 限制噪声；
+2. `free_bounded`：使用固定误差预算并允许排序变化。
 
-For `topk_preserving`, sort valid logits and define:
+对于 `topk_preserving`，对有效 logits 排序并定义：
 
 \[
 \Delta_k=S_{(k)}-S_{(k+1)}.
 \]
 
-Set:
+令：
 
 \[
 \tau
@@ -363,29 +380,29 @@ Set:
 \qquad 0<\alpha<1,
 \]
 
-and generate:
+并生成：
 
 \[
 \|\eta\|_\infty\le\tau.
 \]
 
-Then:
+于是：
 
 \[
 2\tau<\Delta_k
 \]
 
-guarantees that the Top-k set does not change, apart from explicitly handled ties.
+保证 Top-k 集合不变，显式处理的 tie 除外。
 
-For `free_bounded`:
+对于 `free_bounded`：
 
 \[
 \tau=\min(\tau_{\max},\tau_{\rm error}),
 \]
 
-and ranking changes are allowed. This mode is important because preserving the complete ranking and hiding the ranking are conflicting objectives.
+且允许排序变化。该模式很重要，因为保持完整排序与隐藏排序是相互冲突的目标。
 
-Compute:
+计算：
 
 \[
 \widehat A=\operatorname{softmax}(\widehat S),
@@ -395,7 +412,7 @@ Compute:
 \widehat O=\widehat A c_V.
 \]
 
-Track:
+跟踪：
 
 \[
 \widehat O-O
@@ -406,21 +423,22 @@ Track:
 \right)V.
 \]
 
-Noise generation must be deterministic under a recorded seed for reproducibility. Center and rescale sampled noise so that its actual infinity norm obeys the requested bound.
+噪声生成必须在记录的种子下可复现。对采样噪声做居中与重缩放，使其实际无穷范数
+满足所请求的界。
 
-Margin computation, masking, noise clipping, and Softmax reduction must use FP32.
+margin 计算、掩码、噪声裁剪与 Softmax 归约必须使用 FP32。
 
-Do not return attention probabilities from production-mode APIs.
+不要从生产模式 API 返回注意力概率。
 
 ## SwiGLU
 
-For:
+对于：
 
 \[
 z=\operatorname{SiLU}(g)\odot u,
 \]
 
-use a shared neuron permutation \(P_f\) and a nonzero bounded diagonal scaling \(D_f\):
+使用共享神经元排列 \(P_f\) 与非零有界对角缩放 \(D_f\)：
 
 \[
 g'=gP_f,
@@ -428,7 +446,7 @@ g'=gP_f,
 u'=uD_fP_f.
 \]
 
-Then:
+于是：
 
 \[
 \operatorname{SiLU}(g')\odot u'
@@ -436,35 +454,35 @@ Then:
 zD_fP_f.
 \]
 
-Convert the Down weight:
+转换 Down 权重：
 
 \[
 W_d'=P_f^TD_f^{-1}W_d,
 \]
 
-so:
+所以：
 
 \[
 (zD_fP_f)W_d'=zW_d.
 \]
 
-Carry the previous noise through a side path and refresh after the elementwise product:
+让先前的噪声经由旁路传递，并在逐元素乘积后刷新：
 
 \[
 e_z=z'C_z+e_{\rm side}G_z+\xi_z.
 \]
 
-Do not claim that SiLU commutes with arbitrary scaling or dense mixing.
+不要声称 SiLU 与任意缩放或稠密混合交换。
 
-## MoE Router and Top-k
+## MoE Router 与 Top-k（MoE Router and Top-k）
 
-For an expert permutation \(P_E\):
+对于专家排列 \(P_E\)：
 
 \[
 r'=rP_E+\eta_r.
 \]
 
-If:
+若：
 
 \[
 2\|\eta_r\|_\infty
@@ -472,39 +490,40 @@ If:
 r_{(k)}-r_{(k+1)},
 \]
 
-the selected expert set is unchanged after accounting for \(P_E\).
+则在计入 \(P_E\) 之后，被选中的专家集合不变。
 
-Physical experts must be reordered consistently.
+物理专家必须一致地重排。
 
-Implement:
+实现：
 
-- exact expert permutation with no router noise;
-- margin-bounded router noise;
-- optional approximate noisy gate weights.
+- 无 router 噪声的精确专家排列；
+- margin 有界 router 噪声；
+- 可选的近似噪声 gate 权重。
 
-Tie-breaking must match the plaintext implementation and have explicit tests.
+Tie 打破规则必须与明文实现一致，并有显式测试。
 
-## Prototype Scope
+## 原型范围（Prototype Scope）
 
-Start small. Do not begin with a 7B model or custom CUDA.
+从小处开始。不要以 7B 模型或自定义 CUDA 起步。
 
-The required progression is:
+要求的推进顺序是：
 
-1. deterministic small-tensor mathematical tests;
-2. one plaintext Transformer block;
-3. one exact obfuscated Transformer block;
-4. one approximate obfuscated block;
-5. a tiny multi-layer causal LM constructed locally;
-6. a locally available small pretrained Llama-like checkpoint, if available;
-7. only after correctness, optional Triton or fused-kernel work.
+1. 确定性小张量数学测试；
+2. 一个明文 Transformer 块；
+3. 一个精确混淆 Transformer 块；
+4. 一个近似混淆块；
+5. 本地构造的 tiny 多层 causal LM；
+6. 本地可用的小型预训练 Llama-like checkpoint（若有）；
+7. 只有在正确性之后，才做可选的 Triton 或融合内核工作。
 
-If no meaningful pretrained checkpoint is locally available, random tiny models may be used for correctness only. Do not describe random-model results as meaningful language-model accuracy.
+若本地没有有意义的预训练 checkpoint，随机 tiny 模型只能用于正确性。不得把随机模型
+结果描述为有意义的语言模型精度。
 
-Ask before downloading a large model or dataset.
+下载大模型或数据集前先询问。
 
-## Expected Repository Layout
+## 期望仓库布局（Expected Repository Layout）
 
-Create and maintain:
+创建并维护：
 
 ```text
 fastProve/
@@ -517,73 +536,126 @@ fastProve/
 │   └── eval_sweep.yaml
 ├── src/
 │   └── fastprove/
-│       ├── config.py
-│       ├── seed.py
-│       ├── state.py
-│       ├── transforms.py
+│       ├── seed.py  hashing.py  io.py  metrics.py  policy.py  modes.py
+│       ├── basis_common.py  transforms.py  structured.py
+│       ├── state.py  codec.py  coa_views.py  config.py
 │       ├── conversion.py
+│       ├── noise_budget.py  augmented_noise.py  bounded_noise.py
+│       ├── converter/
+│       │   ├── __init__.py
+│       │   ├── hygiene.py
+│       │   ├── load.py
+│       │   ├── client.py
+│       │   ├── save.py
+│       │   └── basis_io.py
 │       ├── layers/
-│       │   ├── linear.py
-│       │   ├── rmsnorm.py
 │       │   ├── attention.py
+│       │   ├── rmsnorm.py
+│       │   ├── deployed.py
+│       │   ├── linear.py
 │       │   ├── swiglu.py
-│       │   └── router.py
+│       │   ├── router.py
+│       │   ├── moe.py
+│       │   ├── embedding.py
+│       │   └── head.py
 │       ├── models/
 │       │   ├── plain.py
-│       │   └── obfuscated.py
+│       │   ├── obfuscated.py
+│       │   ├── obfuscated_types.py
+│       │   ├── client.py
+│       │   └── block_builder.py
+│       ├── pretrained/
+│       │   ├── _checkpoint_io.py
+│       │   ├── llama.py
+│       │   └── qwen2.py
 │       └── evaluation/
-│           ├── correctness.py
-│           ├── accuracy.py
-│           └── metrics.py
+│           ├── environment.py  runtime.py  diagnostics.py  exact_gate.py
+│           ├── layer_metrics.py  performance.py  spec_config.py  runner.py
+│           ├── metrics.py  accuracy.py  artifacts.py  sweep.py  selection.py
+│           ├── token_cache.py  pretrained.py  attack_records.py
+│           ├── correctness.py  prompts.py
+│           ├── benchmarks/
+│           │   ├── tasks.py
+│           │   ├── scoring.py
+│           │   └── bundle.py
+│           └── report.py  report_format.py  report_rows.py  report_tradeoff.py
+│               report_figures.py  report_tables.py  report_markdown.py
+├── evals/                         # 顶层第二套评测 harness（python -m evals）
+│   ├── report.py  conditions.py  keys.py  thresholds.py  stats.py
+│   ├── model_factory.py  metrics_common.py
+│   ├── layer1_operator_equiv.py  layer2_attention.py  layer3_moe.py
+│   ├── layer4_output_logit.py  layer5_downstream.py
+│   └── configs/
 ├── scripts/
 │   ├── run_correctness.py
 │   ├── run_accuracy_sweep.py
-│   └── build_report.py
+│   ├── build_report.py
+│   ├── verify_refactor_equivalence.py  check_doc_links.py
+│   ├── record_*.py  verify_*.py  measure_overhead.py  ...
+│   └── archive/
 ├── tests/
+│   ├── conftest.py  _fixtures.py
+│   └── {math,layers,models,deployment,security,evaluation,cli,pretrained}/
 ├── results/
 │   ├── raw/
 │   ├── tables/
 │   ├── figures/
 │   └── REPORT.md
 └── docs/
+    ├── INDEX.md
+    ├── architecture.md
+    ├── runbook.md
+    ├── STATUS.md
+    ├── CLEANUP_PLAN.md
+    ├── IMPLEMENTATION_PROMPT_dual_channel.md
     ├── mathematics.md
     ├── threat_model.md
-    └── implementation_notes.md
+    ├── implementation_notes.md
+    ├── PROBLEMS.md
+    ├── technical_specification.md  work_factor_security.md
+    ├── augmented_noisy_obfuscation_plan.md
+    ├── literature-review/
+    ├── config_reference.md  scripts_index.md   # 计划中（CLEANUP_PLAN §8.3）
+    ├── verification/  handoff_evidence/
+    └── archive/
 ```
 
-Do not commit downloaded weights, datasets, secrets, caches, or large generated artifacts.
+> 本节只是对现状的描述性清单，不是额外规则；目录随重构演进，权威结构以
+> `docs/architecture.md` 与源码为准。带「计划中」标注的文档尚未创建。
 
-## Implementation Phases
+不要提交下载的权重、数据集、秘密、缓存或大体积生成物。
 
-### Phase 0: Environment Audit
+## 实现阶段（Implementation Phases）
 
-Before changing code:
+### 阶段 0：环境审计（Phase 0: Environment Audit）
 
-- inspect Python and PyTorch versions;
-- inspect available CUDA, MPS, CPU, RAM, and disk;
-- record the result in `docs/implementation_notes.md`;
-- determine whether a local pretrained model and evaluation dataset exist;
-- create a minimal dependency plan.
+在改代码之前：
 
-CPU is sufficient for unit tests and tiny correctness checks. Before a full model evaluation, explicitly verify compute resources.
+- 检查 Python 与 PyTorch 版本；
+- 检查可用 CUDA、MPS、CPU、RAM 与磁盘；
+- 把结果记录到 `docs/implementation_notes.md`；
+- 判断本地是否存在预训练模型与评测数据集；
+- 制定最小依赖计划。
 
-### Phase 1: Mathematical Kernel
+CPU 足以运行单元测试与 tiny 正确性检查。完整模型评测前，必须显式核实算力资源。
 
-Implement:
+### 阶段 1：数学内核（Phase 1: Mathematical Kernel）
 
-- seeded transform generation;
-- condition-number validation;
-- `MixedState`;
-- encode/decode helpers restricted to debug/tests;
-- `ChainLinear`;
-- affine noise refresh;
-- direct numerical tests of every identity.
+实现：
 
-Do not proceed if the linear identity fails.
+- 带种子的变换生成；
+- 条件数验证；
+- `MixedState`；
+- 仅限调试/测试的 encode/decode 助手；
+- `ChainLinear`；
+- 仿射噪声刷新；
+- 对每条恒等式的直接数值测试。
 
-### Phase 2: One Exact Block
+若线性恒等式失败，不得继续。
 
-Implement a small plaintext block and an exact obfuscated block with identical base weights:
+### 阶段 2：一个精确块（Phase 2: One Exact Block）
+
+实现共享同一组基础权重的小型明文块与精确混淆块：
 
 ```text
 RMSNorm
@@ -598,20 +670,20 @@ RMSNorm
 → Residual
 ```
 
-Compare every permitted decoded signal checkpoint.
+比较每个允许解码的信号检查点。
 
-### Phase 3: Approximate Softmax
+### 阶段 3：近似 Softmax（Phase 3: Approximate Softmax）
 
-Implement:
+实现：
 
-- `plaintext`;
-- `exact`;
-- `approximate/topk_preserving`;
-- `approximate/free_bounded`.
+- `plaintext`；
+- `exact`；
+- `approximate/topk_preserving`；
+- `approximate/free_bounded`。
 
-Noise must be applied after masking logic is established and only to valid logits.
+噪声必须在掩码逻辑确立之后添加，且只加到有效 logits 上。
 
-Required initial sweep:
+初始必需扫描：
 
 ```text
 tau_max:
@@ -634,71 +706,71 @@ preserve_top_k:
   16
 ```
 
-The sweep must be configurable; do not hard-code it in layer implementations.
+扫描必须可配置；不要在层实现里硬编码它。
 
-### Phase 4: End-to-End Evaluation
+### 阶段 4：端到端评测（Phase 4: End-to-End Evaluation）
 
-Run plaintext and obfuscated inference on exactly the same:
+在完全相同的以下条件下运行明文与混淆推理：
 
-- model checkpoint;
-- tokenized examples;
-- sequence lengths;
-- seeds;
-- dtype;
-- device;
-- generation settings.
+- 模型 checkpoint；
+- 分词后的样本；
+- 序列长度；
+- 种子；
+- dtype；
+- 设备；
+- 生成设置。
 
-Store one machine-readable record per run.
+每次运行存一条机器可读记录。
 
-### Phase 5: Report
+### 阶段 5：报告（Phase 5: Report）
 
-Generate:
+生成：
 
-- raw JSON or JSONL metrics;
-- summary CSV;
-- accuracy/noise plots;
-- `results/REPORT.md`;
-- exact commands and environment metadata.
+- 原始 JSON 或 JSONL 指标；
+- 汇总 CSV；
+- 精度/噪声图；
+- `results/REPORT.md`；
+- 精确命令与环境元数据。
 
-The report must distinguish mathematical exactness, floating-point deviation, task accuracy degradation, performance overhead, and security limitations.
+报告必须区分数学精确性、浮点偏差、任务精度退化、性能开销与安全限制。
 
-## Evaluation Metrics
+## 评测指标（Evaluation Metrics）
 
-### Layer-Level Correctness
+### 层级正确性（Layer-Level Correctness）
 
-Record:
+记录：
 
-- maximum absolute error;
-- mean absolute error;
-- relative L2 error;
-- cosine similarity;
-- NaN/Inf counts;
-- QK score error;
-- exact-mode Softmax probability error;
-- Value/attention-output signal error;
-- Top-k overlap;
-- tie and mask behavior.
+- 最大绝对误差；
+- 平均绝对误差；
+- 相对 L2 误差；
+- 余弦相似度；
+- NaN/Inf 计数；
+- QK 分数误差；
+- exact 模式 Softmax 概率误差；
+- Value/注意力输出信号误差；
+- Top-k 重叠；
+- tie 与掩码行为。
 
-### End-to-End Accuracy
+### 端到端精度（End-to-End Accuracy）
 
-For a causal language model, record at minimum:
+对于 causal 语言模型，至少记录：
 
-- negative log-likelihood;
-- perplexity;
-- next-token top-1 accuracy;
-- next-token top-5 accuracy;
-- plaintext/obfuscated token agreement;
-- greedy-generation token exact match;
-- sequence-level exact match where meaningful.
+- 负对数似然；
+- 困惑度；
+- 下一 token top-1 精度；
+- 下一 token top-5 精度；
+- 明文/混淆 token 一致率；
+- 贪心生成 token 精确匹配；
+- 有意义的序列级精确匹配。
 
-If a downstream labeled task is used, record:
+若使用下游标注任务，记录：
 
-- task metric appropriate to the dataset;
-- absolute degradation in percentage points;
-- relative degradation;
-- sample count and confidence interval when feasible.
+- 适配数据集的任务指标；
+- 绝对退化（百分点）；
+- 相对退化；
+- 可行时给出样本数与置信区间。
 
-Primary comparison:
+主要比较：
 
 \[
 \Delta_{\rm abs}
@@ -708,7 +780,7 @@ Primary comparison:
 \operatorname{metric}_{\rm plaintext}.
 \]
 
-For metrics where larger is better, also report:
+对越大越好的指标，还要报告：
 
 \[
 \operatorname{drop}_{\rm abs}
@@ -718,134 +790,134 @@ For metrics where larger is better, also report:
 \operatorname{metric}_{\rm obfuscated}.
 \]
 
-For perplexity, report both absolute and relative increase.
+对困惑度，同时报告绝对与相对上升。
 
-### Softmax-Specific Metrics
+### Softmax 专项指标（Softmax-Specific Metrics）
 
-Record:
+记录：
 
-- KL divergence between plaintext and perturbed attention distributions;
-- Jensen-Shannon divergence;
-- Top-k set overlap;
-- rank correlation on valid positions;
-- fraction of queries whose Top-k set changed;
-- clean boundary margin distribution;
-- actual noise infinity norm;
-- fraction of queries receiving zero or near-zero noise;
-- attention-output relative L2 error.
+- 明文与扰动注意力分布之间的 KL 散度；
+- Jensen-Shannon 散度；
+- Top-k 集合重叠；
+- 有效位置上的秩相关；
+- Top-k 集合发生变化的 query 占比；
+- 干净边界 margin 分布；
+- 实际噪声无穷范数；
+- 收到零或近零噪声的 query 占比；
+- 注意力输出相对 L2 误差。
 
-### Performance
+### 性能（Performance）
 
-Record separately:
+分别记录：
 
-- conversion time;
-- prefill latency;
-- decode latency or TPOT;
-- tokens per second;
-- peak memory;
-- KV-cache memory;
-- reference implementation versus optimized implementation.
+- 转换时间；
+- prefill 延迟；
+- decode 延迟或 TPOT；
+- 每秒 token 数；
+- 峰值内存；
+- KV-cache 内存；
+- 参考实现与优化实现的对照。
 
-Do not optimize performance before exact correctness passes.
+在 exact 正确性通过前不要优化性能。
 
-## Initial Acceptance Criteria
+## 初始验收标准（Initial Acceptance Criteria）
 
-Mathematical/unit-test gates:
+数学/单元测试门：
 
-- all transform round trips pass;
-- all matrix shapes are asserted;
-- no matrix inverse occurs in `forward`;
-- FP32 ChainLinear maximum absolute signal error is at most `1e-5` on small tests;
-- exact attention QK scores match within a documented FP32 tolerance;
-- exact-mode single-block output matches the plaintext block within a documented tolerance;
-- mask, causal, cache, and tie tests pass;
-- fixed seeds reproduce identical metrics.
+- 所有变换往返通过；
+- 所有矩阵形状有断言；
+- `forward` 中不发生矩阵求逆；
+- 小张量测试中 FP32 ChainLinear 最大绝对信号误差不超过 `1e-5`；
+- exact 注意力 QK 分数在记录的 FP32 容差内一致；
+- exact 模式单块输出在记录的容差内与明文块一致；
+- 掩码、因果、cache 与 tie 测试通过；
+- 固定种子复现相同指标。
 
-End-to-end exact-mode gate:
+端到端 exact 模式门：
 
-- no NaN or Inf;
-- exact mode shows only floating-point-level deviation;
-- any greedy mismatch is investigated before approximate-noise conclusions are accepted.
+- 无 NaN 或 Inf；
+- exact 模式只出现浮点级偏差；
+- 在接受近似噪声结论之前，任何贪心不匹配都必须先被调查。
 
-Approximate-mode completion gate:
+近似模式完成门：
 
-- every configured noise point has a recorded result or an explicit failure record;
-- the report identifies the best accuracy/privacy operating points;
-- no result is silently omitted;
-- conclusions cite generated artifact paths.
+- 每个配置的噪声点都有记录结果或显式失败记录；
+- 报告指出最佳精度/隐私操作点；
+- 不得静默省略任何结果；
+- 结论引用生成的工件路径。
 
-## Compute and Experiment Guard
+## 算力与实验守卫（Compute and Experiment Guard）
 
-Before a full evaluation:
+完整评测之前：
 
-1. check CUDA using `nvidia-smi` when available;
-2. check PyTorch CUDA and MPS support;
-3. record device name, memory, dtype, and software versions;
-4. compare model requirements with available resources;
-5. do not silently move a planned GPU evaluation to CPU;
-6. do not fabricate results if compute or data is unavailable.
+1. 可用时用 `nvidia-smi` 检查 CUDA；
+2. 检查 PyTorch CUDA 与 MPS 支持；
+3. 记录设备名、内存、dtype 与软件版本；
+4. 把模型需求与可用资源对比；
+5. 不得把计划中的 GPU 评测静默改到 CPU；
+6. 算力或数据不可用时不得编造结果。
 
-Tiny CPU unit tests are allowed.
+允许 tiny CPU 单元测试。
 
-## Data and Model Integrity
+## 数据与模型完整性（Data and Model Integrity）
 
-- Record exact model identifier, local path, revision/commit when available, and file hashes where practical.
-- Record dataset name, split, sample count, preprocessing, and provenance.
-- Never evaluate plaintext and obfuscated modes on different samples.
-- Cache the selected evaluation example IDs or tokenized inputs so all modes use identical data.
-- Never train or evaluate on secret or private material without explicit authorization.
-- Do not download large artifacts without asking first.
+- 记录精确模型标识、本地路径、可用时的 revision/commit 与（可行的）文件哈希。
+- 记录数据集名称、划分、样本数、预处理与来源。
+- 绝不在不同样本上评测明文与混淆模式。
+- 缓存选定的评测样本 ID 或分词输入，使所有模式使用相同数据。
+- 未经明确授权，绝不在秘密或私有材料上训练或评测。
+- 下载大体积工件前先询问。
 
-## Coding Rules
+## 编码规则（Coding Rules）
 
-- Use Python and PyTorch for the reference implementation.
-- Use type hints and docstrings for public APIs.
-- Keep mathematical-layout and PyTorch-layout conversion explicit.
-- Use FP64 or FP32 for offline inversion and conditioning checks.
-- Use FP32 for RMS statistics, logits, margins, clipping, and Softmax reductions.
-- Make model activation dtype configurable.
-- Never silently fall back from a requested secure/fused path to an eager path.
-- Separate debug decode APIs from production APIs.
-- Production-mode outputs must not expose decoded hidden states, noise states, attention probabilities, or router logits.
-- Keep tests small, deterministic, and fast.
-- Prefer configuration files over hard-coded experiment constants.
-- Preserve raw results; derived summaries must be reproducible from raw files.
-- Do not change mathematical definitions merely to make a failing test pass. Diagnose the discrepancy.
+- 参考实现使用 Python 与 PyTorch。
+- 公共 API 使用类型标注与 docstring。
+- 明确区分数学布局与 PyTorch 布局的转换。
+- 离线求逆与条件数检查使用 FP64 或 FP32。
+- RMS 统计、logits、margin、裁剪与 Softmax 归约使用 FP32。
+- 模型激活 dtype 可配置。
+- 绝不把请求的安全/融合路径静默回退到 eager 路径。
+- 把调试解码 API 与生产 API 分开。
+- 生产模式输出不得暴露解码后的隐藏状态、噪声状态、注意力概率或 router logits。
+- 保持测试小、确定、快速。
+- 实验常量优先放进配置文件而不是硬编码。
+- 保留原始结果；派生汇总必须能从原始文件复现。
+- 不得仅为让失败测试通过而修改数学定义。要诊断差异。
 
-## Working Style for Agents
+## Agent 工作方式（Working Style for Agents）
 
-Agents should execute the current phase autonomously while staying within repository scope.
+Agent 应在仓库范围内自主执行当前阶段。
 
-Before implementation:
+实现之前：
 
-- inspect existing files and uncommitted changes;
-- state assumptions;
-- identify the current phase;
-- make a short plan.
+- 检查现有文件与未提交改动；
+- 说明假设；
+- 确认当前阶段；
+- 制定简短计划。
 
-During implementation:
+实现期间：
 
-- implement the smallest complete vertical slice;
-- run targeted tests after each mathematical component;
-- report unexpected discrepancies immediately;
-- do not claim completion based only on code compilation.
+- 实现最小完整纵向切片；
+- 每个数学组件后运行针对性测试；
+- 立即报告意外差异；
+- 不得仅凭代码编译就声称完成。
 
-At handoff:
+交接时：
 
-- summarize files changed;
-- list exact test and experiment commands;
-- report passes, failures, and unexecuted checks separately;
-- link raw result and report files;
-- state the next logically required phase.
+- 汇总改动的文件；
+- 列出精确的测试与实验命令；
+- 分开报告通过、失败与未执行的检查；
+- 链接原始结果与报告文件；
+- 说明下一个逻辑上必需的阶段。
 
-## Definition of Done for the Current Project
+## 当前项目的完成定义（Definition of Done for the Current Project）
 
-The initial project is complete only when:
+初始项目只有在以下条件全部满足时才算完成：
 
-1. plaintext, exact, top-k-preserving approximate, and free-bounded approximate modes exist;
-2. exact-mode mathematical tests pass;
-3. at least one meaningful pretrained small-model evaluation has run, or the absence of model/data/compute is explicitly documented;
-4. the configured noise sweep has produced raw results;
-5. accuracy degradation relative to plaintext is summarized in tables and plots;
-6. `results/REPORT.md` explains the best operating point and limitations;
-7. all reported numbers are reproducible from commands and raw artifacts in this repository.
+1. `plaintext`、`exact`、top-k-preserving 近似与 free-bounded 近似模式均存在；
+2. exact 模式数学测试通过；
+3. 至少一次有意义的预训练小模型评测已运行，或明确记录模型/数据/算力的缺失；
+4. 配置的噪声扫描已产出原始结果；
+5. 相对明文的精度退化已汇总为表与图；
+6. `results/REPORT.md` 说明了最佳操作点与限制；
+7. 所有报告数字都可从本仓库内的命令与原始工件复现。

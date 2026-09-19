@@ -1,5 +1,10 @@
 # 增广带噪协变混淆矩阵：构造与实施方案
 
+状态：CURRENT（阶段 A 已执行；阶段 B/D 未开始）
+日期：2026-09-14
+上游依据：docs/implementation_notes.md、results/raw/augmented_noise_kernel/kernel_records.jsonl
+适用范围：增广带噪协变混淆矩阵的构造与阶段 A–D 计划
+
 日期：2026-09-14。状态：阶段 A 已执行并验证（见 `docs/implementation_notes.md` 增广带噪内核一节与 `results/raw/augmented_noise_kernel/kernel_records.jsonl`）；阶段 B 的 COA 攻击评估与阶段 D 的 block 接入尚未开始。
 
 ## 1. Target：本轮要做什么
@@ -267,7 +272,7 @@ c'=[hW+b,\ hC+eG+\xi]M_{\rm out}.
 | `src/fastprove/seed.py` | 增加稳定 sample/position 域；区分测试随机性与部署秘密管理 |
 | `src/fastprove/models/obfuscated.py` | 当前 `_refresh_out` 每层生成一个 r 维向量并广播；改为逐样本逐位置刷新，验证 cache 一致性 |
 | `src/fastprove/layers/embedding.py` | 固定混淆表保留为对照；新增端侧逐记录编码入口，不声称旧表是新鲜随机化 |
-| `src/fastprove/converter.py` | 明确端侧秘密包、云端包、攻击者导出视图，不只依赖 state_dict 名称黑名单 |
+| `src/fastprove/converter/` | 明确端侧秘密包、云端包、攻击者导出视图，不只依赖 state_dict 名称黑名单 |
 | `src/fastprove/config.py` | 增加矩阵族、初始/刷新噪声能量、C 的对照设置与攻击视图配置 |
 
 先保留现有配置及其默认行为，新增配置承载实验。双侧基的 dense Gram 不满足 `_gram_blocks_from` 的结构约束，应明确报不支持，或走命名清晰的独立 reference 路径，禁止静默回退。
@@ -278,8 +283,8 @@ c'=[hW+b,\ hC+eG+\xi]M_{\rm out}.
 configs/augmented_noise_kernel.yaml
 scripts/run_augmented_noise_kernel.py
 scripts/run_augmented_coa_eval.py
-tests/test_augmented_noise_kernel.py
-tests/test_coa_view_contract.py
+tests/math/test_augmented_noise_kernel.py
+tests/security/test_coa_view_contract.py
 results/raw/augmented_noise_kernel/*.jsonl
 results/tables/augmented_noise_kernel.csv
 results/figures/augmented_noise_kernel_*.png
@@ -287,6 +292,12 @@ results/AUGMENTED_NOISE_REPORT.md
 ```
 
 配置草案，字段需随实现接入，当前不能直接交给现有配置解析器：
+
+注（P8a，2026-09-19）：上表中 `scripts/run_augmented_coa_eval.py` **从未实现**，
+阶段 B 的 COA 攻击评估未执行；`configs/augmented_noise_kernel.yaml` 实际是孤儿
+（无 `.py` 读取它，`scripts/run_augmented_noise_kernel.py` 在代码内构造
+`KernelConfig`），仅作文档保留；测试实际落位为
+`tests/math/test_augmented_noise_kernel.py`。
 
 ```yaml
 basis_family: dense_two_sided

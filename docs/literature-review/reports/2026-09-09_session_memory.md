@@ -1,5 +1,10 @@
 # 2026-09-09
 
+状态：CURRENT
+日期：2026-09-09
+上游依据：docs/literature-review/LITERATURE_INDEX.md
+适用范围：文献精读会话记录
+
 ## 五篇论文启发分析（covariant obfuscation 相关文献）
 
 精读并产出报告：`docs/literature-review/reports/2026-09-09_five_papers_inspiration.md`

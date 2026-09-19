@@ -1,8 +1,15 @@
+> 旧框架，禁止复活：生产路径是 D = d；不得引用 expanded_concat/expanded_full/P̂/a/B_comp。
+
+状态：HISTORICAL-已归档
+日期：2026-09-16
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # 增广协变推理 v2：方案、推导主线与可行性边界
 
 日期：2026-09-16。性质：修正后的研究方案，不是安全认证或已完成实现声明。
 
-配套：[完整数学证明](PROOF_PACKAGE.md) · [攻击工作因子](docs/work_factor_security.md) · [工程实施指南](docs/augmented_covariant_implementation_v2.md)。
+配套：[完整数学证明](2026-09-16_PROOF_PACKAGE.md) · [攻击工作因子](../work_factor_security.md) · [工程实施指南](2026-09-16_augmented_covariant_implementation_v2.md)。
 
 ## Target：要证明的可行性
 
@@ -20,7 +27,7 @@ $$h_\ell\xrightarrow{\hat P_\ell}x_\ell=h_\ell\hat P_\ell
 
 **COHERENT AFTER REFRAMING / EXTRA ASSUMPTION**。
 
-相对于 [v1 报告](docs/aloepri_augmented_noise_architecture.md)，保留并明确以“扩维后拼接增广”为主方案，同时保留链式刷新、离线权重转换和可选端云切分；撤回“拼接后环境空间满秩”“免疫零空间与不变性攻击”“首层 RMSNorm 切分即安全闭环”和未经运行支持的成本数字。
+相对于 [v1 报告](2026-09-16_aloepri_augmented_noise_architecture.md)，保留并明确以“扩维后拼接增广”为主方案，同时保留链式刷新、离线权重转换和可选端云切分；撤回“拼接后环境空间满秩”“免疫零空间与不变性攻击”“首层 RMSNorm 切分即安全闭环”和未经运行支持的成本数字。
 
 | 结论 | 状态 | 证明位置 |
 |---|---|---|
@@ -237,7 +244,7 @@ $$G_{s/b,v}(\rho,m)=\frac{W_{s,v}(\rho,m)}{W_{b,v}(\rho,m)}.$$
 
 $$C_A(E,m)=E C_{setup}+mC_{target}.$$
 
-所以密钥轮换只有在跨 epoch 攻击不可迁移时才能提高摊销成本。任何右逆、Gram 或零空间攻击若比学习型反演便宜，就由它决定当前方案的工作因子；不能选择最慢的攻击作为安全证据。完整合同见 [攻击工作因子文档](docs/work_factor_security.md)。
+所以密钥轮换只有在跨 epoch 攻击不可迁移时才能提高摊销成本。任何右逆、Gram 或零空间攻击若比学习型反演便宜，就由它决定当前方案的工作因子；不能选择最慢的攻击作为安全证据。完整合同见 [攻击工作因子文档](../work_factor_security.md)。
 
 ## Remarks and Interpretation：预期收益与取舍
 
@@ -266,6 +273,6 @@ $$C_A(E,m)=E C_{setup}+mC_{target}.$$
 ## 来源与证据层级
 
 - AloePri v2：[论文](https://arxiv.org/abs/2603.01499v2)，仅用于既有方法背景；本文件的证明独立展开，不继承其安全或性能数字。
-- [2026-09-15 交接](docs/AUGMENTED_NOISE_HANDOFF_20260915.md)：已有实现、观察范围及旧部署反解证据。
-- [阶段 A 复核](docs/augmented_noise_stage_a_review.md)：既有数值记录的缺陷及修复要求。
+- [2026-09-15 交接](2026-09-15_AUGMENTED_NOISE_HANDOFF_20260915.md)：已有实现、观察范围及旧部署反解证据。
+- [阶段 A 复核](2026-09-14_augmented_noise_stage_a_review.md)：既有数值记录的缺陷及修复要求。
 - 本次可运行的数学检查与原始结果见实施指南“本次交付验证”；它们辅助检查证明，不是形式化验证器或模型评测。

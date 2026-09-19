@@ -1,3 +1,10 @@
+> HISTORICAL-已归档：2026-09-15 交接快照，后续 S0–S5、P0–P7 已推进；当前口径见 docs/INDEX.md。
+
+状态：HISTORICAL-已归档
+日期：2026-09-15
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # fastProve 增广带噪混淆研究：完整交接文档
 
 交接日期：2026-09-15。工作目录：`/Users/yin/code/fastProve`。
@@ -67,10 +74,10 @@ PPT 原路径（其他机器上可能不存在）：
 
 实际文件哈希、仓库状态、来源记录见配套文件：
 
-- [证据清单](handoff_evidence/20260915/evidence_manifest.json)
-- [验证日志](handoff_evidence/20260915/verification.txt)
-- [本次参数泄漏复现脚本](handoff_evidence/20260915/probe_public_query_projection.py)
-- [本次参数泄漏 raw](../results/raw/handoff_diagnostic_20260915/public_query_projection.json)
+- [证据清单](../handoff_evidence/20260915/evidence_manifest.json)
+- [验证日志](../handoff_evidence/20260915/verification.txt)
+- [本次参数泄漏复现脚本](../handoff_evidence/20260915/probe_public_query_projection.py)
+- [本次参数泄漏 raw../../results/raw/handoff_diagnostic_20260915/public_query_projection.json)
 
 `.gitignore` 当前忽略 `results/raw/**/*.jsonl`，所以阶段 A 的 `kernel_records.jsonl` 不会自动随普通 git 提交交接。交付仓库副本时必须单独携带它和新 raw，按 manifest 校验哈希。不要只给对方 commit ID。
 
@@ -204,7 +211,7 @@ D_q=\texttt{deployed\_q}=P\Gamma W_q=P B,
 | 恢复 h 相对 L2 | 1.42327e-7 |
 | 词表行对应 token top-1 | 64/64，100% |
 
-原始记录：[public_query_projection.json](../results/raw/handoff_diagnostic_20260915/public_query_projection.json)。
+原始记录：[public_query_projection.json../../results/raw/handoff_diagnostic_20260915/public_query_projection.json)。
 
 **成立范围：**一个随机 tiny 基础模型、一个转换密钥、旧 structured 服务包、cloud 观察范围。观测单位是云端可见的整个混淆 embedding 表，不是 64 条自然语言 prompt。未得到真实预训练模型恢复率，也未证明 transcript-only 或新双侧实例已被攻破。
 
@@ -239,7 +246,7 @@ D_q=\texttt{deployed\_q}=P\Gamma W_q=P B,
 
 攻击脚本使用约 1 ulp 窗口，未完整模拟实际 Gram 收缩误差。调整窗口会改变结果，不能预言只是“小幅”下降。用独立校准估计实际误差，并报告目标落入候选集的覆盖率。
 
-`docs/scheme_vs_impl_verdict.md` §4 的最小示例把 embedding 范数直接与 RMS 比较，量纲/尺度不同。正确比较应为同一种统计量：
+`docs/archive/2026-09-14_scheme_vs_impl_verdict.md` §4 的最小示例把 embedding 范数直接与 RMS 比较，量纲/尺度不同。正确比较应为同一种统计量：
 
 \[
 \rho_j=\sqrt{\|E_j\|^2/d+\epsilon},
@@ -262,7 +269,7 @@ D_q=\texttt{deployed\_q}=P\Gamma W_q=P B,
 
 ## 7. 阶段 A 尚未关闭的问题与修复规格
 
-详细旧复核见 [阶段 A 复核](augmented_noise_stage_a_review.md)。以下为接手执行规格，代码位置以当前文件为准。
+详细旧复核见 [阶段 A 复核](2026-09-14_augmented_noise_stage_a_review.md)。以下为接手执行规格，代码位置以当前文件为准。
 
 ### A1：FP32 门禁测错路径，优先级 P0
 
@@ -492,9 +499,9 @@ PYTHONPATH=src python scripts/run_augmented_noise_kernel.py --output-dir results
 
 1. 本文：当前交接判断、执行规格和最新实测。
 2. `AGENTS.md`：项目数学约定、运行与证据纪律；用户后续确认的 COA/端云场景优先。
-3. [增广方案](augmented_noisy_obfuscation_plan.md)：矩阵/噪声目标与阶段定义。
-4. [阶段 A 复核](augmented_noise_stage_a_review.md)：已确认的记录问题。
+3. [增广方案](../augmented_noisy_obfuscation_plan.md)：矩阵/噪声目标与阶段定义。
+4. [阶段 A 复核](2026-09-14_augmented_noise_stage_a_review.md)：已确认的记录问题。
 5. 配套证据清单、raw 与实际代码：验证上述判断。
-6. `docs/PROBLEMS.md`、`docs/scheme_vs_impl_verdict.md`、`docs/problem_analysis.md`、`docs/threat_model.md`：历史分析线索，按本文重新核实攻击能力、数值来源和推论范围。
+6. `docs/PROBLEMS.md`、`docs/archive/2026-09-14_scheme_vs_impl_verdict.md`、`docs/archive/2026-09-13_problem_analysis.md`、`docs/threat_model.md`：历史分析线索，按本文重新核实攻击能力、数值来源和推论范围。
 
 接手者不必接受本文的每个判断；可以用真实代码和可复现实验推翻它。但必须保留相同的攻击者信息边界、数学定义与证据标准。

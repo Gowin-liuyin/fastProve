@@ -1,3 +1,10 @@
+> HISTORICAL-已归档：旧实验执行方案，现行 runbook 与 72 点 sweep 口径以 docs/INDEX.md 所列文档为准；当前口径见 docs/INDEX.md。
+
+状态：HISTORICAL-已归档
+日期：2026-09-19
+上游依据：docs/INDEX.md（归档清单）
+适用范围：历史研究记录；仅存档，不作验收依据
+
 # fastProve 实验执行方案
 
 ## 1. 状态、目标与禁止事项

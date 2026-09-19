@@ -1,9 +1,9 @@
 # 代码结构梳理与文档重建计划
 
-状态：草案，待决策项见 §10
+状态：CURRENT（草案，待决策项见 §10）
 日期：2026-09-19
-适用范围：整个仓库（`src/`、`scripts/`、`evals/`、`tests/`、`docs/`、`configs/`、`results/`）
 上游依据：`AGENTS.md`（规则与验收门）、`docs/IMPLEMENTATION_PROMPT_dual_channel.md`（当前设计与 T1–T10 结论）
+适用范围：整个仓库（`src/`、`scripts/`、`evals/`、`tests/`、`docs/`、`configs/`、`results/`）
 
 ---
 
@@ -191,7 +191,7 @@ REFERENCE PATH — 参与验收门与数学等价性测试，部署 forward 不�
 
 同步处理 `tests/test_cli_plan.py` 与 `tests/test_pretrained_compare_cli.py` 对脚本私有符号的依赖：**同一提交内**改为从新位置 import。
 
-**门**：双绿。另需人工确认 `README.md`/`docs/experiment_plan.md`/`results/REPORT.md` 里的命令行仍逐字有效。
+**门**：双绿。另需人工确认 `README.md`/`docs/archive/2026-09-19_experiment_plan.md`/`results/REPORT.md` 里的命令行仍逐字有效。
 
 ### P6 `evals/` 归位（需决策，见 §10-①）
 
@@ -231,7 +231,7 @@ REFERENCE PATH — 参与验收门与数学等价性测试，部署 forward 不�
 
 每份文档顶部加统一头：`状态`（CURRENT / CONTRACT-未实现 / HISTORICAL-已归档）、`日期`、`上游依据`、`适用范围`。新建 `docs/INDEX.md` 作为唯一入口，列出全部文档及其状态。
 
-归档（**移动不删除**，它们是研究记录）到 `docs/archive/<日期>_<原名>.md`，并在文件头加 supersession banner：`START_PROMPT.md`、`docs/IMPLEMENTATION_PLAN.md`（127 KB，其 ~3046 行仍称 REPORT 为 `SUPERSEDED`/`HARD: FAIL`，与今日事实相反）、`augmented_noise_stage_a_review.md`、`AUGMENTED_NOISE_HANDOFF_20260915.md`、`problem_analysis.md`、`scheme_vs_impl_verdict.md`、`experiment_plan.md`、`superpowers/plans/`、`results/REPORT_zh.md`（已自标 SUPERSEDED）。`aloepri_augmented_noise_architecture.md` 已有正确 banner，作为模板。
+归档（**移动不删除**，它们是研究记录）到 `docs/archive/<日期>_<原名>.md`，并在文件头加 supersession banner（P8a 已执行，落位如下）：`docs/archive/2026-09-19_START_PROMPT.md`、`docs/archive/2026-09-19_IMPLEMENTATION_PLAN.md`（127 KB，其 ~3046 行仍称 REPORT 为 `SUPERSEDED`/`HARD: FAIL`，与今日事实相反）、`docs/archive/2026-09-14_augmented_noise_stage_a_review.md`、`docs/archive/2026-09-15_AUGMENTED_NOISE_HANDOFF_20260915.md`、`docs/archive/2026-09-13_problem_analysis.md`、`docs/archive/2026-09-14_scheme_vs_impl_verdict.md`、`docs/archive/2026-09-19_experiment_plan.md`、`docs/archive/2026-07-31_fastprove-prototype.md`、`docs/archive/2026-08-06_REPORT_zh.md`（已自标 SUPERSEDED）。`docs/archive/2026-09-16_aloepri_augmented_noise_architecture.md` 已有正确 banner，作为模板。
 
 #### 8.2 必须重写的文档
 
@@ -257,9 +257,9 @@ REFERENCE PATH — 参与验收门与数学等价性测试，部署 forward 不�
 - 修正 4 处引用了**不存在**的脚本：`verify_token_recovery_candidate_rescoring.py`、`verify_aloepri_subspace_attack.py`、`run_augmented_coa_eval.py`、`probe_embedding_norm_equalisation.py`。
 - `scripts/run_augmented_noise_kernel.py:12-13` docstring 指向不存在的 `scripts.postprocess_augmented_noise_kernel`。
 - `docs/IMPLEMENTATION_PROMPT_dual_channel.md` 的「现状必读」是 pre-S1 快照，已部分失真（`0.02` 硬编码 13 处已收敛为 `config.py:86` 的具名默认；`ker(L)` 已在 `structured.py:278` 构造；`noise_budget.py` 已落地并在 `converter.py:392-393/476-490` 接线；「40 个测试文件」现为 45）。加一节「S1 之后的增量」而非改写原文。
-- **禁止复活的旧框架**：`aloepri_*.md`、`DERIVATION_PACKAGE.md`、`augmented_covariant_implementation_v2.md` 描述的 `expanded_concat`/`expanded_full`/`P̂`/`a`/`B_comp` 在 `src/` 中**不存在**（生产是 `D = d`）；T3/T4/T5 已证 channel-0 噪声的信息论隐藏量**恰为 0**，填满它只把已知明文样本需求从 `d+r+1` 抬到 `N+1`。文档重建必须统一采用后者的口径。
+- **禁止复活的旧框架**：`docs/archive/2026-09-16_aloepri_augmented_noise_architecture.md`、`docs/archive/2026-09-16_DERIVATION_PACKAGE.md`、`docs/archive/2026-09-16_augmented_covariant_implementation_v2.md` 描述的 `expanded_concat`/`expanded_full`/`P̂`/`a`/`B_comp` 在 `src/` 中**不存在**（生产是 `D = d`）；T3/T4/T5 已证 channel-0 噪声的信息论隐藏量**恰为 0**，填满它只把已知明文样本需求从 `d+r+1` 抬到 `N+1`。文档重建必须统一采用后者的口径。
 - `configs/eval_sweep.yaml` 的两个待查项：`execution.run_in_current_prototype_pass: false` 是过期门标志；`base_config: configs/tiny_approx.yaml`（带 `rho_noise_bound: 1e-5`）与同文件「exact 正确性用 tiny_exact」的注释表面冲突——`evaluation/sweep.py` 里查不到 `rho_noise_bound` 处理，**需实测 spec→config 构造链确认 sweep 的 plaintext/exact 点是否继承了非零 ρ 噪声**。若确实继承，属实质问题，立 PROBLEMS 条目，不在本次静默修改。
-- `configs/augmented_noise_kernel.yaml` 是孤儿（无 `.py` 读它，`run_augmented_noise_kernel.py` 在代码里构造 `KernelConfig`）。该缺陷 `augmented_noise_stage_a_review.md:72` 已记录。本次只在文档标注「documentation-only」，接线属功能变更，另立项。
+- `configs/augmented_noise_kernel.yaml` 是孤儿（无 `.py` 读它，`run_augmented_noise_kernel.py` 在代码里构造 `KernelConfig`）。该缺陷 `docs/archive/2026-09-14_augmented_noise_stage_a_review.md:72` 已记录。本次只在文档标注「documentation-only」，接线属功能变更，另立项。
 - 语言政策统一（见 §10-⑤）。
 
 **门**：文档内所有相对路径、命令、文件引用做一次自动化链接检查（新增 `scripts/check_doc_links.py`，纯文档工具，不参与等价性）。

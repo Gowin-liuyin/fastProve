@@ -1,5 +1,10 @@
 # fastProve 系统技术架构与实现规格说明书
 
+状态：CURRENT
+日期：2026-09-16
+上游依据：AGENTS.md、docs/architecture.md
+适用范围：系统技术架构、模块职责与接口规格（v2.0）
+
 **版本**：v2.0 (部署闭环与增广混淆演进版)  
 **更新日期**：2026-09-16  
 **对应代码库状态**：Stage A–D 全闭环实现 (`src/fastprove/`)
@@ -251,7 +256,7 @@ _FORBIDDEN_SERVER_KEY_LEAF_TOKENS = (
     "tau", "token_codec", "basis"
 )
 ```
-*注：`common_qk` 与 `deployed_gram_blocks` 属于服务端必须执行的算子依赖，在 `runtime_config.json` 的 `server_visible_key_material` 字段中显式备案，不再进行隐匿。*
+*注：`common_qk` 与 `deployed_gram_blocks` 属于服务端必须执行的算子依赖，在转换产物的 runtime_config.json 的 `server_visible_key_material` 字段中显式备案，不再进行隐匿。*
 
 ---
 
@@ -307,7 +312,7 @@ sequenceDiagram
 ### 7.2 核心工程约束与硬指标
 * **辅助噪声幅度硬约束**：
   $$\frac{\|e\|}{\|h\|} \le 30$$
-  *原因：$A_{\rm gram}$ 的 FP32 截断误差随 $(\|e\|/\|h\|)^2$ 增长。超过 30 将直接造成信号路径 $\rho$ 精度漂移，导致模型输出坍塌（见 `tests/test_structured_basis.py`）。*
+  *原因：$A_{\rm gram}$ 的 FP32 截断误差随 $(\|e\|/\|h\|)^2$ 增长。超过 30 将直接造成信号路径 $\rho$ 精度漂移，导致模型输出坍塌（见 `tests/math/test_structured_basis.py`）。*
 * **基条件数约束**：$\kappa_2(M) \le 10$。
 * **显存膨胀控制**：
   * 主干 Transformer 维度膨胀率为 $n/d = (d+r)/d$（当 $d=3072, r=16$ 时，膨胀率仅 **0.52%**）。
@@ -320,5 +325,5 @@ sequenceDiagram
 * **数学恒等式独立复核预言机**：[`docs/design_identity_check.py`](design_identity_check.py)
 * **已知安全性上界与泄漏清单**：[`docs/PROBLEMS.md`](PROBLEMS.md)
 * **端云威胁模型与特权边界**：[`docs/threat_model.md`](threat_model.md)
-* **交接与阶段性审计备忘录**：[`docs/AUGMENTED_NOISE_HANDOFF_20260915.md`](AUGMENTED_NOISE_HANDOFF_20260915.md)
-* **评测与实验实施方案**：[`docs/experiment_plan.md`](experiment_plan.md)
+* **交接与阶段性审计备忘录**：[`docs/archive/2026-09-15_AUGMENTED_NOISE_HANDOFF_20260915.md`](archive/2026-09-15_AUGMENTED_NOISE_HANDOFF_20260915.md)
+* **评测与实验实施方案**：[`docs/archive/2026-09-19_experiment_plan.md`](archive/2026-09-19_experiment_plan.md)

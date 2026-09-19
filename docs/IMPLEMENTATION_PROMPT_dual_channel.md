@@ -1,7 +1,12 @@
 # 双通道噪声预算重构：交接提示词与代码修改计划
 
+状态：CURRENT（S0–S5 已执行；增量见文末「S1 之后的增量」）
+日期：2026-09-19
+上游依据：AGENTS.md、docs/PROBLEMS.md
+适用范围：双通道噪声预算重构的提示词与分阶段计划
+
 日期：2026-09-19。依据：[噪声放置分析](noise_placement_explained.pdf)（推导与 T1–T10 核验）、
-[攻击工作因子](work_factor_security.md)、[问题分析](problem_analysis.md)、
+[攻击工作因子](work_factor_security.md)、[问题分析（已归档）](archive/2026-09-13_problem_analysis.md)、
 核验脚本 `docs/verification/verify_noise_ordering.py`、原始记录
 `results/raw/noise_ordering_analysis_20260919.json`。
 
@@ -63,7 +68,7 @@ results/raw/noise_ordering_analysis_20260919.json）：
   也就是免费通道当前只有 r 维。
 - 噪声有两套互不相连的实现：
   A 套 src/fastprove/augmented_noise.py（有 energy_ratio 即 beta，有 component_sigma 换算），
-      只被 scripts/run_augmented_noise_kernel.py 和 tests/test_augmented_noise_kernel.py 用，
+      只被 scripts/run_augmented_noise_kernel.py 和 tests/math/test_augmented_noise_kernel.py 用，
       模型 forward 和权重转换完全不调用它；
   B 套 src/fastprove/models/obfuscated.py + src/fastprove/layers/deployed.py（真正跑推理的），
       噪声幅度硬编码 scale=0.02，共 13 处。
@@ -76,7 +81,7 @@ results/raw/noise_ordering_analysis_20260919.json）：
 - 攻击脚本是自包含单文件，无共享 util。JSON 是手写惯例：claim / requires_* 布尔前提位 /
   by_<axis> 分轴结果。最完整的范式是 scripts/verify_token_recovery_from_rho.py，
   最小模板是 scripts/verify_gram_leakage.py（126 行）。
-- 唯一真正复现攻击的测试是 tests/test_rho_noise.py:84 和 :260，新攻击测试照这个写。
+- 唯一真正复现攻击的测试是 tests/security/test_rho_noise.py:84 和 :260，新攻击测试照这个写。
 
 ## 每阶段交付
 
@@ -105,7 +110,7 @@ tests/ 里有过一个抓不到注入泄漏却给出「2 passed」的守卫测�
 | 位置 | `src/fastprove/augmented_noise.py`（259 行） | `src/fastprove/models/obfuscated.py` + `src/fastprove/layers/deployed.py` |
 | 幅度来源 | `NoiseRefreshSpec.energy_ratio` → `component_sigma()`（:54–62） | **硬编码 `scale=0.02`，13 处** |
 | 配置文件 | `configs/augmented_noise_kernel.yaml`（`load_config` 不认这个 schema） | `configs/tiny_*.yaml` |
-| 消费方 | `scripts/run_augmented_noise_kernel.py`、`tests/test_augmented_noise_kernel.py` | 模型 forward、权重转换、全部 exact/approx 门禁 |
+| 消费方 | `scripts/run_augmented_noise_kernel.py`、`tests/math/test_augmented_noise_kernel.py` | 模型 forward、权重转换、全部 exact/approx 门禁 |
 | 接入模型 | **否** | 是 |
 
 13 处硬编码位置：
@@ -127,7 +132,7 @@ $$c = [h,\;e]\,M,\qquad \text{signal\_dim}=\text{hidden\_size},\quad \text{noise
 即 $D = d$。按分析报告的定理 3，当前免费通道 $\ker L$ 的维数是 $(D-d)+r = r$，也就是
 **只有拼接噪声那 $r$ 维**，补空间那 $D-d$ 维一个都没有。
 
-`DERIVATION_PACKAGE.md` 描述的 `expanded_full`（$c=[h\hat P+aB_c,\,e]M$）目前只是纸面方案。
+`docs/archive/2026-09-16_DERIVATION_PACKAGE.md` 描述的 `expanded_full`（$c=[h\hat P+aB_c,\,e]M$）目前只是纸面方案（该旧框架已归档、禁止复活）。
 
 ### 1.3 已有的可复用件
 
@@ -214,7 +219,7 @@ def channel_decomposition(self, noise: torch.Tensor) -> dict[str, float]:
 
 两者都在 FP64 下算，与 `dense_inverse()` 一致。
 
-**新测试** `tests/test_free_noise_cone.py`（照 `tests/test_structured.py` 的风格）
+**新测试** `tests/math/test_free_noise_cone.py`（照 `tests/math/test_structured_basis.py` 的风格）
 
 ```python
 def test_free_basis_has_expected_dimension()          # dim == noise_dim
@@ -227,7 +232,7 @@ def test_induced_semantic_error_matches_n_times_L()   # 定理 2，rel err < 1e-
 
 **验收**
 
-- `python -m pytest -q tests/test_free_noise_cone.py` 全绿；
+- `python -m pytest -q tests/math/test_free_noise_cone.py` 全绿；
 - `python -m pytest -q` 全绿（无行为变更，计数应只增不减）；
 - 新增一条 recorded run：`results/raw/free_noise_cone_check.json`，记 `dim_ker_L`、
   `max_semantic_leak`、`subspace_principal_angle`，以及 `torch_version`/`platform`/`seed`。
@@ -280,13 +285,13 @@ $\xi$ 的默认值应等价于现在的 0.02。
 显式写出两个新字段，值取「与当前行为等价」：`free_noise_energy_ratio: 0.02`、
 `signal_noise_coupling_scale: 0.0`。
 
-**改动 5**：`src/fastprove/converter.py:407–420` 的 `runtime_config.json` 记录新字段。
+**改动 5**：`src/fastprove/converter/save.py` 的 `runtime_config.json` 记录新字段。
 
 **验收（这是本阶段最关键的一条）**
 
 - **数值等价性回归**：改动前后，`configs/tiny_exact.yaml` 与 `configs/tiny_approx.yaml`
   在同一 seed 下的输出必须逐位一致。做法：改动前先跑一遍存基线
-  `results/raw/pre_s1_baseline.json`，改完再跑对比。不允许「差不多」。
+  `results/raw/pre_s1_baseline_tiny_exact.json`（以及 `..._tiny_approx.json`），改完再跑对比。不允许「差不多」。
 - `python -m pytest -q` 全绿；
 - `results/raw/exact_gate_D1.json` 门禁重跑仍 PASS；
 - `grep -rn "0\.02" src/fastprove/` 只应命中 yaml 默认值的文档字符串，不再有裸魔数。
@@ -344,11 +349,11 @@ def semantic_hiding_bits(sigma_delta_over_sigma_h: float) -> float:
     ratio == 0 返回 inf（无隐藏）。"""
 ```
 
-**改动**：`src/fastprove/converter.py` 的 `convert()`（:303）在写 `runtime_config.json` 时
+**改动**：`src/fastprove/converter/save.py` 的 `ModelConverter.convert()`（:35）在写 `runtime_config.json` 时
 一并写 `noise_budget.json`（`DualChannelBudget.manifest()`），并在写之前调用
 `assert_consistent_with(config)`。这样预算不一致会在转换期就失败，而不是事后靠人读文档发现。
 
-**新测试** `tests/test_noise_budget.py`
+**新测试** `tests/math/test_noise_budget.py`
 
 ```python
 def test_channel_zero_rejects_nonzero_hiding_claim()      # 定理 4 的守卫
@@ -404,7 +409,7 @@ CLI（照既有约定）：`--output`（必填）、`--signal-dim`、`--noise-di
 `--seed`、`--sample-counts`（逗号分隔，扫 $T$）、可选 `--server-model-dir`
 （有则攻击真实 bundle，无则用合成 basis）。
 
-JSON 必含（照 `verify_token_recovery_from_rho.json` 的惯例）：
+JSON 必含（照 `results/raw/token_recovery_from_rho.json` 的惯例）：
 
 ```json
 {
@@ -429,7 +434,7 @@ JSON 必含（照 `verify_token_recovery_from_rho.json` 的惯例）：
 concat 构造下 $\hat L \ne L$（矩阵相对差可达 0.33），但在可达状态集上逐点精确。
 只报后者会得出「攻击失败」的错误结论。
 
-**新测试** `tests/test_known_plaintext_recovery.py`，照 `tests/test_rho_noise.py:84` 的范式
+**新测试** `tests/security/test_known_plaintext_recovery.py`，照 `tests/security/test_rho_noise.py:84` 的范式
 缩成小规模确定性单测：
 
 ```python
@@ -506,7 +511,7 @@ FLOPs 用解析式估算（例如 QR + SVD 的 $O(TN^2)$ 展开系数），不�
 在 docstring 里写明这是上界估算，不是最优复杂度下界——`work_factor_security.md` §4.1
 已经这么措辞了，保持一致。
 
-**新测试** `tests/test_attack_records.py`：必填键、`right_censored` 强制、
+**新测试** `tests/security/test_attack_records.py`：必填键、`right_censored` 强制、
 `amortised_seconds` 的三个规模点（$m\in\{1,10^2,10^4\}$，对应 §3 的要求）、
 拒绝非白名单 `coa_view`。
 
@@ -522,7 +527,7 @@ FLOPs 用解析式估算（例如 QR + SVD 的 $O(TN^2)$ 展开系数），不�
 ### S6：否证实验——候选集 + 语言模型重排
 
 **目标**：这是分析报告里唯一能**否证整套论证**的实验，也是
-`problem_analysis.md` §5.3 的最大证据缺口。优先级高于补测 PPL/MMLU，因为它便宜，
+`docs/archive/2026-09-13_problem_analysis.md` §5.3 的最大证据缺口。优先级高于补测 PPL/MMLU，因为它便宜，
 且它的结果决定要不要继续在 $\tau=10^{-5}$ 这个操作点上花精度预算。
 
 **要检验的预测**
@@ -532,7 +537,10 @@ token 恢复率从 93.8% 掉到 3.9%。两者同时成立只能说明：掉的�
 所以把「唯一匹配」换成「$\tau$ 邻域候选集 + 语言模型重排」或「多次观测取平均」，
 恢复率应**显著高于 3.9%**。
 
-**新脚本** `scripts/verify_token_recovery_candidate_rescoring.py`
+**新脚本（从未实现）** `scripts/verify_token_recovery_candidate_rescoring.py`
+（S6 未执行，该脚本在全仓库不存在；阻塞记录见
+`results/raw/blocked_stages_s6_s7.json`。基础设施工件仍是已实现的
+`scripts/verify_token_recovery_from_rho.py`。）
 
 基础设施直接复用 `scripts/verify_token_recovery_from_rho.py`（它已经有
 `mean_candidate_count` / `uniquely_determined_fraction` / `unique_and_correct_fraction`
@@ -580,8 +588,9 @@ $$E'_i = E_i \cdot \frac{\bar s}{s_i},\qquad
 难点在于补偿项是**逐 token 标量**，而 RMSNorm 后的第一层投影是**逐 token 共享**的矩阵。
 所以不能简单吸收进权重。要先在参考实现里确认可行性：
 
-**先做可行性探针**，不要直接改转换器。新脚本
-`scripts/probe_embedding_norm_equalisation.py`：
+**先做可行性探针**，不要直接改转换器。计划新脚本
+`scripts/probe_embedding_norm_equalisation.py`（从未实现：S7 未执行，脚本不在仓库中；
+阻塞记录见 `results/raw/blocked_stages_s6_s7.json`）：
 
 1. 取真实 checkpoint 的 $E$，算范数分布与 `distinct_fraction`；
 2. 构造等范数化的 $E'$；
@@ -592,7 +601,7 @@ $$E'_i = E_i \cdot \frac{\bar s}{s_i},\qquad
 
 **只有探针显示精度代价可接受**，才进入第二步改
 `src/fastprove/pretrained/{llama,qwen2}.py` 的加载路径和
-`src/fastprove/converter.py` 的转换路径。
+`src/fastprove/converter/` 包的转换路径。
 
 **验收**
 
@@ -610,7 +619,7 @@ $$E'_i = E_i \cdot \frac{\bar s}{s_i},\qquad
 
 ### S3：补空间噪声与升维（收益已知有界，排最后）
 
-**目标**：把 `DERIVATION_PACKAGE.md` 的 `expanded_full` 从纸面变成实现，
+**目标**：把 `docs/archive/2026-09-16_DERIVATION_PACKAGE.md` 的 `expanded_full` 从纸面变成实现，
 即引入 $\hat P/\hat Q$ 升维和补空间噪声 $a$，把自由通道从 $r$ 维扩到 $(D-d)+r$ 维。
 
 **先读这一段再决定要不要做。** 定理 3 + T5 已经证明：
@@ -633,7 +642,7 @@ $$E'_i = E_i \cdot \frac{\bar s}{s_i},\qquad
 |---|---|
 | `config.py` `ObfuscationConfig` | 新增 `lifted_dim`（$D$）、`complement_noise_energy_ratio`（$\beta_a$）；校验 $D \ge d$、$D-d$ 与 `basis_block_size` 对齐 |
 | `structured.py` | 新增 $\hat P/\hat Q$ 生成（**用正交完成构造**，见下）、$B_c$ 基（$\ker(\hat Q^{\!\top})$）、扩展 `free_noise_basis()` 覆盖两类自由度 |
-| `conversion.py:82–108` | K 矩阵改为 `DERIVATION_PACKAGE.md` §3 的 $K_{i\to o}=\begin{bmatrix}\hat Q_iW\hat P_o & \hat Q_iC\\ 0 & G\end{bmatrix}$ |
+| `conversion.py:82–108` | K 矩阵改为 `docs/archive/2026-09-16_DERIVATION_PACKAGE.md` §3 的 $K_{i\to o}=\begin{bmatrix}\hat Q_iW\hat P_o & \hat Q_iC\\ 0 & G\end{bmatrix}$ |
 | `layers/deployed.py:101–363` | 部署权重融合吸收 $\hat Q_i$ 与 $\hat P_o$ |
 | `models/obfuscated.py` | 采样补空间噪声 $a$，与 $e$ 分开记账 |
 | `noise_budget.py`（S2 建的） | `free` 通道拆成 `complement` + `concat` 两个子项 |
@@ -641,7 +650,7 @@ $$E'_i = E_i \cdot \frac{\bar s}{s_i},\qquad
 **必须注意**：$\hat P$ 要用正交完成构造（取 $D\times D$ 正交矩阵的前 $d$ 行，
 则 $\hat Q=\hat P^{\!\top}$ 精确、$B_c$ 就是剩下的 $D-d$ 行），
 **不要**用随机矩阵 + `pinv`。后者的右逆病态，会让条件数校验和 exact 门禁一起失守。
-`DERIVATION_PACKAGE.md` §2 也提了这一点。我在核验脚本的 `make_scheme()` 里就是这么做的。
+`docs/archive/2026-09-16_DERIVATION_PACKAGE.md` §2 也提了这一点。我在核验脚本的 `make_scheme()` 里就是这么做的。
 
 **验收**：`expanded_full` 下 $\dim\ker L=(D-d)+r$；exact 门禁仍 PASS；
 S4 的攻击样本阈值从 $d+r+1$ 实测抬到 $N+1$；`noise_budget.json` 正确拆分两个子项。
@@ -680,8 +689,36 @@ S4 的攻击样本阈值从 $d+r+1$ 实测抬到 $N+1$；`noise_budget.json` 正
 | 核验脚本 | `docs/verification/verify_noise_ordering.py` |
 | 原始核验记录 | `results/raw/noise_ordering_analysis_20260919.json` |
 | 工作因子口径 | `docs/work_factor_security.md` |
-| 已记录的泄漏通道 | `docs/PROBLEMS.md`、`docs/problem_analysis.md` |
-| 方案主体与 P1–P15 | `DERIVATION_PACKAGE.md`、`PROOF_PACKAGE.md` |
+| 已记录的泄漏通道 | `docs/PROBLEMS.md`、`docs/archive/2026-09-13_problem_analysis.md` |
+| 方案主体与 P1–P15（旧框架，已归档） | `docs/archive/2026-09-16_DERIVATION_PACKAGE.md`、`docs/archive/2026-09-16_PROOF_PACKAGE.md` |
 | 观察视图契约 | `src/fastprove/coa_views.py` |
 | 攻击脚本范式 | `scripts/verify_token_recovery_from_rho.py`（最全）、`scripts/verify_gram_leakage.py`（最小） |
-| 攻击测试范式 | `tests/test_rho_noise.py:84`、`:260` |
+| 攻击测试范式 | `tests/security/test_rho_noise.py:84`、`:260` |
+
+---
+
+# S1 之后的增量（P8a 于 2026-09-19 补记；不改写上文原文）
+
+上文「现状必读」是 S1 之前的快照。截至本日已落地的增量：
+
+1. **0.02 硬编码已收敛为具名默认。** `src/fastprove/config.py:86` 的
+   `free_noise_energy_ratio: float = 0.02` 就是原先 13 处 `scale=0.02` 的单一来源；
+   `signal_noise_coupling_scale` 的 dataclass 默认是保守的 `0.0`，而
+   `configs/tiny_exact.yaml`/`tiny_approx.yaml` 显式写入历史值 `0.02` 以保持逐位一致。
+   现在 `rg "0\.02" src/fastprove/` 只剩该默认值与注释
+   （`config.py:90`、`models/obfuscated.py:184`），不再有裸魔数。
+2. **`ker(L)` 已在 `structured.py` 构造。** `StructuredBasis.free_noise_basis()`
+   （`src/fastprove/structured.py:254`）用 FP64 SVD 返回 `ker(L)` 的正交行基；
+   `channel_decomposition()`（同文件 `:287`）给出通道 0/1 能量分解。
+   通道 0 的信息论隐藏量为 0 的口径不变。
+3. **`noise_budget.py` 已落地并在转换器接线。** `DualChannelBudget`
+   （`src/fastprove/noise_budget.py:127`）在 `src/fastprove/converter/save.py:103-104`
+   构造并做一致性校验，在 `:187-201` 写出 `noise_budget.json` 并记录 sha256。
+4. **测试规模与布局已变。** P7 把测试移入
+   `tests/{math,layers,models,deployment,security,evaluation,cli,pretrained}/`，
+   现有 48 个 `test_*.py`（`tests/` 下合计 59 个 `.py`），
+   `python -m pytest tests -q` 为 **399 passed**；上文「当前 40 个测试文件」已过期。
+5. **S6/S7 状态。** 两阶段均未执行，阻塞记录在
+   `results/raw/blocked_stages_s6_s7.json`；S6 的
+   `scripts/verify_token_recovery_candidate_rescoring.py` 与 S7 的
+   `scripts/probe_embedding_norm_equalisation.py` 从未实现（上文对应处已加注）。
