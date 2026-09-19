@@ -20,7 +20,7 @@
 | 类别 | 数量 | 是否可修 | 说明 |
 |---|---:|---|---|
 | **A. 构造的固有泄漏** | 7 条 | ❌ 不可用工程手段消除 | 由「输出精确 + 低开销 + 无可信边界」三个约束强制 |
-| **B. 实现缺陷** | 3 条 | ✅ 已全部修复 | 普通 bug，含一条我自己文档引入的 |
+| **B. 实现缺陷** | 4 条 | ✅ 3 条已修复；1 条待决策（§3.4） | 普通 bug，含一条我自己文档引入的 |
 | **C. 证据链缺口** | 4 条 | ⏳ 待补 | 不是错误，是尚未验证的部分 |
 
 **最重要的一条**（§1.1）：服务端要算对 RMSNorm 就必须算对 `ρ`，而 `ρ` 代数上就是
@@ -384,7 +384,7 @@ Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重。`untied_deployed` 模�
 
 ---
 
-## 3. 类别 B：实现缺陷（已全部修复）
+## 3. 类别 B：实现缺陷（3 条已修复，1 条待决策）
 
 ### 3.1 【我的文档引入】`test_no_decode_in_forward.py` 是空测试
 
@@ -442,6 +442,81 @@ Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重。`untied_deployed` 模�
 
 见 §1.4。原文用 `κ ≤ 10` 描述距离保真度上界，实际是精确暴露。
 已补 5bis.8 条目 6 并在 5bis.3 加前向警告。
+
+### 3.4 【待决策，未修复】Wilson 区间两份定义逐位不一致（z 常数不同）
+
+**现象**
+
+同一个概念「二项比例的 95% Wilson 置信区间」在仓库里有两份独立实现，给定相同
+`(k, n)` 会给出不同的浮点数：
+
+- `evals/stats.py::wilson_interval`：`z` 由 `_z_from_level(0.95)` 查表得到
+  `1.959963984540054`，返回 `IntervalEstimate.ci_low/ci_high`；
+- `fastprove/evaluation/benchmarks/scoring.py::_wilson_interval`：默认参数
+  `z=1.959963985`，被 `_annotate_chance_floor` 用来写 `accuracy_ci95`。
+  （P5c 之前这是 `scripts/run_osnip_style_benchmarks.py:322` 的本地副本。）
+
+**根因**
+
+两份实现的 `z` 常数不同（绝对差约 4.6e-10，相对差约 2.3e-10），且半宽公式的
+浮点运算顺序不同：
+
+```
+evals:   margin = z*sqrt((phat(1-phat) + z²/(4n))/n) / denom
+scoring: half   = z*sqrt(phat(1-phat)/n + z²/(4n²)) / denom
+```
+
+两式代数等价，浮点上不逐位相等；两个来源叠加后最大差约 1.2e-10。
+
+**实测数据**（python3.13 / torch 2.11；遍历 n ≤ 200 全部 k，及
+n ∈ {500, 1000, 1838, 4000, 10000} 的抽样 k，共 21253 个 `(k, n)`）
+
+| 量 | 值 |
+|---|---:|
+| 最大绝对差 | **1.1728734650162664e-10**（k=0, n=4, 上界） |
+| k=10, n=10 下界差 | **9.411e-11** |
+| k=1838, n=1838 下界差 | 9.767e-13 |
+| k=95, n=100 下界差 | 1.911e-11 |
+
+**谁在用哪一份**
+
+| 工件 / 脚本 | 使用哪份定义 |
+|---|---|
+| `accuracy_ci95`：`results/raw/osnip_style_bench_fixed*.json`（63/9 条任务记录，由 `scoring.py::_annotate_chance_floor` 生成） | z = 1.959963985 |
+| `top1_token_agreement_ci95`：`results/raw/exact_gate_D1.json`、`results/raw/eval_P2_k5.json`；`evals/layer4_output_logit.py`、`evals/layer5_downstream.py`、`fastprove/evaluation/accuracy.py:581` | `evals.stats.wilson_interval`，z = 1.959963984540054 |
+
+**对历史结果可比性的风险**
+
+已落盘的 `accuracy_ci95` 与 evals 统计用户（`top1_token_agreement_ci95` 等）基于
+不同 `z`。差异 1e-10 远低于报告的四舍五入精度（≥1e-6），**不改变任何已发表数字
+的解读**；但任何跨工件的逐位相等断言（bit-parity 测试、`--check` 式逐位复现门）
+都会因为定义不同而失败。若将来统一，两类历史 CI 值在 1e-10 量级上不可互比。
+
+**统一需要显式决策（本次重构不做，两份实现都保留）**
+
+- 方案 1：让 `scoring.py::_wilson_interval` 改为调用
+  `evals.stats.wilson_interval`，则 `accuracy_ci95` 数值改变 ~1e-10，历史工件不动；
+- 方案 2：让 `evals.stats` 改用 `z=1.959963985`，改变的是 evals 统计用户；
+- 方案 3：两边新增共享函数并让 `scoring` 单向复用 `evals.stats`，同时把定义写进
+  README/`docs/IMPLEMENTATION_PLAN.md`。
+
+在决策落地前，禁止在报告或测试中假设两份定义逐位一致。
+
+**复现**
+
+```bash
+python - <<'PY'
+from evals.stats import wilson_interval
+from fastprove.evaluation.benchmarks.scoring import _wilson_interval
+e = wilson_interval(0, 4)
+lo, hi = _wilson_interval(0, 4)
+print(e.ci_high, hi, abs(e.ci_high - hi))
+# 0.4898908364545973 0.48989083657188465 1.1728734650162664e-10
+PY
+```
+
+**工程可消除性**：✅ 可消除，但必须是一次显式取舍——改任何一边都会让已记录工件
+在 1e-10 量级上变化，因此不允许在结构重构里静默统一。
 
 ---
 

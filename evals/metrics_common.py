@@ -2,33 +2,32 @@
 
 from __future__ import annotations
 
-import math
 from typing import Dict, Optional, Tuple
 
 import torch
 
-from fastprove.evaluation.metrics import tensor_error_metrics
+from fastprove.evaluation.metrics import (
+    js_divergence as _canonical_js_divergence,
+    kl_divergence as _canonical_kl_divergence,
+    max_abs_error as _canonical_max_abs_error,
+    relative_l2_error as _canonical_relative_l2_error,
+    tensor_error_metrics,
+    topk_row_metrics,
+)
 
 
 def max_abs_error(reference: torch.Tensor, actual: torch.Tensor) -> float:
-    return float(
-        (reference.detach().double() - actual.detach().double())
-        .abs()
-        .max()
-        .item()
-    )
+    """Maximum absolute FP64 error; delegates to fastprove."""
+
+    return _canonical_max_abs_error(reference, actual)
 
 
 def relative_l2_error(
     reference: torch.Tensor, actual: torch.Tensor, *, eps: float = 1e-12
 ) -> float:
-    ref = reference.detach().double().reshape(-1)
-    act = actual.detach().double().reshape(-1)
-    num = torch.linalg.vector_norm(act - ref)
-    den = torch.linalg.vector_norm(ref)
-    if den.item() == 0.0:
-        return 0.0 if num.item() == 0.0 else math.inf
-    return float((num / den.clamp_min(eps)).item())
+    """Relative L2 error with denominator floor ``eps``; delegates to fastprove."""
+
+    return _canonical_relative_l2_error(reference, actual, eps=eps)
 
 
 def infinity_and_relative(
@@ -54,56 +53,17 @@ def infinity_and_relative(
 def kl_divergence(
     p: torch.Tensor, q: torch.Tensor, *, valid: Optional[torch.Tensor] = None
 ) -> float:
-    """Mean row-wise KL(p ‖ q) over valid positions."""
+    """Mean row-wise KL(p ‖ q) over valid positions; delegates to fastprove."""
 
-    p64 = p.detach().double()
-    q64 = q.detach().double()
-    tiny = torch.finfo(torch.float64).tiny
-    if valid is None:
-        valid = torch.ones_like(p64, dtype=torch.bool)
-    p_safe = p64.clamp_min(tiny)
-    q_safe = q64.clamp_min(tiny)
-    terms = torch.where(
-        valid & (p64 > 0),
-        p64 * (p_safe.log() - q_safe.log()),
-        torch.zeros_like(p64),
-    )
-    row = terms.sum(dim=-1)
-    row_valid = valid.any(dim=-1)
-    if not row_valid.any():
-        return 0.0
-    return float(row[row_valid].mean().item())
+    return _canonical_kl_divergence(p, q, valid_mask=valid)
 
 
 def js_divergence(
     p: torch.Tensor, q: torch.Tensor, *, valid: Optional[torch.Tensor] = None
 ) -> float:
-    """Mean row-wise Jensen–Shannon divergence."""
+    """Mean row-wise Jensen–Shannon divergence; delegates to fastprove."""
 
-    p64 = p.detach().double()
-    q64 = q.detach().double()
-    tiny = torch.finfo(torch.float64).tiny
-    if valid is None:
-        valid = torch.ones_like(p64, dtype=torch.bool)
-    m = 0.5 * (p64 + q64)
-    m_safe = m.clamp_min(tiny)
-    p_safe = p64.clamp_min(tiny)
-    q_safe = q64.clamp_min(tiny)
-    p_to_m = torch.where(
-        valid & (p64 > 0),
-        p64 * (p_safe.log() - m_safe.log()),
-        torch.zeros_like(p64),
-    ).sum(dim=-1)
-    q_to_m = torch.where(
-        valid & (q64 > 0),
-        q64 * (q_safe.log() - m_safe.log()),
-        torch.zeros_like(q64),
-    ).sum(dim=-1)
-    row = 0.5 * (p_to_m + q_to_m)
-    row_valid = valid.any(dim=-1)
-    if not row_valid.any():
-        return 0.0
-    return float(row[row_valid].mean().item())
+    return _canonical_js_divergence(p, q, valid_mask=valid)
 
 
 def total_variation(
@@ -159,10 +119,8 @@ def topk_set_overlap(
         c_top1 = int(torch.argmax(c).item())
         n_top1 = int(torch.argmax(n).item())
         top1_matches.append(1.0 if c_top1 == n_top1 else 0.0)
-        kk = min(k, c.numel())
-        c_set = set(torch.topk(c, kk, largest=True).indices.tolist())
-        n_set = set(torch.topk(n, kk, largest=True).indices.tolist())
-        overlaps.append(len(c_set & n_set) / float(kk))
+        overlap, _changed = topk_row_metrics(c, n, top_k=k)
+        overlaps.append(overlap)
         # Pairwise rank flips among valid positions.
         if c.numel() >= 2:
             # Order disagreement: sign of pairwise differences.
