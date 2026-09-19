@@ -29,7 +29,7 @@ import torch.nn.functional as F
 
 from ..seed import RequestContext, make_generator
 from ..state import MixedState
-from ..structured import StructuredBasis
+from ..structured import StructuredBasis, gram_rms_scale
 from ..transforms import BasisDescriptor, generate_signed_permutation
 from ..augmented_noise import deployed_free_noise_sigma
 from .deployed import (
@@ -402,17 +402,8 @@ def _moe_rms_scale(
     """O(n*b) RMS scale reading the shipped Gram artifacts."""
 
     def rms_scale(mixed: torch.Tensor, eps: float) -> torch.Tensor:
-        count, block = int(gram_blocks.shape[0]), int(gram_blocks.shape[1])
-        device = mixed.device
-        perm = gram_perm.to(device=device)
-        gathered = mixed[..., perm].to(dtype=torch.float32)
-        segments = gathered.reshape(*mixed.shape[:-1], count, block)
-        gram = gram_blocks.to(device=device, dtype=torch.float32)
-        contracted = torch.einsum(
-            "...mi,mij,...mj->...", segments, gram, segments
+        return gram_rms_scale(
+            mixed, signal_dim, gram_blocks, gram_perm, eps, width_error=None
         )
-        return torch.sqrt(
-            contracted.clamp_min(0.0) / float(signal_dim) + float(eps)
-        ).unsqueeze(-1)
 
     return rms_scale

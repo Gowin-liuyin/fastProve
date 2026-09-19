@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Optional
 
 import torch
 
@@ -209,22 +210,16 @@ class StructuredBasis:
 
         if mixed.shape[-1] != self.total_dim:
             raise ValueError("mixed width does not match basis")
-        device = mixed.device
-        gathered = mixed[..., self.perm_out.to(device)].to(dtype=torch.float32)
-        segments = gathered.reshape(
-            *mixed.shape[:-1], self.block_count, self.block_size
-        )
-        gram = self.gram_blocks.to(device=device, dtype=torch.float32)
-        contracted = torch.einsum("...mi,mij,...mj->...", segments, gram, segments)
-        return contracted.clamp_min(0.0)
+        return gram_signal_norm_squared(mixed, self.gram_blocks, self.perm_out)
 
     def rms_scale(self, mixed: torch.Tensor, eps: float) -> torch.Tensor:
         """Return ``sqrt(||h||^2 / d + eps)`` with shape ``[..., 1]`` in FP32."""
 
         if eps <= 0:
             raise ValueError("eps must be positive")
-        squared = self.signal_norm_squared(mixed)
-        return torch.sqrt(squared / float(self.signal_dim) + float(eps)).unsqueeze(-1)
+        return gram_rms_scale(
+            mixed, self.signal_dim, self.gram_blocks, self.perm_out, eps
+        )
 
     def dense(self) -> torch.Tensor:
         """Return dense FP64 ``M``. Offline conversion/validation only."""
@@ -354,6 +349,49 @@ class StructuredBasis:
             product, torch.eye(self.total_dim, dtype=_FP64), atol=atol, rtol=0.0
         ):
             raise ValueError("structured inverse does not invert the basis")
+
+
+def gram_signal_norm_squared(
+    mixed: torch.Tensor,
+    gram_blocks: torch.Tensor,
+    gram_perm: torch.Tensor,
+    *,
+    width_error: Optional[str] = "mixed width does not match basis",
+) -> torch.Tensor:
+    """Blockwise ``c A_gram c^T`` reduction shared by all deployed readers.
+
+    ``A_gram = P P.T`` is block diagonal in ``gram_perm`` order. The result is
+    clamped at zero because the Gram is positive semidefinite but finite
+    precision can yield a tiny negative value. FP32 reduction by design.
+    """
+
+    count, block = int(gram_blocks.shape[0]), int(gram_blocks.shape[1])
+    if width_error is not None and mixed.shape[-1] != count * block:
+        raise ValueError(width_error)
+    device = mixed.device
+    perm = gram_perm.to(device=device)
+    gathered = mixed[..., perm].to(dtype=torch.float32)
+    segments = gathered.reshape(*mixed.shape[:-1], count, block)
+    gram = gram_blocks.to(device=device, dtype=torch.float32)
+    contracted = torch.einsum("...mi,mij,...mj->...", segments, gram, segments)
+    return contracted.clamp_min(0.0)
+
+
+def gram_rms_scale(
+    mixed: torch.Tensor,
+    signal_dim: int,
+    gram_blocks: torch.Tensor,
+    gram_perm: torch.Tensor,
+    eps: float,
+    *,
+    width_error: Optional[str] = "mixed width does not match basis",
+) -> torch.Tensor:
+    """``sqrt(||h||^2 / d + eps)`` from the shipped Gram artifacts."""
+
+    squared = gram_signal_norm_squared(
+        mixed, gram_blocks, gram_perm, width_error=width_error
+    )
+    return torch.sqrt(squared / float(signal_dim) + float(eps)).unsqueeze(-1)
 
 
 def _gram_blocks_from(basis: StructuredBasis) -> torch.Tensor:

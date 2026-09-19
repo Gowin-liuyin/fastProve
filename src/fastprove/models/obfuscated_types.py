@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Tuple
 import torch
 
 from ..seed import make_generator
+from ..structured import gram_rms_scale
 
 if TYPE_CHECKING:
     from ..codec import TokenCodec
@@ -123,19 +124,13 @@ def _rms_scale_from_factors(
     """
 
     def rms_scale(mixed: torch.Tensor, eps: float) -> torch.Tensor:
-        count, block = int(gram_blocks.shape[0]), int(gram_blocks.shape[1])
-        if mixed.shape[-1] != count * block:
-            raise ValueError("mixed width does not match the Gram artifacts")
-        device = mixed.device
-        perm = gram_perm.to(device=device)
-        gathered = mixed[..., perm].to(dtype=torch.float32)
-        segments = gathered.reshape(*mixed.shape[:-1], count, block)
-        gram = gram_blocks.to(device=device, dtype=torch.float32)
-        contracted = torch.einsum(
-            "...mi,mij,...mj->...", segments, gram, segments
+        return gram_rms_scale(
+            mixed,
+            signal_dim,
+            gram_blocks,
+            gram_perm,
+            eps,
+            width_error="mixed width does not match the Gram artifacts",
         )
-        return torch.sqrt(
-            contracted.clamp_min(0.0) / float(signal_dim) + float(eps)
-        ).unsqueeze(-1)
 
     return rms_scale
