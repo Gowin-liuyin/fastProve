@@ -6,42 +6,21 @@
 
 from __future__ import annotations
 
-import hashlib
 import math
 from dataclasses import dataclass
 
 import torch
 
+from .basis_common import (
+    BasisDescriptor,
+    transform_fingerprint as _fingerprint,
+    validate_basis_dtype,
+)
 from .seed import make_generator
 
 
 def _validate_transform_dtype(dtype: torch.dtype) -> None:
-    if dtype not in (torch.float32, torch.float64):
-        raise ValueError("transform deployment dtype must be FP32 or FP64")
-
-
-def _fingerprint(
-    matrix: torch.Tensor, signal_dim: int, noise_dim: int
-) -> str:
-    raw = matrix.detach().to(device="cpu", dtype=torch.float64).contiguous().numpy()
-    header = ("%d:%d:" % (signal_dim, noise_dim)).encode("ascii")
-    return hashlib.sha256(header + raw.tobytes()).hexdigest()
-
-
-@dataclass(frozen=True)
-class BasisDescriptor:
-    """Public state metadata that contains no decoding matrix."""
-
-    signal_dim: int
-    noise_dim: int
-    condition_number: float
-    fingerprint: str
-
-    @property
-    def total_dim(self) -> int:
-        """Augmented dimension."""
-
-        return self.signal_dim + self.noise_dim
+    validate_basis_dtype(dtype, label="transform deployment")
 
 
 @dataclass(frozen=True)

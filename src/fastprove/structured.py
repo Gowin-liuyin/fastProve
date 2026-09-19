@@ -24,14 +24,17 @@ Block-local mixing lowers the cost of a known-plaintext recovery of ``M`` from
 
 from __future__ import annotations
 
-import hashlib
 import math
 from dataclasses import dataclass
 
 import torch
 
+from .basis_common import (
+    BasisDescriptor,
+    factors_fingerprint as _fingerprint,
+    validate_basis_dtype,
+)
 from .seed import make_generator
-from .transforms import BasisDescriptor
 
 # Re-exported for existing importers; canonical definitions live in policy.py.
 from .policy import (
@@ -45,36 +48,7 @@ _FP64 = torch.float64
 
 
 def _validate_dtype(dtype: torch.dtype) -> None:
-    if dtype not in (torch.float32, torch.float64):
-        raise ValueError("structured basis dtype must be FP32 or FP64")
-
-
-def _fingerprint(
-    perm_in: torch.Tensor,
-    scales: torch.Tensor,
-    blocks: torch.Tensor,
-    perm_out: torch.Tensor,
-    signal_dim: int,
-    noise_dim: int,
-) -> str:
-    """Hash the basis factors.
-
-    Floating factors are canonicalized to FP64 before hashing so that the
-    fingerprint identifies the *numerical values* actually stored, independent
-    of whether the caller hashes before or after a dtype cast. Callers must
-    still hash the tensors they store, not pre-cast copies.
-    """
-
-    digest = hashlib.sha256()
-    digest.update(("%d:%d:" % (signal_dim, noise_dim)).encode("ascii"))
-    for tensor in (perm_in, scales, blocks, perm_out):
-        value = tensor.detach().to(device="cpu").contiguous()
-        if value.is_floating_point():
-            value = value.to(dtype=_FP64).contiguous()
-        digest.update(str(tuple(value.shape)).encode("ascii"))
-        digest.update(str(value.dtype).encode("ascii"))
-        digest.update(value.numpy().tobytes())
-    return digest.hexdigest()
+    validate_basis_dtype(dtype, label="structured basis")
 
 
 @dataclass(frozen=True)
