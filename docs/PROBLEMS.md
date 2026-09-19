@@ -27,7 +27,7 @@
 | 类别 | 数量 | 是否可修 | 说明 |
 |---|---:|---|---|
 | **A. 构造的固有泄漏** | 7 条 | ❌ 不可用工程手段消除 | 由「输出精确 + 低开销 + 无可信边界」三个约束强制 |
-| **B. 实现缺陷** | 5 条 | ✅ 3 条已修复；2 条待决策（§3.4、§3.5） | 普通 bug，含一条我自己文档引入的 |
+| **B. 实现缺陷** | 6 条 | ✅ 3 条已修复；3 条待决策（§3.4、§3.5、§3.6） | 普通 bug，含一条我自己文档引入的 |
 | **C. 证据链缺口** | 4 条 | ⏳ 待补 | 不是错误，是尚未验证的部分 |
 
 **最重要的一条**（§1.1）：服务端要算对 RMSNorm 就必须算对 `ρ`，而 `ρ` 代数上就是
@@ -391,7 +391,7 @@ Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重。`untied_deployed` 模�
 
 ---
 
-## 3. 类别 B：实现缺陷（3 条已修复，2 条待决策）
+## 3. 类别 B：实现缺陷（3 条已修复，3 条待决策）
 
 ### 3.1 【我的文档引入】`test_no_decode_in_forward.py` 是空测试
 
@@ -616,6 +616,52 @@ PY
 
 **工程可消除性**：✅ 可消除（选项 1/2），但改变 sweep 的执行语义与已记录溯源，
 需要显式决策，不允许在文档清理里静默修改。
+
+---
+
+### 3.6 【待决策，未修复】evals 默认 bf16 门禁在 debug 路径崩溃（重构前已存在）
+
+**现象**
+
+`python -m evals --check-gates`（默认 `--precision bf16`）在 layer1 崩溃：
+
+```text
+File "src/fastprove/models/obfuscated.py", line 653, in _run
+    clean_update = torch.einsum(
+        "bhqd,hdn->bqn",
+        attention_debug.clean_output.float(),
+        cast("deployed_attn_out"),
+    )
+RuntimeError: expected m1 and m2 to have the same dtype, but got: float != c10::BFloat16
+```
+
+同一命令加 `--precision fp32` 通过：`HARD: PASS SOFT: PASS ALL: PASS`。
+`results/REPORT.md` §2.1 的头条 exact-gate 命令本就带 `--precision fp32`，所以已发表
+数字不受影响；受影响的是默认门禁路径与 runbook 中的简写命令。
+
+**不是本次结构重构引入**
+
+在 fresh clone 中把工作树切到重构前提交 `5e19c43` 后，同一条命令以完全相同的堆栈
+复现（P9 冒烟记录，2026-09-20）。
+
+**根因（初步，未修）**
+
+debug 路径把 `attention_debug.clean_output` 显式转成 FP32，而服务端 buffer
+`deployed_attn_out` 保持模型 dtype（bf16），`torch.einsum` 拒绝混合 dtype。
+生产（非 debug）forward 不经过该表达式，因此 bf16 生产推理未受影响。
+
+**候选处理（需决策，禁止静默修）**
+
+1. debug 路径把两个操作数统一到同一 dtype（例如都转 FP32 或用目标 dtype）；
+2. evals harness 显式强制 `--precision fp32`，并在协议文档中写明 bf16 门禁暂不可用；
+3. 接受 bf16 门禁阻塞，登记为已知限制直到专门修复。
+
+**复现**
+
+```bash
+python -m evals --check-gates                    # 预期崩溃（默认 bf16）
+python -m evals --check-gates --precision fp32   # HARD/SOFT/ALL: PASS
+```
 
 ---
 

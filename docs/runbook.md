@@ -55,18 +55,23 @@ python docs/verification/verify_noise_ordering.py            # 只读，打印 T
 ## 5. 协议门禁（evals harness）
 
 ```bash
-PYTHONPATH=src:. python -m evals --check-gates
+python -m evals --check-gates --precision fp32
 ```
 
 `python -m evals` 是 `python -m evals.report` 的别名（`evals/__main__.py:1`），
 默认 `--config evals/configs/P2.yaml --base-config configs/tiny_exact.yaml`。
 通过判据：输出 `HARD: PASS   SOFT: PASS   ALL: PASS`。
 
+**必须显式 `--precision fp32`**。默认 bf16 目前会在 debug 路径崩溃
+（`RuntimeError: ... float != c10::BFloat16`，`models/obfuscated.py:653`）；该缺陷在
+重构前提交 `5e19c43` 上同样复现，见 `docs/PROBLEMS.md` §3.6。P6 打包 `evals` 之后
+不再需要 `PYTHONPATH`。
+
 与 `results/REPORT.md` §2.1 逐字对应的门禁命令（写 `results/raw/exact_gate_D1.json`；
 若要避免覆盖已跟踪工件，先把 `--output` 改到临时路径）：
 
 ```bash
-PYTHONPATH=src:evals python -m evals --base-config configs/tiny_exact.yaml \
+python -m evals --base-config configs/tiny_exact.yaml \
     --config evals/configs/P2.yaml --precision fp32 --keys 1 --layers 1,2,3,4 \
     --check-gates --output results/raw/exact_gate_D1.json
 ```

@@ -1,9 +1,9 @@
-# fastProve 项目状态（P8b 之后）
+# fastProve 项目状态（P8/P9 之后）
 
 状态：CURRENT
 日期：2026-09-20
 上游依据：AGENTS.md、docs/CLEANUP_PLAN.md、docs/PROBLEMS.md
-适用范围：接续 `docs/implementation_notes.md` 的进度快照：P0–P7 重构、当前门禁、未决问题与下一步
+适用范围：接续 `docs/implementation_notes.md` 的进度快照：P0–P9 重构与验证、当前门禁、未决问题与下一步
 
 本文接续 [`docs/implementation_notes.md`](implementation_notes.md)（其最后一条记录停在
 P4，2026-09-19）。P8a 已建立文档生命周期与归档；本次 P8b 完成 README / 数学 /
@@ -21,6 +21,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 | 模式 | `plaintext` / `exact` / `topk_preserving` / `free_bounded` 四模式均实现 |
 | 扫描 | 72/72 点已落盘（随机 tiny，仅正确性），见 `results/REPORT.md` §2.3 |
 | 预训练 | 仓库不含 checkpoint；Qwen2 1.5B 本机 artifact 已消失（`checkpoint_bytes = 0`） |
+| 新克隆冒烟（P9） | `git clone` → 68 MB；`venv --system-site-packages` + `pip install -e . --no-deps` 后：pytest 399 passed、等价性 OK、`design_identity_check.py` 13 项全过；外部目录可 `import fastprove, evals` |
 
 ## 2. P0–P7 重构提交（`git log --oneline`）
 
@@ -38,6 +39,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 | `f4a1c96` | P4 | 记录去重结果与性能测量延期 |
 | `57548fc`–`ee4e038` | P5a–P5c | scripts 库化（sweep record builders、pretrained compare、osnip benchmarks） |
 | `165b1f4`–`2bae50a` | P6a–P6b | `evals/` 打包化、指标定义对齐（逐位一致测试） |
+| `566be17` | P8 | 文档重建（生命周期标注、归档、as-built 文档、链接检查器） |
 | `cd6cc04` | P7 | 测试重组（8 个子目录 + `conftest.py`）、补齐两个验收缺口 |
 
 更早的 S0–S5 双通道重构为 `5e19c43`（等价性基线的对照点）。
@@ -58,6 +60,9 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
   使全部 72 个 spec（含 plaintext/exact 基线点）继承 `rho_noise_bound: 1e-5` 与
   `per_request`；exact 正确性仍只对 `configs/tiny_exact.yaml`（ρ=0、`fixed_debug`）成立。
   在决策前不得把重跑的 sweep 基线点描述为 ρ=0 基线。
+- **§3.6 待决策**：evals 默认 bf16 门禁在 debug 路径崩溃（`models/obfuscated.py:653`
+  的 einsum dtype 不匹配，重构前已存在）；`--precision fp32` 正常通过。runbook 已要求
+  显式 fp32。
 - **A 类构造固有泄漏（7 条，不可修）**：最严重的是 `ρ` 泄漏 `‖h‖` 并在 FP32 下
   恢复 layer-0 输入 token（实测 92.5% Qwen2 / 93.4% Llama）；公开基座 embedding 时
   词表置换挡不住明文；Gram 几何、`e ≈ hC` 通道、融合内核假设挡不住 `ρ`。
