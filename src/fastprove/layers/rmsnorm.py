@@ -7,6 +7,11 @@ from typing import Optional, Tuple
 
 import torch
 
+from ..bounded_noise import (
+    MANTISSA_MASK,
+    mantissa_to_signed_unit,
+    mix_coordinates,
+)
 from ..seed import RequestContext
 
 
@@ -70,14 +75,9 @@ def _sample_bounded_scalar_noise(
         + batch_index * 6364136223846793005
         + pos_index * 1442695040888963407
     )
-    coordinate = coordinate * 6364136223846793005 + 1442695040888963407
-    coordinate = coordinate ^ (coordinate >> 33)
-    coordinate = coordinate * 3202034522624059733 + 1442695040888963407
-    coordinate = coordinate ^ (coordinate >> 29)
-    mantissa = torch.bitwise_and(coordinate, (1 << 53) - 1)
-    raw = (2.0 * mantissa.to(dtype=torch.float64) / float(1 << 53) - 1.0).to(
-        dtype=torch.float32
-    )
+    coordinate = mix_coordinates(coordinate)
+    mantissa = torch.bitwise_and(coordinate, MANTISSA_MASK)
+    raw = mantissa_to_signed_unit(mantissa)
     for _ in tail:
         raw = raw.unsqueeze(-1)
     raw = raw.to(device=reference.device)

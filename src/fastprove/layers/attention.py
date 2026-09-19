@@ -9,6 +9,11 @@ from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 
+from ..bounded_noise import (
+    MANTISSA_MASK,
+    mantissa_to_signed_unit,
+    mix_coordinates,
+)
 from ..modes import AttentionMode
 from ..seed import RequestContext
 
@@ -92,7 +97,15 @@ def compute_topk_budget(
     valid_mask: torch.Tensor,
     config: ApproximationConfig,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Compute per-query Top-k margin and strict bounded-noise budget."""
+    """Compute per-query Top-k margin and strict bounded-noise budget.
+
+    Intentionally different from ``StableRouter._margin_and_tau``: this rule
+    operates on the *valid* (unmasked) positions only, uses the k-th/(k+1)-th
+    valid margin, and returns ``min(tau_max, alpha * margin / 2, tau_error)``.
+    The router rule sorts unmasked canonical expert logits, clamps the margin
+    at zero, and yields zero budget on non-positive margins. Do not merge the
+    two implementations.
+    """
 
     logits = clean_logits.to(dtype=torch.float32)
     valid = _expand_valid_mask(valid_mask, logits)
@@ -177,14 +190,9 @@ def _sample_bounded_noise(
         + q_index * 3202034522624059733
         + k_index * 3935559000370003845
     )
-    coordinate = coordinate * 6364136223846793005 + 1442695040888963407
-    coordinate = coordinate ^ (coordinate >> 33)
-    coordinate = coordinate * 3202034522624059733 + 1442695040888963407
-    coordinate = coordinate ^ (coordinate >> 29)
-    mantissa = torch.bitwise_and(coordinate, (1 << 53) - 1)
-    raw = (2.0 * mantissa.to(dtype=torch.float64) / float(1 << 53) - 1.0).to(
-        dtype=torch.float32
-    )
+    coordinate = mix_coordinates(coordinate)
+    mantissa = torch.bitwise_and(coordinate, MANTISSA_MASK)
+    raw = mantissa_to_signed_unit(mantissa)
     raw = raw.to(device=logits.device)
     valid_float = valid.to(dtype=torch.float32)
     counts = valid_float.sum(dim=-1, keepdim=True)

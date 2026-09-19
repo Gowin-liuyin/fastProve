@@ -118,6 +118,10 @@ class StableRouter(nn.Module):
     def _margin_and_tau(
         self, canonical_logits: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        # Deliberately NOT the same budget rule as
+        # ``attention.compute_topk_budget``: expert logits carry no mask, the
+        # margin is clamped at zero (so ties or crossings get tau = 0), and the
+        # tie order follows the canonical expert permutation. Do not merge.
         sorted_values = torch.sort(
             canonical_logits.float(),
             dim=-1,
