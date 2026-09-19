@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import time
-import hashlib
-from dataclasses import dataclass
-from typing import Any, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -44,153 +42,22 @@ from ..transforms import (
     generate_orthogonal,
     generate_signed_permutation,
 )
+from .block_builder import BlockDeploymentMixin
+from .client import ObfuscatedBlockClient
+from .obfuscated_types import (
+    ConvertedObfuscatedBlock,
+    ConvertedObfuscatedLM,
+    ObfuscatedBlockDebug,
+    ObfuscatedKVCache,
+    ObfuscatedLMCache,
+    _cache_tensor_digest,
+    _random_matrix,
+    _rms_scale_from_factors,
+)
 from .plain import PlainDecoderBlock, PlainTinyCausalLM
 
 
-class ObfuscatedBlockClient:
-    """Client/debug-side holder of the hidden mixing transform."""
-
-    def __init__(
-        self, transform: StructuredBasis, *, debug_enabled: bool
-    ) -> None:
-        self._transform = transform
-        self._debug_enabled = bool(debug_enabled)
-
-    @property
-    def basis(self) -> BasisDescriptor:
-        """Public basis identity without matrix material."""
-
-        return self._transform.descriptor
-
-    def encode_debug(
-        self, signal: torch.Tensor, noise: torch.Tensor
-    ) -> MixedState:
-        """Encode an input only on the explicitly enabled reference path."""
-
-        return encode_debug(
-            signal, noise, self._transform, enabled=self._debug_enabled
-        )
-
-    def decode_debug(
-        self, state: MixedState
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Decode an output only on the explicitly enabled reference path."""
-
-        return decode_debug(
-            state, self._transform, enabled=self._debug_enabled
-        )
-
-
-@dataclass(frozen=True)
-class ConvertedObfuscatedBlock:
-    """Converted module, separate client helper, and conversion timing."""
-
-    module: "ObfuscatedDecoderBlock"
-    client: ObfuscatedBlockClient
-    conversion_time_seconds: float
-
-
-@dataclass(frozen=True)
-class ObfuscatedBlockDebug:
-    """Diagnostics returned only by :meth:`forward_debug`."""
-
-    qk_score_error: dict
-    softmax_error: dict
-    clean_logits: torch.Tensor
-    noisy_logits: torch.Tensor
-    clean_probabilities: torch.Tensor
-    noisy_probabilities: torch.Tensor
-    valid_mask: torch.Tensor
-    logit_noise: torch.Tensor
-    tau: torch.Tensor
-    margin: torch.Tensor
-    clean_attention_output: torch.Tensor
-    attention_output: torch.Tensor
-    post_attention: torch.Tensor
-    attention_noise_state: torch.Tensor
-    z_prime: torch.Tensor
-    final_noise_state: torch.Tensor
-
-
-@dataclass(frozen=True)
-class ObfuscatedKVCache:
-    """Transformed Key and mixed Value state for incremental attention."""
-
-    key: torch.Tensor
-    value_mixed: torch.Tensor
-    key_valid: torch.Tensor
-    positions: torch.Tensor
-    cache_identity: str = ""
-    request_seed: int = 0
-    request_id: str = ""
-
-
-@dataclass(frozen=True)
-class ObfuscatedLMCache:
-    """One transformed KV cache per decoder layer."""
-
-    layers: Tuple[ObfuscatedKVCache, ...]
-
-
-def _random_matrix(
-    rows: int,
-    columns: int,
-    *,
-    seed: int,
-    domain: str,
-    scale: float,
-) -> torch.Tensor:
-    generator = make_generator(seed, domain, rows, columns)
-    return (
-        torch.randn(rows, columns, generator=generator, dtype=torch.float32)
-        * scale
-    )
-
-
-def _cache_tensor_digest(*tensors: torch.Tensor) -> str:
-    """Return a stable identity for tensors that define a KV layout."""
-
-    digest = hashlib.sha256()
-    for tensor in tensors:
-        value = tensor.detach().to(device="cpu", dtype=torch.float32).contiguous()
-        digest.update(str(tuple(value.shape)).encode("ascii"))
-        digest.update(value.numpy().tobytes())
-    return digest.hexdigest()
-
-
-def _rms_scale_from_factors(
-    signal_dim: int,
-    gram_blocks: torch.Tensor,
-    gram_perm: torch.Tensor,
-) -> Any:
-    """Build an ``O(n*b)`` RMS-scale callable from the server-side Gram.
-
-    Only a scalar per token is produced; the signal is never reconstructed.
-    ``gram_blocks`` / ``gram_perm`` are the server-side deployed artifacts
-    (see the converter): the block-diagonal ``A_gram = P P.T`` blocks in
-    ``perm_out`` order.
-    """
-
-    def rms_scale(mixed: torch.Tensor, eps: float) -> torch.Tensor:
-        count, block = int(gram_blocks.shape[0]), int(gram_blocks.shape[1])
-        if mixed.shape[-1] != count * block:
-            raise ValueError("mixed width does not match the Gram artifacts")
-        device = mixed.device
-        perm = gram_perm.to(device=device)
-        gathered = mixed[..., perm].to(dtype=torch.float32)
-        segments = gathered.reshape(*mixed.shape[:-1], count, block)
-        gram = gram_blocks.to(device=device, dtype=torch.float32)
-        contracted = torch.einsum(
-            "...mi,mij,...mj->...", segments, gram, segments
-        )
-        return torch.sqrt(
-            contracted.clamp_min(0.0) / float(signal_dim) + float(eps)
-        ).unsqueeze(-1)
-
-    return rms_scale
-
-
-class ObfuscatedDecoderBlock(nn.Module):
+class ObfuscatedDecoderBlock(BlockDeploymentMixin, nn.Module):
     """Reference fused-checkpoint implementation of one converted block.
 
     The private hidden inverse models the designated trusted/fused nonlinear
@@ -413,171 +280,18 @@ class ObfuscatedDecoderBlock(nn.Module):
             persistent=False,
         )
 
-        # -- deployed attention weights (offline fusion) ------------------
-        # Value noise coupling must be [n, Hkv, rh] to read directly from the
-        # mixed state; the legacy [d, Hkv, rh] form read from plaintext h.
-        value_signal_coupling = torch.stack(
-            [
-                _random_matrix(
-                    hidden_transform.total_dim,
-                    value_noise,
-                    seed=seed,
-                    domain="block-%d-value-C-%d" % (self.layer_id, head),
-                    scale=0.03,
-                )
-                for head in range(kv_heads)
-            ],
-            dim=1,
-        )
-        validate_auxiliary_budget(
-            basis=hidden_transform,
-            sample_signal=torch.randn(
-                64, hidden, generator=make_generator(seed, "budget-probe")
-            ),
-            signal_noise_coupling=self.attention_noise_coupling,
-            noise_propagator=self.attention_noise_propagator,
-            context="block-%d-attention" % self.layer_id,
-        )
-        deployed_attention = build_deployed_attention(
-            basis=hidden_transform,
-            value_bases=value_transforms,
-            gamma_attention=plain.attention_norm_weight.detach(),
-            q_weight_math=plain.q_proj.weight.detach().T.contiguous(),
-            k_weight_math=plain.k_proj.weight.detach().T.contiguous(),
-            v_weight_math=plain.v_proj.weight.detach().T.contiguous(),
-            o_weight_math=plain.o_proj.weight.detach().T.contiguous(),
-            q_bias=(
-                plain.q_proj.bias.detach()
-                if plain.q_proj.bias is not None
-                else None
-            ),
-            k_bias=(
-                plain.k_proj.bias.detach()
-                if plain.k_proj.bias is not None
-                else None
-            ),
-            v_bias=(
-                plain.v_proj.bias.detach()
-                if plain.v_proj.bias is not None
-                else None
-            ),
-            value_signal_coupling=value_signal_coupling,
-            signal_noise_coupling=self.attention_noise_coupling,
-            noise_propagator=self.attention_noise_propagator,
-            auxiliary_to_hidden=self.attention_aux_to_hidden,
-            fixed_refresh=(
-                self.attention_fixed_refresh if fixed else None
-            ),
-            kv_index=plain.kv_index.detach(),
+        self._build_deployed_weights(
+            plain=plain,
+            hidden_transform=hidden_transform,
+            value_transforms=value_transforms,
+            swiglu_transform=swiglu_transform,
+            fixed=fixed,
+            seed=seed,
+            hidden=hidden,
             head_dim=head_dim,
-        )
-        # Server-side deployed weights: persistent by design (B1.3 documents
-        # that ``deployed_attn_noise_out`` and ``noise_read`` jointly leak the
-        # noise state ``e`` up to an invertible r x r map; this is recorded in
-        # docs/threat_model.md and is not fixable in this design).
-        self.register_buffer(
-            "deployed_q", deployed_attention.query, persistent=True
-        )
-        self.register_buffer(
-            "deployed_k", deployed_attention.key, persistent=True
-        )
-        self.register_buffer(
-            "deployed_v", deployed_attention.value, persistent=True
-        )
-        self.register_buffer(
-            "deployed_q_bias", deployed_attention.query_bias, persistent=True
-        )
-        self.register_buffer(
-            "deployed_k_bias", deployed_attention.key_bias, persistent=True
-        )
-        self.register_buffer(
-            "deployed_v_bias", deployed_attention.value_bias, persistent=True
-        )
-        self.register_buffer(
-            "deployed_attn_out", deployed_attention.output, persistent=True
-        )
-        self.register_buffer(
-            "deployed_attn_noise_out",
-            deployed_attention.noise_out,
-            persistent=True,
-        )
-        self.register_buffer(
-            "deployed_attn_refresh_out",
-            deployed_attention.refresh_out,
-            persistent=True,
-        )
-        # N must be online for the (c @ N) @ Wnz residual terms. B1.3 records
-        # the recoverability consequence of shipping it.
-        self.register_buffer(
-            "noise_read",
-            hidden_transform.noise_projection().to(dtype=torch.float32),
-            persistent=True,
-        )
-        self.register_buffer(
-            "_noise_rows",
-            hidden_transform.noise_rows().to(dtype=torch.float32),
-            persistent=True,
-        )
-        # Server-side Gram artifacts for the O(n*b) rho statistic. A_gram =
-        # P P.T is block diagonal in perm_out order; the nullspace (noise
-        # subspace) content is already implied by the shipped ``noise_read``
-        # (B1.3), so these add no new recorded leakage.
-        self.register_buffer(
-            "deployed_gram_blocks",
-            hidden_transform.gram_blocks.detach().clone(),
-            persistent=True,
-        )
-        self.register_buffer(
-            "deployed_gram_perm",
-            hidden_transform.perm_out.detach().clone(),
-            persistent=True,
-        )
-        # rho is a scalar per token; the factor tensors live in the deployed
-        # Gram buffers, so the closure is rebuildable from the server bundle.
-        self._rms_scale = _rms_scale_from_factors(
-            self.config.hidden_size,
-            self.deployed_gram_blocks,
-            self.deployed_gram_perm,
-        )
-        self._debug_basis_unmix = (
-            (lambda tensor: hidden_transform.unmix(tensor))
-            if debug_enabled
-            else None
-        )
-
-        # -- deployed feed-forward weights (offline fusion) ---------------
-        validate_auxiliary_budget(
-            basis=hidden_transform,
-            sample_signal=torch.randn(
-                64, hidden, generator=make_generator(seed, "budget-probe-ffn")
-            ),
-            signal_noise_coupling=self.down_noise_coupling,
-            noise_propagator=self.down_noise_propagator,
-            context="block-%d-ffn" % self.layer_id,
-        )
-        deployed_ffn = build_deployed_feed_forward(
-            basis=hidden_transform,
-            gamma_ffn=plain.ffn_norm_weight.detach(),
-            gate_weight_math=plain.gate_proj.weight.detach().T.contiguous(),
-            up_weight_math=plain.up_proj.weight.detach().T.contiguous(),
-            down_weight_math=plain.down_proj.weight.detach().T.contiguous(),
-            neuron_permutation=swiglu_transform.permutation,
-            neuron_scale=swiglu_transform.scale,
-            swiglu_noise_coupling=self.swiglu_noise_coupling,
-            down_noise_coupling=self.down_noise_coupling,
-            noise_propagator=self.down_noise_propagator,
-            fixed_refresh=self.down_fixed_refresh if fixed else None,
-        )
-        self.register_buffer("deployed_gate", deployed_ffn.gate, persistent=True)
-        self.register_buffer("deployed_up", deployed_ffn.up, persistent=True)
-        self.register_buffer(
-            "deployed_ffn_out", deployed_ffn.output, persistent=True
-        )
-        self.register_buffer(
-            "deployed_ffn_noise_out", deployed_ffn.noise_out, persistent=True
-        )
-        self.register_buffer(
-            "deployed_ffn_refresh_out", deployed_ffn.refresh_out, persistent=True
+            kv_heads=kv_heads,
+            value_noise=value_noise,
+            debug_enabled=debug_enabled,
         )
 
         self.attention = ObfuscatedAttention(
@@ -1029,16 +743,6 @@ class ObfuscatedDecoderBlock(nn.Module):
         )
         assert debug is not None
         return output, debug
-
-
-@dataclass(frozen=True)
-class ConvertedObfuscatedLM:
-    """Converted tiny LM, separate client helper, codec, and timing."""
-
-    module: "ObfuscatedTinyCausalLM"
-    client: ObfuscatedBlockClient
-    token_codec: TokenCodec
-    conversion_time_seconds: float
 
 
 class ObfuscatedTinyCausalLM(nn.Module):
