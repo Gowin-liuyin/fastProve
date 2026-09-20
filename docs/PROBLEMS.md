@@ -647,9 +647,11 @@ PY
   结论：ρ=1e-5 把 exact 锚点抬高约 2.7 倍（有实际数值后果，故必须归零）；
   而 `per_request` 与 `fixed_debug` 同等不破坏 exact 性，且 `fixed_debug` 是
   AGENTS.md 明令不得当作隐私路径的 debug 配置，因此刷新模式不换。
-- **丙的 replica 属后续运行**：重跑后用 `selection_rule` 选出的候选点，以
-  `obfuscation_override={"rho_noise_bound": 1e-5}` 补一组部署折衷复制点；
-  本次结构清理只落实基础口径，不生成/不重跑任何结果。
+- **丙的 replica 已完成（2026-09-20）**：基础重跑后用 `selection_rule` 选出 39 个
+  候选（`results/raw/sweep_selection_rho0.json`），以
+  `--rho-replica 1e-5` 生成 `results/raw/eval_sweep_rho0_replica.jsonl`（39/39
+  成功、exact 门禁通过）；逐点边际代价（Δtop1=0、Δppl 最大 9.54e-07、ΔJS 最大
+  8.63e-11）见 `results/raw/rho_replica_marginal.json` 与 `results/REPORT.md` §6.1。
 - **可比性断点**：已落盘的 `results/raw/eval_sweep*.jsonl` 产生于该字段引入
   之前（继承 ρ=1e-5）；2026-09-20 重跑（`eval_sweep_rho0.jsonl`）已完成，**125 个
   非性能指标与旧份逐位相同**（性能/时间字段除外），旧两份保留为历史引用，规范来源

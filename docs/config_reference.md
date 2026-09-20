@@ -197,7 +197,10 @@ basis_block_size。Value 基不使用块划分：`head_dim + value_noise_dim_per
    并在 `eval_sweep.yaml` 的 `obfuscation_override` 中显式声明（两者由
    `tests/evaluation/test_sweep_rho_policy.py` 锁定一致）。`refresh_mode` 保持
    `per_request`（实测不破坏 exact 性，且 `fixed_debug` 不得当隐私路径）。
-   部署折衷 ρ=1e-5 的复制点由重跑后的 selection 候选单独生成，不属于这 72 个基础点。
+   部署折衷 ρ=1e-5 的复制点不属于这 72 个基础点：用
+   `--spec-ids-file <selection manifest> --rho-replica 1e-5 --output <新文件>`
+   单独生成（run_id 带 `-rho<值>` 后缀、必须显式 `--output`），比较用
+   `scripts/compare_rho_replica.py`；已完成结果见 `results/REPORT.md` §6.1。
 3. 已归档 `eval_sweep*.jsonl` 产生于该口径之前（继承 ρ=1e-5），**重跑后不可与之
    逐点比较**；见 `results/PROVENANCE.md` §7。
 

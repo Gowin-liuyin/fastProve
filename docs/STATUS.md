@@ -21,6 +21,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 | 模式 | `plaintext` / `exact` / `topk_preserving` / `free_bounded` 四模式均实现 |
 | 扫描 | 72/72 点已落盘（随机 tiny，仅正确性），见 `results/REPORT.md` §2.3 |
 | ρ=0 重跑（2026-09-20） | `results/raw/eval_sweep_rho0.jsonl`（72/72 success；记录自带生效 `obfuscation` ρ=0/per_request）；125 个非性能指标与旧 `eval_sweep*.jsonl` **逐位相同**；校准冒烟见 `eval_sweep_rho0_calibration.jsonl` |
+| ρ=1e-5 replica（2026-09-20） | 39 个候选（`sweep_selection_rho0.json`）→ `eval_sweep_rho0_replica.jsonl`（39/39 success、exact 门禁过）；边际代价 Δtop1=0、Δppl≤9.54e-07、ΔJS≤8.63e-11（`rho_replica_marginal.json`、REPORT §6.1） |
 | 预训练 | 仓库不含 checkpoint；Qwen2 1.5B 本机 artifact 已消失（`checkpoint_bytes = 0`） |
 | 新克隆冒烟（P9） | `git clone` → 68 MB（工作树 6.8 MB；历史仍含 38 篇 PDF，未重写历史）；`venv --system-site-packages` + `pip install -e . --no-deps` 后：pytest、等价性、`design_identity_check.py` 全过；外部目录可 `import fastprove, evals` |
 
@@ -63,8 +64,9 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
   `refresh_mode` 保持 `per_request`（实测不破坏 exact 性，且 `fixed_debug` 不得当隐私
   路径）；新增 `tests/evaluation/test_sweep_rho_policy.py`。重跑已完成（校准 8 →
   全量 64）：`results/raw/eval_sweep_rho0.jsonl` 72/72 成功、exact 门禁通过、
-  125 个非性能指标与旧份逐位相同，旧两份保留为历史；部署折衷 ρ=1e-5 的复制点由
-  selection 候选单独生成（待办）。
+  125 个非性能指标与旧份逐位相同，旧两份保留为历史；部署折衷 ρ=1e-5 的复制点已完成
+  （39 个 selection 候选 → `eval_sweep_rho0_replica.jsonl`，边际代价 Δtop1=0、
+  Δppl≤9.54e-07、ΔJS≤8.63e-11，见 REPORT §6.1 与 `rho_replica_marginal.json`）。
 - **§3.6 已修复（2026-09-20）**：debug 路径 `clean_update` 右操作数补 `.float()`；
   修复后 bf16 由「不可达的堆栈」变为**可测量的非门禁条件**（greedy 0.875、
   argmax 0.9766、ppl_rel 2.49e-4），与 `exact_gate_D1_bf16.json` 一贯的

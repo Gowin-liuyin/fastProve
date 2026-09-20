@@ -1,0 +1,584 @@
+{
+  "baseline_run_ids": [
+    "plaintext",
+    "exact"
+  ],
+  "cohort_key": [
+    "fastprove-random-tiny-correctness-only",
+    null,
+    null,
+    null,
+    null,
+    "deterministic-synthetic-token-sequences",
+    null,
+    null,
+    "f40dcdcde4aeafd22480866a07a8bded2739a1ebd880cde5f85356171ac67e6a",
+    20260731,
+    "tiny_reference",
+    "cpu",
+    "float32",
+    "float32",
+    24,
+    2,
+    4,
+    64,
+    "cd6b953e829424c6f5d929c6c95e2640d8ac877dd4e38ce89685793e7b1e6c1f",
+    "d43d59a4ca61910eb680e8b1332d8c4a3de22bdb1ac2e82abef4138beb894016"
+  ],
+  "exact_gate": {
+    "passed": true,
+    "run_ids": [
+      "exact"
+    ]
+  },
+  "expected_run_ids": [
+    "plaintext",
+    "exact",
+    "topk-tau0-a0p5-k4",
+    "topk-tau0-a0p5-k8",
+    "topk-tau0-a0p5-k16",
+    "topk-tau0-a0p8-k4",
+    "topk-tau0-a0p8-k8",
+    "topk-tau0-a0p8-k16",
+    "topk-tau0-a0p95-k4",
+    "topk-tau0-a0p95-k8",
+    "topk-tau0-a0p95-k16",
+    "topk-tau0p001-a0p5-k4",
+    "topk-tau0p001-a0p5-k8",
+    "topk-tau0p001-a0p5-k16",
+    "topk-tau0p001-a0p8-k4",
+    "topk-tau0p001-a0p8-k8",
+    "topk-tau0p001-a0p8-k16",
+    "topk-tau0p001-a0p95-k4",
+    "topk-tau0p001-a0p95-k8",
+    "topk-tau0p001-a0p95-k16",
+    "topk-tau0p003-a0p5-k4",
+    "topk-tau0p003-a0p5-k8",
+    "topk-tau0p003-a0p5-k16",
+    "topk-tau0p003-a0p8-k4",
+    "topk-tau0p003-a0p8-k8",
+    "topk-tau0p003-a0p8-k16",
+    "topk-tau0p003-a0p95-k4",
+    "topk-tau0p003-a0p95-k8",
+    "topk-tau0p003-a0p95-k16",
+    "topk-tau0p01-a0p5-k4",
+    "topk-tau0p01-a0p5-k8",
+    "topk-tau0p01-a0p5-k16",
+    "topk-tau0p01-a0p8-k4",
+    "topk-tau0p01-a0p8-k8",
+    "topk-tau0p01-a0p8-k16",
+    "topk-tau0p01-a0p95-k4",
+    "topk-tau0p01-a0p95-k8",
+    "topk-tau0p01-a0p95-k16",
+    "topk-tau0p03-a0p5-k4",
+    "topk-tau0p03-a0p5-k8",
+    "topk-tau0p03-a0p5-k16",
+    "topk-tau0p03-a0p8-k4",
+    "topk-tau0p03-a0p8-k8",
+    "topk-tau0p03-a0p8-k16",
+    "topk-tau0p03-a0p95-k4",
+    "topk-tau0p03-a0p95-k8",
+    "topk-tau0p03-a0p95-k16",
+    "topk-tau0p05-a0p5-k4",
+    "topk-tau0p05-a0p5-k8",
+    "topk-tau0p05-a0p5-k16",
+    "topk-tau0p05-a0p8-k4",
+    "topk-tau0p05-a0p8-k8",
+    "topk-tau0p05-a0p8-k16",
+    "topk-tau0p05-a0p95-k4",
+    "topk-tau0p05-a0p95-k8",
+    "topk-tau0p05-a0p95-k16",
+    "topk-tau0p1-a0p5-k4",
+    "topk-tau0p1-a0p5-k8",
+    "topk-tau0p1-a0p5-k16",
+    "topk-tau0p1-a0p8-k4",
+    "topk-tau0p1-a0p8-k8",
+    "topk-tau0p1-a0p8-k16",
+    "topk-tau0p1-a0p95-k4",
+    "topk-tau0p1-a0p95-k8",
+    "topk-tau0p1-a0p95-k16",
+    "free-tau0",
+    "free-tau0p001",
+    "free-tau0p003",
+    "free-tau0p01",
+    "free-tau0p03",
+    "free-tau0p05",
+    "free-tau0p1"
+  ],
+  "failure_run_ids": [],
+  "missing_expected_run_ids": [],
+  "observed_modes": [
+    "exact",
+    "free_bounded",
+    "plaintext",
+    "topk_preserving"
+  ],
+  "observed_run_ids": [
+    "plaintext",
+    "exact",
+    "topk-tau0-a0p5-k4",
+    "topk-tau0-a0p5-k8",
+    "topk-tau0-a0p5-k16",
+    "topk-tau0-a0p8-k4",
+    "topk-tau0-a0p8-k8",
+    "topk-tau0-a0p8-k16",
+    "topk-tau0-a0p95-k4",
+    "topk-tau0-a0p95-k8",
+    "topk-tau0-a0p95-k16",
+    "topk-tau0p001-a0p5-k4",
+    "topk-tau0p001-a0p5-k8",
+    "topk-tau0p001-a0p5-k16",
+    "topk-tau0p001-a0p8-k4",
+    "topk-tau0p001-a0p8-k8",
+    "topk-tau0p001-a0p8-k16",
+    "topk-tau0p001-a0p95-k4",
+    "topk-tau0p001-a0p95-k8",
+    "topk-tau0p001-a0p95-k16",
+    "topk-tau0p003-a0p5-k4",
+    "topk-tau0p003-a0p5-k8",
+    "topk-tau0p003-a0p5-k16",
+    "topk-tau0p003-a0p8-k4",
+    "topk-tau0p003-a0p8-k8",
+    "topk-tau0p003-a0p8-k16",
+    "topk-tau0p003-a0p95-k4",
+    "topk-tau0p003-a0p95-k8",
+    "topk-tau0p003-a0p95-k16",
+    "topk-tau0p01-a0p5-k4",
+    "topk-tau0p01-a0p5-k8",
+    "topk-tau0p01-a0p5-k16",
+    "topk-tau0p01-a0p8-k4",
+    "topk-tau0p01-a0p8-k8",
+    "topk-tau0p01-a0p8-k16",
+    "topk-tau0p01-a0p95-k4",
+    "topk-tau0p01-a0p95-k8",
+    "topk-tau0p01-a0p95-k16",
+    "topk-tau0p03-a0p5-k4",
+    "topk-tau0p03-a0p5-k8",
+    "topk-tau0p03-a0p5-k16",
+    "topk-tau0p03-a0p8-k4",
+    "topk-tau0p03-a0p8-k8",
+    "topk-tau0p03-a0p8-k16",
+    "topk-tau0p03-a0p95-k4",
+    "topk-tau0p03-a0p95-k8",
+    "topk-tau0p03-a0p95-k16",
+    "topk-tau0p05-a0p5-k4",
+    "topk-tau0p05-a0p5-k8",
+    "topk-tau0p05-a0p5-k16",
+    "topk-tau0p05-a0p8-k4",
+    "topk-tau0p05-a0p8-k8",
+    "topk-tau0p05-a0p8-k16",
+    "topk-tau0p05-a0p95-k4",
+    "topk-tau0p05-a0p95-k8",
+    "topk-tau0p05-a0p95-k16",
+    "topk-tau0p1-a0p5-k4",
+    "topk-tau0p1-a0p5-k8",
+    "topk-tau0p1-a0p5-k16",
+    "topk-tau0p1-a0p8-k4",
+    "topk-tau0p1-a0p8-k8",
+    "topk-tau0p1-a0p8-k16",
+    "topk-tau0p1-a0p95-k4",
+    "topk-tau0p1-a0p95-k8",
+    "topk-tau0p1-a0p95-k16",
+    "free-tau0",
+    "free-tau0p001",
+    "free-tau0p003",
+    "free-tau0p01",
+    "free-tau0p03",
+    "free-tau0p05",
+    "free-tau0p1"
+  ],
+  "record_count": 72,
+  "schedule_details": [
+    {
+      "endpoint_run_ids": [
+        "free-tau0",
+        "free-tau0p1"
+      ],
+      "frontier_run_ids": [
+        "free-tau0",
+        "free-tau0p001",
+        "free-tau0p003",
+        "free-tau0p01",
+        "free-tau0p03",
+        "free-tau0p05",
+        "free-tau0p1"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "free_bounded"
+      ],
+      "selected_run_ids": [
+        "free-tau0",
+        "free-tau0p001",
+        "free-tau0p003",
+        "free-tau0p01",
+        "free-tau0p03",
+        "free-tau0p05",
+        "free-tau0p1"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p5-k16",
+        "topk-tau0p1-a0p5-k16"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p01-a0p5-k16",
+        "topk-tau0p1-a0p5-k16"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.5,
+        16
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p5-k16",
+        "topk-tau0p01-a0p5-k16",
+        "topk-tau0p1-a0p5-k16"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p5-k4",
+        "topk-tau0p1-a0p5-k4"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p003-a0p5-k4",
+        "topk-tau0p1-a0p5-k4"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.5,
+        4
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p5-k4",
+        "topk-tau0p003-a0p5-k4",
+        "topk-tau0p1-a0p5-k4"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p5-k8",
+        "topk-tau0p1-a0p5-k8"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p03-a0p5-k8",
+        "topk-tau0p05-a0p5-k8",
+        "topk-tau0p1-a0p5-k8"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.5,
+        8
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p5-k8",
+        "topk-tau0p03-a0p5-k8",
+        "topk-tau0p05-a0p5-k8",
+        "topk-tau0p1-a0p5-k8"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p8-k16",
+        "topk-tau0p1-a0p8-k16"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p01-a0p8-k16",
+        "topk-tau0p1-a0p8-k16"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.8,
+        16
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p8-k16",
+        "topk-tau0p01-a0p8-k16",
+        "topk-tau0p1-a0p8-k16"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p8-k4",
+        "topk-tau0p1-a0p8-k4"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p003-a0p8-k4",
+        "topk-tau0p03-a0p8-k4",
+        "topk-tau0p1-a0p8-k4"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.8,
+        4
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p8-k4",
+        "topk-tau0p003-a0p8-k4",
+        "topk-tau0p03-a0p8-k4",
+        "topk-tau0p1-a0p8-k4"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p8-k8",
+        "topk-tau0p1-a0p8-k8"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p05-a0p8-k8",
+        "topk-tau0p1-a0p8-k8"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.8,
+        8
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p8-k8",
+        "topk-tau0p05-a0p8-k8",
+        "topk-tau0p1-a0p8-k8"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p95-k16",
+        "topk-tau0p1-a0p95-k16"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p03-a0p95-k16",
+        "topk-tau0p1-a0p95-k16"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.95,
+        16
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p95-k16",
+        "topk-tau0p03-a0p95-k16",
+        "topk-tau0p1-a0p95-k16"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p95-k4",
+        "topk-tau0p1-a0p95-k4"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p003-a0p95-k4",
+        "topk-tau0p05-a0p95-k4",
+        "topk-tau0p1-a0p95-k4"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.95,
+        4
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p95-k4",
+        "topk-tau0p003-a0p95-k4",
+        "topk-tau0p05-a0p95-k4",
+        "topk-tau0p1-a0p95-k4"
+      ]
+    },
+    {
+      "endpoint_run_ids": [
+        "topk-tau0-a0p95-k8",
+        "topk-tau0p1-a0p95-k8"
+      ],
+      "frontier_run_ids": [
+        "topk-tau0p05-a0p95-k8",
+        "topk-tau0p1-a0p95-k8"
+      ],
+      "observed_successes": 7,
+      "schedule": [
+        "topk_preserving",
+        0.95,
+        8
+      ],
+      "selected_run_ids": [
+        "topk-tau0-a0p95-k8",
+        "topk-tau0p05-a0p95-k8",
+        "topk-tau0p1-a0p95-k8"
+      ]
+    }
+  ],
+  "schema_version": "fastprove.sweep_selection.v1",
+  "selected_run_ids": [
+    "plaintext",
+    "exact",
+    "topk-tau0-a0p5-k4",
+    "topk-tau0-a0p5-k8",
+    "topk-tau0-a0p5-k16",
+    "topk-tau0-a0p8-k4",
+    "topk-tau0-a0p8-k8",
+    "topk-tau0-a0p8-k16",
+    "topk-tau0-a0p95-k4",
+    "topk-tau0-a0p95-k8",
+    "topk-tau0-a0p95-k16",
+    "topk-tau0p003-a0p5-k4",
+    "topk-tau0p003-a0p8-k4",
+    "topk-tau0p003-a0p95-k4",
+    "topk-tau0p01-a0p5-k16",
+    "topk-tau0p01-a0p8-k16",
+    "topk-tau0p03-a0p5-k8",
+    "topk-tau0p03-a0p8-k4",
+    "topk-tau0p03-a0p95-k16",
+    "topk-tau0p05-a0p5-k8",
+    "topk-tau0p05-a0p8-k8",
+    "topk-tau0p05-a0p95-k4",
+    "topk-tau0p05-a0p95-k8",
+    "topk-tau0p1-a0p5-k4",
+    "topk-tau0p1-a0p5-k8",
+    "topk-tau0p1-a0p5-k16",
+    "topk-tau0p1-a0p8-k4",
+    "topk-tau0p1-a0p8-k8",
+    "topk-tau0p1-a0p8-k16",
+    "topk-tau0p1-a0p95-k4",
+    "topk-tau0p1-a0p95-k8",
+    "topk-tau0p1-a0p95-k16",
+    "free-tau0",
+    "free-tau0p001",
+    "free-tau0p003",
+    "free-tau0p01",
+    "free-tau0p03",
+    "free-tau0p05",
+    "free-tau0p1"
+  ],
+  "selection_rule": {
+    "description": "retain plaintext/exact, every successful schedule endpoint, and the non-dominated noise/accuracy/perplexity frontier",
+    "objectives": {
+      "maximize": [
+        "actual_noise_infinity_norm"
+      ],
+      "minimize": [
+        "top1_absolute_drop",
+        "perplexity_relative_increase"
+      ]
+    }
+  },
+  "selection_status_by_run_id": {
+    "exact": "selected_for_full",
+    "free-tau0": "selected_for_full",
+    "free-tau0p001": "selected_for_full",
+    "free-tau0p003": "selected_for_full",
+    "free-tau0p01": "selected_for_full",
+    "free-tau0p03": "selected_for_full",
+    "free-tau0p05": "selected_for_full",
+    "free-tau0p1": "selected_for_full",
+    "plaintext": "selected_for_full",
+    "topk-tau0-a0p5-k16": "selected_for_full",
+    "topk-tau0-a0p5-k4": "selected_for_full",
+    "topk-tau0-a0p5-k8": "selected_for_full",
+    "topk-tau0-a0p8-k16": "selected_for_full",
+    "topk-tau0-a0p8-k4": "selected_for_full",
+    "topk-tau0-a0p8-k8": "selected_for_full",
+    "topk-tau0-a0p95-k16": "selected_for_full",
+    "topk-tau0-a0p95-k4": "selected_for_full",
+    "topk-tau0-a0p95-k8": "selected_for_full",
+    "topk-tau0p001-a0p5-k16": "calibration_only",
+    "topk-tau0p001-a0p5-k4": "calibration_only",
+    "topk-tau0p001-a0p5-k8": "calibration_only",
+    "topk-tau0p001-a0p8-k16": "calibration_only",
+    "topk-tau0p001-a0p8-k4": "calibration_only",
+    "topk-tau0p001-a0p8-k8": "calibration_only",
+    "topk-tau0p001-a0p95-k16": "calibration_only",
+    "topk-tau0p001-a0p95-k4": "calibration_only",
+    "topk-tau0p001-a0p95-k8": "calibration_only",
+    "topk-tau0p003-a0p5-k16": "calibration_only",
+    "topk-tau0p003-a0p5-k4": "selected_for_full",
+    "topk-tau0p003-a0p5-k8": "calibration_only",
+    "topk-tau0p003-a0p8-k16": "calibration_only",
+    "topk-tau0p003-a0p8-k4": "selected_for_full",
+    "topk-tau0p003-a0p8-k8": "calibration_only",
+    "topk-tau0p003-a0p95-k16": "calibration_only",
+    "topk-tau0p003-a0p95-k4": "selected_for_full",
+    "topk-tau0p003-a0p95-k8": "calibration_only",
+    "topk-tau0p01-a0p5-k16": "selected_for_full",
+    "topk-tau0p01-a0p5-k4": "calibration_only",
+    "topk-tau0p01-a0p5-k8": "calibration_only",
+    "topk-tau0p01-a0p8-k16": "selected_for_full",
+    "topk-tau0p01-a0p8-k4": "calibration_only",
+    "topk-tau0p01-a0p8-k8": "calibration_only",
+    "topk-tau0p01-a0p95-k16": "calibration_only",
+    "topk-tau0p01-a0p95-k4": "calibration_only",
+    "topk-tau0p01-a0p95-k8": "calibration_only",
+    "topk-tau0p03-a0p5-k16": "calibration_only",
+    "topk-tau0p03-a0p5-k4": "calibration_only",
+    "topk-tau0p03-a0p5-k8": "selected_for_full",
+    "topk-tau0p03-a0p8-k16": "calibration_only",
+    "topk-tau0p03-a0p8-k4": "selected_for_full",
+    "topk-tau0p03-a0p8-k8": "calibration_only",
+    "topk-tau0p03-a0p95-k16": "selected_for_full",
+    "topk-tau0p03-a0p95-k4": "calibration_only",
+    "topk-tau0p03-a0p95-k8": "calibration_only",
+    "topk-tau0p05-a0p5-k16": "calibration_only",
+    "topk-tau0p05-a0p5-k4": "calibration_only",
+    "topk-tau0p05-a0p5-k8": "selected_for_full",
+    "topk-tau0p05-a0p8-k16": "calibration_only",
+    "topk-tau0p05-a0p8-k4": "calibration_only",
+    "topk-tau0p05-a0p8-k8": "selected_for_full",
+    "topk-tau0p05-a0p95-k16": "calibration_only",
+    "topk-tau0p05-a0p95-k4": "selected_for_full",
+    "topk-tau0p05-a0p95-k8": "selected_for_full",
+    "topk-tau0p1-a0p5-k16": "selected_for_full",
+    "topk-tau0p1-a0p5-k4": "selected_for_full",
+    "topk-tau0p1-a0p5-k8": "selected_for_full",
+    "topk-tau0p1-a0p8-k16": "selected_for_full",
+    "topk-tau0p1-a0p8-k4": "selected_for_full",
+    "topk-tau0p1-a0p8-k8": "selected_for_full",
+    "topk-tau0p1-a0p95-k16": "selected_for_full",
+    "topk-tau0p1-a0p95-k4": "selected_for_full",
+    "topk-tau0p1-a0p95-k8": "selected_for_full"
+  },
+  "source": "/Users/yin/code/fastProve/results/raw/eval_sweep_rho0.jsonl",
+  "status": "ready_for_full_evaluation",
+  "status_counts": {
+    "success": 72
+  },
+  "unselected_run_ids": [
+    "topk-tau0p001-a0p5-k4",
+    "topk-tau0p001-a0p5-k8",
+    "topk-tau0p001-a0p5-k16",
+    "topk-tau0p001-a0p8-k4",
+    "topk-tau0p001-a0p8-k8",
+    "topk-tau0p001-a0p8-k16",
+    "topk-tau0p001-a0p95-k4",
+    "topk-tau0p001-a0p95-k8",
+    "topk-tau0p001-a0p95-k16",
+    "topk-tau0p003-a0p5-k8",
+    "topk-tau0p003-a0p5-k16",
+    "topk-tau0p003-a0p8-k8",
+    "topk-tau0p003-a0p8-k16",
+    "topk-tau0p003-a0p95-k8",
+    "topk-tau0p003-a0p95-k16",
+    "topk-tau0p01-a0p5-k4",
+    "topk-tau0p01-a0p5-k8",
+    "topk-tau0p01-a0p8-k4",
+    "topk-tau0p01-a0p8-k8",
+    "topk-tau0p01-a0p95-k4",
+    "topk-tau0p01-a0p95-k8",
+    "topk-tau0p01-a0p95-k16",
+    "topk-tau0p03-a0p5-k4",
+    "topk-tau0p03-a0p5-k16",
+    "topk-tau0p03-a0p8-k8",
+    "topk-tau0p03-a0p8-k16",
+    "topk-tau0p03-a0p95-k4",
+    "topk-tau0p03-a0p95-k8",
+    "topk-tau0p05-a0p5-k4",
+    "topk-tau0p05-a0p5-k16",
+    "topk-tau0p05-a0p8-k4",
+    "topk-tau0p05-a0p8-k16",
+    "topk-tau0p05-a0p95-k16"
+  ]
+}

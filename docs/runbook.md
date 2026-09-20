@@ -83,13 +83,27 @@ python -m evals --base-config configs/tiny_exact.yaml \
 ```bash
 python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml          # 只列 72 点，不跑推理
 python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml \
-    --output results/raw/eval_sweep.jsonl --execute-deferred                   # 显式授权执行
+    --output results/raw/eval_sweep_rho0.jsonl --execute-deferred              # 基础 sweep（ρ=0 契约）
 ```
 
 通过判据：72 条 run record 全部 `status: success`，且 exact 门禁通过（无 skipped）。
-已知边界：sweep 的 plaintext/exact 点从 `base_config: configs/tiny_approx.yaml`
-继承 `rho_noise_bound: 1e-5` 与 `per_request`，不是 ρ=0 的 exact 基线
-（`docs/PROBLEMS.md` §3.5）。
+口径：基础 sweep 全部 ρ=0（`_config_for_spec` 契约 + `configs/eval_sweep.yaml`
+显式声明，见 `docs/PROBLEMS.md` §3.5），每条记录自带生效 `obfuscation` 字段。
+
+### 6.1 部署折衷 replica（ρ=1e-5，39 个候选）
+
+```bash
+python scripts/select_sweep_candidates.py --raw results/raw/eval_sweep_rho0.jsonl \
+    --output results/raw/sweep_selection_rho0.json
+python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml \
+    --spec-ids-file results/raw/sweep_selection_rho0.json --rho-replica 1e-5 \
+    --output results/raw/eval_sweep_rho0_replica.jsonl --execute-deferred
+python scripts/compare_rho_replica.py --base results/raw/eval_sweep_rho0.jsonl \
+    --replica results/raw/eval_sweep_rho0_replica.jsonl \
+    --output-json results/raw/rho_replica_marginal.json
+```
+
+通过判据：39/39 success、exact 门禁通过；边际代价表见 `results/REPORT.md` §6.1。
 
 ## 7. 报告器
 

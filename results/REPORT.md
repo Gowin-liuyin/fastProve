@@ -230,3 +230,36 @@ PYTHONPATH=src python -m pytest -q tests/security/test_rho_noise.py
 python docs/design_identity_check.py
 PYTHONPATH=src python scripts/measure_overhead.py --output results/raw/overhead_compromise.json
 ```
+
+### 6.1 ρ=1e-5 的边际代价（replica，2026-09-20）
+
+`docs/PROBLEMS.md` §3.5 决策丙的后半段：在 72 点基础 sweep（全部 ρ=0）之上，对
+selection 选出的 39 个候选（plaintext/exact + 30 topk + 7 free）补一组 ρ=1e-5
+复制点（`results/raw/eval_sweep_rho0_replica.jsonl`，39/39 成功、exact 门禁通过），
+逐点配对测量该部署旋钮的边际代价（replica − base）：
+
+| 指标（39 点） | 最大绝对增量 | 均值 |
+|---|---:|---:|
+| 下一位 top-1 绝对退化 | 0.0000 | 0.0000 |
+| perplexity 相对上升 | 9.54e-07 | 3.42e-07 |
+| NLL 绝对上升 | 9.54e-07 | 3.42e-07 |
+| Softmax JS 散度 | 8.63e-11 | 8.24e-12 |
+
+边际代价落在指标浮点分辨率内（JS ~1e-11、ppl ~1e-6 相对量级），top-1 完全不变；
+39 点逐条数据见 `results/raw/rho_replica_marginal.json`，候选清单见
+`results/raw/sweep_selection_rho0.json`。**限制**：这是随机 tiny 模型上的正确性
+证据，不能外推为语言模型能力结论；ρ 的隐私面仍由 §1.1 的 ρ 泄漏结论约束，
+ρ=1e-5 不改变该结论。
+
+复现：
+
+```bash
+python scripts/select_sweep_candidates.py --raw results/raw/eval_sweep_rho0.jsonl \
+    --output results/raw/sweep_selection_rho0.json
+python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml \
+    --spec-ids-file results/raw/sweep_selection_rho0.json --rho-replica 1e-5 \
+    --output results/raw/eval_sweep_rho0_replica.jsonl --execute-deferred
+python scripts/compare_rho_replica.py --base results/raw/eval_sweep_rho0.jsonl \
+    --replica results/raw/eval_sweep_rho0_replica.jsonl \
+    --output-json results/raw/rho_replica_marginal.json
+```

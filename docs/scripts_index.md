@@ -3,10 +3,10 @@
 状态：CURRENT
 日期：2026-09-20
 上游依据：docs/CLEANUP_PLAN.md §P5、§8.3；docs/implementation_notes.md
-适用范围：`scripts/` 全部 28 个脚本与 `scripts/archive/` 2 个归档脚本的用途、类别、调用、产物与引用
+适用范围：`scripts/` 全部 29 个脚本与 `scripts/archive/` 2 个归档脚本的用途、类别、调用、产物与引用
 
-所有「典型调用」中的 `--help` 形式都在 2026-09-20 实测（26 个现行脚本 + 2 个归档脚本
-均接受 `-h/--help`）。带参数示例取自 `README.md`、`docs/runbook.md`、`results/raw/README.md`
+所有「典型调用」中的 `--help` 形式都在 2026-09-20 实测（`scripts/` 下全部现行脚本
++ `scripts/archive/` 的 2 个归档脚本均接受 `-h/--help`）。带参数示例取自 `README.md`、`docs/runbook.md`、`results/raw/README.md`
 或脚本 docstring；无法考证确切 argv 的标「待考」。脚本名在本次清理中**未改动**
 （CLEANUP_PLAN §4-⑧：`evaluation/report.py` 内嵌三条命令名，重命名会静默改报告正文）。
 
@@ -22,7 +22,7 @@ util**；`docs/CLEANUP_PLAN.md:180` 据此在 P5 不动这些脚本，只在本�
   `verify_recoverability_bound.py`、`verify_rho_recoverable_from_fused_output.py`、
   `verify_token_recovery_from_rho.py`。
 - 4 个 `record_*.py` 与其余 `verify_*.py` 沿用同一「脚本之间零 import」的写法：
-  2026-09-20 用 `rg "from scripts|import scripts" scripts/*.py` 核对，**全部 28 个脚本
+  2026-09-20 用 `rg "from scripts|import scripts" scripts/*.py` 核对，**全部 29 个脚本
   之间无互相 import**。它们可以 import `fastprove` 库，但不共享脚本级 util。
 - 与 CLEANUP_PLAN:180「7 个 `verify_*.py` 与 `record_*.py`」的计数差异：当时把
   `verify_*.py` 与 `record_*.py` 合并表述为 7 个；当前树上 `verify_*` 9 个、`record_*` 4 个。
@@ -33,7 +33,7 @@ util**；`docs/CLEANUP_PLAN.md:180` 据此在 P5 不动这些脚本，只在本�
 | 脚本 | 用途（docstring 首句） | 典型调用 | 主要产物 |
 |---|---|---|---|
 | `run_correctness.py` | Plan the tiny correctness run（默认只读，`--execute` 才跑模型） | `python scripts/run_correctness.py --execute`（README.md:92） | `results/raw/correctness.jsonl`（`--output` 默认，`run_correctness.py:37-39`） |
-| `run_accuracy_sweep.py` | Plan or explicitly execute the complete 72-point aligned sweep | `python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --output results/raw/eval_sweep.jsonl --execute-deferred`（runbook.md:78-79） | `eval_sweep*.jsonl`、可选 preflight manifest |
+| `run_accuracy_sweep.py` | Plan or explicitly execute the complete 72-point aligned sweep | 基础：`python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --output results/raw/eval_sweep_rho0.jsonl --execute-deferred`；replica：加 `--spec-ids-file <selection.json> --rho-replica 1e-5 --output <新文件>`（runbook.md §6） | `eval_sweep_rho0*.jsonl`、可选 preflight manifest |
 | `build_report.py` | Plan or explicitly derive tables, figures, and REPORT.md from raw JSONL | `python scripts/build_report.py --raw results/raw/eval_sweep_dtype_fixed.jsonl --output results --execute`（runbook.md:93） | `results/tables/`、`results/figures/`、`results/REPORT.md` |
 | `run_pretrained_compare.py` | Plaintext vs current-fastProve obfuscated comparison for Llama (or tiny) | `python scripts/run_pretrained_compare.py --model-path <ckpt> --output <json>`（READY 前置见 runbook.md §8；外部 CUDA argv 待考） | `--output` 默认写 llama_compare.json；本次落盘实例为 `results/raw/llama_compare_P.json`、`results/raw/llama_compare_large.json` |
 | `run_osnip_style_benchmarks.py` | OSNIP-style utility benchmarks for plain vs fastProve | `python scripts/run_osnip_style_benchmarks.py --model-path <ckpt> --data-dir results/raw/osnip_bench_data ...`（外部 CUDA argv 待考） | `--output` 默认写 osnip_style_bench.json；本次落盘实例为 `results/raw/osnip_style_bench_fixed.json` 等 |
@@ -45,6 +45,7 @@ util**；`docs/CLEANUP_PLAN.md:180` 据此在 P5 不动这些脚本，只在本�
 | `build_real_scenario_prompts.py` | Build ≥1500 real-scenario prompts for Llama Instruct comparison | `python scripts/build_real_scenario_prompts.py` | 默认 `results/raw/real_scenario_prompts_1500.jsonl`（`:default`） |
 | `build_attack_cost_records.py` | Build `results/raw/attack_costs.jsonl` from recorded attack artifacts | `python scripts/build_attack_cost_records.py --output results/raw/attack_costs.jsonl` | `attack_costs.jsonl`（不跑攻击、不造数） |
 | `select_sweep_candidates.py` | Select a traceable full-evaluation subset from calibration JSONL | `python scripts/select_sweep_candidates.py --raw <calibration.jsonl> --output <manifest.json>` | 候选 manifest JSON（不跑推理、不改输入） |
+| `compare_rho_replica.py` | Compare a rho replica sweep against its rho=0 base records | `python scripts/compare_rho_replica.py --base results/raw/eval_sweep_rho0.jsonl --replica results/raw/eval_sweep_rho0_replica.jsonl --output-json results/raw/rho_replica_marginal.json` | 逐点边际代价 JSON（schema `fastprove.rho_replica_marginal.v1`；不跑推理） |
 | `measure_overhead.py` | Measure reference-implementation overhead versus the plaintext model | `python scripts/measure_overhead.py --hidden-size 1024 --output results/raw/overhead_B7_d1024.json` | `overhead_B7_d*.json` |
 
 引用（节选）：`run_correctness.py` ← `README.md:92`、`tests/cli/test_cli_plan.py`、

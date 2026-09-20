@@ -5,12 +5,13 @@
 上游依据：AGENTS.md、docs/INDEX.md、docs/PROBLEMS.md
 适用范围：`results/raw/` 的实际目录盘点：每条记录的用途、生成命令、跟踪状态与备注
 
-本目录当前共有 **65 条条目**（62 个文件 + 3 个子目录；不含本 README）。
+本目录当前共有 **70 条条目**（67 个文件 + 3 个子目录；不含本 README）。
 下表的「生成命令」只写仓库内可考证的来源：能找到脚本默认路径/docstring 的写脚本
 路径；exact argv 无法考证的标 `待考`。所有 `results/raw/*.jsonl`、`*.pt` 默认被
 `.gitignore` 排除，白名单仅 `eval_sweep.jsonl`、`eval_sweep_dtype_fixed.jsonl`、
 `eval_sweep_rho0.jsonl`、`eval_sweep_rho0_calibration.jsonl`、
-`attack_costs.jsonl`、`real_scenario_prompts_1500.jsonl`。
+`eval_sweep_rho0_replica.jsonl`、`attack_costs.jsonl`、
+`real_scenario_prompts_1500.jsonl`。
 
 > 口径声明：除预训练相关记录外，绝大部分精度/安全数字来自随机 tiny 模型或小张量
 > 探针（`meaningful_lm_evidence: False`），只能作为数学/工程正确性证据，不得描述为
@@ -24,6 +25,9 @@
 | `eval_sweep_dtype_fixed.jsonl` | 同上，dtype 溯源字段已修正 | 同上（修 `structured.reduction_compute_dtype_name` 后重跑） | 跟踪（白名单） | **superseded（2026-09-20）**：被 ρ=0 重跑取代；72 个 spec 的精度指标仍逐位相同，只有被修标签与墙钟/内存类差异 |
 | `eval_sweep_rho0.jsonl` | 72/72 点 sweep，ρ=0 基础口径（**当前规范**） | `python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --output results/raw/eval_sweep_rho0.jsonl --execute-deferred` | 跟踪（白名单） | 记录自带生效 `obfuscation`（ρ=0、`per_request`）与修正后的 dtype 标签；125 个非性能指标与旧两份逐位相同；见 `docs/PROBLEMS.md` §3.5、`results/PROVENANCE.md` §7 |
 | `eval_sweep_rho0_calibration.jsonl` | 同上，`--calibration-only`（sample_count=8）冒烟 | 同命令加 `--calibration-only` | 跟踪（白名单） | 全量重跑前的口径/schema 检查：72/72 成功、exact 门禁通过 |
+| `sweep_selection_rho0.json` | ρ=0 基础 sweep 的候选选择 manifest | `python scripts/select_sweep_candidates.py --raw results/raw/eval_sweep_rho0.jsonl --output results/raw/sweep_selection_rho0.json` | 跟踪 | `status: ready_for_full_evaluation`，39 个候选（plaintext/exact + 30 topk + 7 free） |
+| `eval_sweep_rho0_replica.jsonl` | 39 个候选在 ρ=1e-5 下的复制点（部署折衷边际代价） | `python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --spec-ids-file results/raw/sweep_selection_rho0.json --rho-replica 1e-5 --output results/raw/eval_sweep_rho0_replica.jsonl --execute-deferred` | 跟踪（白名单） | 39/39 成功、exact 门禁通过；run_id 带 `-rho1e-05` 后缀 |
+| `rho_replica_marginal.json` | replica 与 base 的逐点边际代价 | `python scripts/compare_rho_replica.py --base results/raw/eval_sweep_rho0.jsonl --replica results/raw/eval_sweep_rho0_replica.jsonl --output-json results/raw/rho_replica_marginal.json` | 跟踪 | schema `fastprove.rho_replica_marginal.v1`；Δtop1=0、Δppl 最大 9.54e-07、ΔJS 最大 8.63e-11 |
 | `exact_gate_D1.json` | FP32 exact 硬/软门禁明细 | `PYTHONPATH=src:evals python -m evals --base-config configs/tiny_exact.yaml --config evals/configs/P2.yaml --precision fp32 --keys 1 --layers 1,2,3,4 --check-gates --output results/raw/exact_gate_D1.json` | 跟踪 | `results/REPORT.md` §2.1 的头条门禁 |
 | `exact_gate_D1_bf16.json` | BF16 独立条件（非 exact 门禁） | 同上，`--precision bf16`（确切 argv 待考） | 跟踪 | BF16 只作独立 condition 记录 |
 | `exact_tolerance_A4.json` / `exact_tolerance_A4_before.json` | A4 阶段前后 exact logits 偏差 | `PYTHONPATH=src python scripts/record_exact_tolerance.py --output results/raw/exact_tolerance_A4.json` | 跟踪 | `A4_before` 是修复前对照 |

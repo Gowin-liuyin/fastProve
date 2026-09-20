@@ -25,6 +25,7 @@ results/raw/**/*.pt
 !results/raw/eval_sweep_dtype_fixed.jsonl
 !results/raw/eval_sweep_rho0.jsonl
 !results/raw/eval_sweep_rho0_calibration.jsonl
+!results/raw/eval_sweep_rho0_replica.jsonl
 !results/raw/attack_costs.jsonl
 !results/raw/real_scenario_prompts_1500.jsonl
 results/tables/*.csv

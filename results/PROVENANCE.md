@@ -29,6 +29,9 @@
 | 72/72 点 sweep 与 §2.3 两张精度表 | `results/raw/eval_sweep_dtype_fixed.jsonl` | `PYTHONPATH=src python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --execute-deferred`（修 `structured.reduction_compute_dtype_name()` 后重跑） | **superseded（2026-09-20）**：由 ρ=0 重跑取代；72 个 spec 精度指标仍逐位相同 / 跟踪（白名单）/ 923,805 B |
 | ρ=0 口径重跑（**当前规范**） | `results/raw/eval_sweep_rho0.jsonl` | `python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --output results/raw/eval_sweep_rho0.jsonl --execute-deferred` | **current**（2026-09-20）：记录自带生效 `obfuscation`（ρ=0、per_request）与修正后的 dtype 标签；125 个非性能指标与旧份**逐位相同**，性能类字段为墙钟差异 / 跟踪（白名单）/ 946,527 B |
 | ρ=0 校准阶段检查 | `results/raw/eval_sweep_rho0_calibration.jsonl` | 同命令加 `--calibration-only`（sample_count=8） | **current**：72/72 成功、exact 门禁通过，作为全量重跑前的口径/schema 冒烟 / 跟踪（白名单）/ 831,383 B |
+| 部署折衷 replica 候选清单 | `results/raw/sweep_selection_rho0.json` | `python scripts/select_sweep_candidates.py --raw results/raw/eval_sweep_rho0.jsonl --output results/raw/sweep_selection_rho0.json` | **current**：39 个候选 / 跟踪 |
+| ρ=1e-5 复制点（§6.1） | `results/raw/eval_sweep_rho0_replica.jsonl` | `python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --spec-ids-file results/raw/sweep_selection_rho0.json --rho-replica 1e-5 --output results/raw/eval_sweep_rho0_replica.jsonl --execute-deferred` | **current**：39/39 成功，run_id 带 `-rho1e-05` / 跟踪（白名单） |
+| ρ replica 边际代价（§6.1 表） | `results/raw/rho_replica_marginal.json` | `python scripts/compare_rho_replica.py --base results/raw/eval_sweep_rho0.jsonl --replica results/raw/eval_sweep_rho0_replica.jsonl --output-json results/raw/rho_replica_marginal.json` | **current**：逐点配对，Δtop1=0、Δppl≤9.54e-07、ΔJS≤8.63e-11 / 跟踪 |
 | 同上（历史，REPORT.md 旧引用） | `results/raw/eval_sweep.jsonl` | 同命令（修复前一次运行） | **superseded（2026-09-20）**：dtype 标签错误（`docs/PROBLEMS.md` §3.2），且被 ρ=0 重跑取代；非性能指标与新规范逐位相同 / 跟踪（白名单）/ 923,785 B |
 | 固定 seed 两次运行 72 个 metric 树逐位相同（§2.3） | 第二遍对照在 `/tmp`，**未入库**（REPORT.md:189） | 同 sweep 命令重跑一遍后逐位比对 | 结论无仓库内原始对照，只有第一遍记录；照实标注 |
 | 性能开销表（§2.4） | `results/raw/overhead_B7_d512.json`、`d1024`、`d2048` | `PYTHONPATH=src python scripts/measure_overhead.py --hidden-size <d> --output results/raw/overhead_B7_d<d>.json`（REPORT.md:181-182） | current / 跟踪 / 1,005–1,300 B 量级 |
@@ -106,7 +109,9 @@
   `obfuscation_override`）。**重跑已于 2026-09-20 完成**：`eval_sweep_rho0.jsonl`
   为当前规范记录，125 个非性能指标与 `eval_sweep.jsonl` / `eval_sweep_dtype_fixed.jsonl`
   **逐位相同**（性能/时间字段除外）；旧两份保留为历史引用，不再作为规范来源。
-  部署折衷 ρ=1e-5 的复制点属后续运行。
+  部署折衷 ρ=1e-5 的复制点也已完成：39 个候选（`sweep_selection_rho0.json`）→
+  `eval_sweep_rho0_replica.jsonl`，逐点边际代价见 `rho_replica_marginal.json`
+  与 REPORT §6.1。
 - **Wilson 区间**：`accuracy_ci95` 现由统一实现生成（z = 1.959963984540054，
   见 `fastprove/evaluation/stats.py`）。归档 `osnip_style_bench_fixed*.json`
   使用 z = 1.959963985，两者相差 ≤1.2e-10（远低于报告精度）；归档数字保持不变，
