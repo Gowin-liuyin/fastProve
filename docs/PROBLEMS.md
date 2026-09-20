@@ -27,7 +27,7 @@
 | 类别 | 数量 | 是否可修 | 说明 |
 |---|---:|---|---|
 | **A. 构造的固有泄漏** | 7 条 | ❌ 不可用工程手段消除 | 由「输出精确 + 低开销 + 无可信边界」三个约束强制 |
-| **B. 实现缺陷** | 6 条 | ✅ 3 条已修复；3 条待决策（§3.4、§3.5、§3.6） | 普通 bug，含一条我自己文档引入的 |
+| **B. 实现缺陷** | 6 条 | ✅ 已全部处理（§3.1–§3.3 历史修复；§3.4 统一、§3.5 决策并落实、§3.6 修复于 2026-09-20） | 普通 bug，含一条我自己文档引入的 |
 | **C. 证据链缺口** | 4 条 | ⏳ 待补 | 不是错误，是尚未验证的部分 |
 
 **最重要的一条**（§1.1）：服务端要算对 RMSNorm 就必须算对 `ρ`，而 `ρ` 代数上就是
@@ -391,7 +391,7 @@ Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重。`untied_deployed` 模�
 
 ---
 
-## 3. 类别 B：实现缺陷（3 条已修复，3 条待决策）
+## 3. 类别 B：实现缺陷（6 条：§3.1–§3.3 历史修复，§3.4–§3.6 于 2026-09-20 处理）
 
 ### 3.1 【我的文档引入】`test_no_decode_in_forward.py` 是空测试
 
@@ -450,7 +450,7 @@ Llama-3.2 的 `lm_head` 与 `embed_tokens` 共享权重。`untied_deployed` 模�
 见 §1.4。原文用 `κ ≤ 10` 描述距离保真度上界，实际是精确暴露。
 已补 5bis.8 条目 6 并在 5bis.3 加前向警告。
 
-### 3.4 【待决策，未修复】Wilson 区间两份定义逐位不一致（z 常数不同）
+### 3.4 【已修复，2026-09-20】Wilson 区间两份定义逐位不一致（z 常数不同）
 
 **现象**
 
@@ -525,7 +525,23 @@ PY
 **工程可消除性**：✅ 可消除，但必须是一次显式取舍——改任何一边都会让已记录工件
 在 1e-10 量级上变化，因此不允许在结构重构里静默统一。
 
-### 3.5 【待决策，未修复】sweep 的 plaintext/exact 点继承非零 `ρ` 噪声与 `per_request` 刷新
+**已修复（2026-09-20，用户授权）**
+
+- 权威实现迁至 `src/fastprove/evaluation/stats.py`（`IntervalEstimate`、
+  `validate_level`、`wilson_interval`、`relative_increase`、
+  `percentage_point_drop`），95% 的 z 保留有出处的表值 `1.959963984540054`；
+- `evals/stats.py` 改为从 fastprove 重导出（依赖方向 evals → fastprove）；
+  其他 evals 函数继续通过 `_validate_level` 别名工作；
+- `benchmarks/scoring.py::_wilson_interval` 删除本地公式，委托统一实现
+  （保留 `n <= 0 → (nan, nan)` 哨兵）；`evaluation/accuracy.py` 的
+  `from evals.stats import ...` 反向依赖一并移除；
+- 测试：`tests/evaluation/test_stats_single_source.py`（对象身份 + 8 组
+  `(k, n)` 逐位相等 + z 常数 + 零基线语义）；
+- 影响：未来生成的 osnip `accuracy_ci95` 使用统一 z，与已归档
+  `osnip_style_bench_fixed*.json` 相差 ≤1.2e-10（远低于报告精度）；
+  **已归档数字不做修改**，可比性断点记录在 `results/PROVENANCE.md`。
+
+### 3.5 【已决策，2026-09-20 落实基础口径】sweep 的 plaintext/exact 点继承非零 `ρ` 噪声与 `per_request` 刷新
 
 **现象**
 
@@ -611,6 +627,35 @@ PY
 4. 若认为 ρ=1e-5 应当进入基线，则需要重跑受影响点并更新结果表——这是行为与数字
    变更，不在文档重构范围内。
 
+**决策落地（2026-09-20，用户授权，采用丙的基础口径）**
+
+- **72 个基础点全部 `rho_noise_bound = 0`**：`_config_for_spec` 新增
+  `obfuscation_override` 参数与具名常量 `BASE_SWEEP_RHO_NOISE_BOUND = 0.0`，
+  不再整块继承 `obfuscation`；`configs/eval_sweep.yaml` 显式声明
+  `obfuscation_override.rho_noise_bound: 0.0`，`execution` 过期门标志同步为
+  「基础 sweep 已于 2026-09-19 完成，重跑仍需 `--execute-deferred`」。
+- **`refresh_mode` 保持 `per_request` 不动**（否掉选项 1 的 `fixed_debug`
+  半句）。实测（exact 模式、tiny 配置，解码信号对明文块最大绝对误差）：
+
+  | refresh_mode | ρ | max_abs_err |
+  |---|---:|---:|
+  | fixed_debug | 0 | 1.907e-06 |
+  | fixed_debug | 1e-5 | 5.648e-06 |
+  | per_request | 0 | 2.101e-06 |
+  | per_request | 1e-5 | 5.633e-06 |
+
+  结论：ρ=1e-5 把 exact 锚点抬高约 2.7 倍（有实际数值后果，故必须归零）；
+  而 `per_request` 与 `fixed_debug` 同等不破坏 exact 性，且 `fixed_debug` 是
+  AGENTS.md 明令不得当作隐私路径的 debug 配置，因此刷新模式不换。
+- **丙的 replica 属后续运行**：重跑后用 `selection_rule` 选出的候选点，以
+  `obfuscation_override={"rho_noise_bound": 1e-5}` 补一组部署折衷复制点；
+  本次结构清理只落实基础口径，不生成/不重跑任何结果。
+- **可比性断点**：已落盘的 `results/raw/eval_sweep*.jsonl` 产生于该字段引入
+  之前（继承 ρ=1e-5），重跑后的基础点不再与它们逐点可比；已登记在
+  `results/PROVENANCE.md`。
+- 测试：`tests/evaluation/test_sweep_rho_policy.py`（72 点全 ρ=0、默认值、
+  replica 覆盖、未知键拒绝、YAML 与常量一致、门标志同步）。
+
 在决策落地前，禁止把当前配置重跑出来的 plaintext/exact 点描述为「与
 `configs/tiny_exact.yaml` 等价的 ρ=0 基线」。
 
@@ -662,6 +707,18 @@ debug 路径把 `attention_debug.clean_output` 显式转成 FP32，而服务端 
 python -m evals --check-gates                    # 预期崩溃（默认 bf16）
 python -m evals --check-gates --precision fp32   # HARD/SOFT/ALL: PASS
 ```
+
+**已修复（2026-09-20，用户授权）**
+
+- `src/fastprove/models/obfuscated.py` 的 `clean_update` 右操作数补
+  `cast("deployed_attn_out").float()`，与同段 debug 路径既有的 FP32 约定
+  一致；FP32 下 `.float()` 是恒等操作，等价性基线未移动（12/12 OK）。
+- bf16 门禁现在可运行，并复现 `results/REPORT.md` §2.1 记录的 bf16 条件量级：
+  `lm_head_argmax_match = 0.9765625`、`greedy_sequence_exact_match = 0.875`、
+  `ppl_relative_increase ≈ 2.49e-4`。HARD 仍 FAIL 属 bf16 条件本身（REPORT 已
+  注明 BF16 是独立条件、exact 门禁在 FP32 判定）；`--precision fp32` 仍
+  HARD/SOFT/ALL PASS。runbook 已写明门禁精度取 fp32。
+- 该修复只影响 debug 诊断路径，生产 forward（非 debug）不经过该表达式。
 
 ---
 

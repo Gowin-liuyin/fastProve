@@ -13,7 +13,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 
 | 维度 | 事实 |
 |---|---|
-| 测试 | `python -m pytest tests -q` → **399 passed**（P7 重组后计数） |
+| 测试 | `python -m pytest tests -q` → **417 passed**（P7 重组 399 + §3.5/§3.4 新增测试） |
 | 等价性 | `python scripts/verify_refactor_equivalence.py --check` → 12 section 与 `results/raw/refactor_baseline_5e19c43ea2b2.json` 逐位一致 |
 | 数学预言机 | `python docs/design_identity_check.py` → 13 项 FP64 恒等式全过 |
 | 环境 | Python 3.13.12 / PyTorch 2.11.0 / NumPy 2.4.4；macOS arm64；CPU + MPS，无 CUDA |
@@ -21,7 +21,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 | 模式 | `plaintext` / `exact` / `topk_preserving` / `free_bounded` 四模式均实现 |
 | 扫描 | 72/72 点已落盘（随机 tiny，仅正确性），见 `results/REPORT.md` §2.3 |
 | 预训练 | 仓库不含 checkpoint；Qwen2 1.5B 本机 artifact 已消失（`checkpoint_bytes = 0`） |
-| 新克隆冒烟（P9） | `git clone` → 68 MB；`venv --system-site-packages` + `pip install -e . --no-deps` 后：pytest 399 passed、等价性 OK、`design_identity_check.py` 13 项全过；外部目录可 `import fastprove, evals` |
+| 新克隆冒烟（P9） | `git clone` → 68 MB（工作树 6.8 MB；历史仍含 38 篇 PDF，未重写历史）；`venv --system-site-packages` + `pip install -e . --no-deps` 后：pytest、等价性、`design_identity_check.py` 全过；外部目录可 `import fastprove, evals` |
 
 ## 2. P0–P7 重构提交（`git log --oneline`）
 
@@ -51,18 +51,21 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 - 本次文档重建**未改任何 Python 代码、未重跑任何数值实验**（唯一新写入的运行时
   文件是验证过程产生的临时副本，见 `git status`）。
 
-## 4. 未决问题（`docs/PROBLEMS.md`）
+## 4. 已决问题（`docs/PROBLEMS.md`）
 
-- **§3.4 待决策**：Wilson 区间两份定义 z 常数不同（`evals/stats.py` 的
-  `1.959963984540054` vs `benchmarks/scoring.py` 的 `1.959963985`），最大差
-  ~1.2e-10；两份实现都保留，未统一。
-- **§3.5 待决策**：`configs/eval_sweep.yaml` 的 `base_config: configs/tiny_approx.yaml`
-  使全部 72 个 spec（含 plaintext/exact 基线点）继承 `rho_noise_bound: 1e-5` 与
-  `per_request`；exact 正确性仍只对 `configs/tiny_exact.yaml`（ρ=0、`fixed_debug`）成立。
-  在决策前不得把重跑的 sweep 基线点描述为 ρ=0 基线。
-- **§3.6 待决策**：evals 默认 bf16 门禁在 debug 路径崩溃（`models/obfuscated.py:653`
-  的 einsum dtype 不匹配，重构前已存在）；`--precision fp32` 正常通过。runbook 已要求
-  显式 fp32。
+- **§3.4 已修复（2026-09-20）**：Wilson 统一到 `fastprove/evaluation/stats.py`
+  （z = 1.959963984540054），`evals/stats.py` 重导出，benchmark scoring 与
+  `evaluation/accuracy.py` 不再各自持有一份；新增
+  `tests/evaluation/test_stats_single_source.py`。归档工件的 1e-10 量级差异不改。
+- **§3.5 已决策（2026-09-20，丙的基础口径）**：72 个基础点全部 `rho_noise_bound=0`
+  （`_config_for_spec` 契约 + `configs/eval_sweep.yaml` 显式声明），`refresh_mode`
+  保持 `per_request`（实测不破坏 exact 性，且 `fixed_debug` 不得当隐私路径）；部署
+  折衷 ρ=1e-5 的复制点由后续重跑 + selection 候选单独生成。新增
+  `tests/evaluation/test_sweep_rho_policy.py`；重跑结果与原 `eval_sweep*.jsonl`
+  不可逐点比较（PROVENANCE 已记）。
+- **§3.6 已修复（2026-09-20）**：debug 路径 `clean_update` 右操作数补 `.float()`；
+  bf16 门禁可运行并复现 REPORT §2.1 的 bf16 条件（greedy 0.875），exact 门禁仍在
+  `--precision fp32` 下判定并通过。
 - **A 类构造固有泄漏（7 条，不可修）**：最严重的是 `ρ` 泄漏 `‖h‖` 并在 FP32 下
   恢复 layer-0 输入 token（实测 92.5% Qwen2 / 93.4% Llama）；公开基座 embedding 时
   词表置换挡不住明文；Gram 几何、`e ≈ hC` 通道、融合内核假设挡不住 `ρ`。

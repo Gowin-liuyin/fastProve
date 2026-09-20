@@ -1,7 +1,7 @@
 # 文献清单（PDF 已移出仓库）
 
 状态：CURRENT
-日期：2026-09-19
+日期：2026-09-20
 上游依据：docs/CLEANUP_PLAN.md §10-③（用户已批准）
 适用范围：文献 PDF 移出跟踪后的清单、精读笔记索引与恢复方法
 
@@ -15,6 +15,10 @@ git show 5e19c43:docs/literature-review/papers/quantization/GPTQ_2022.pdf > /tmp
 
 - 精读结论见 `docs/literature-review/reports/`，下载前先查已有笔记。
 - 新增文献只提交本清单条目，不要提交 PDF 文件。
+- **历史说明（2026-09-20）**：本次只移出了工作树/索引，**没有重写 git 历史**，
+  38 篇 PDF 的 blob 仍保留在历史提交中（`git rev-list --objects --all | grep -c '\\.pdf$'` = 43）。
+  新克隆省下的是工作树体积（约 65 MB），`.git` 仍有约 58 MB；若要真正瘦身需重写历史，
+  会让所有已发布的 commit hash 失效，项目决定不做。
 
 ## attention-approx
 

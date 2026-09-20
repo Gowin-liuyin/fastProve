@@ -92,7 +92,23 @@
 ## 6. 复现前置条件
 
 - 包安装：`python -m pip install -e '.[test]'`（P0/P1 后不再需要脚本内 `sys.path` 引导）；
-- `evals` 门禁命令仍需 `PYTHONPATH=src:evals`（历史命令按原样保留，P6a 已同时提供打包路径）；
+- `evals` 已随 `pip install -e .` 安装（P6a），门禁命令不再需要 `PYTHONPATH=src:evals`；
 - 预训练相关命令需要仓库外的 checkpoint 与本机可用算力；当前阻塞状态见
   `docs/runbook.md` §8 与 `results/raw/blocked_stages_s6_s7.json`。**不得**用随机 tiny
   结果替代这些测量（AGENTS.md）。
+
+## 7. 可比性断点（2026-09-20，§3.4/§3.5 决策落地）
+
+- **sweep 基线口径**：`_config_for_spec` 现在把 72 个基础点的
+  `rho_noise_bound` 显式置 0（`configs/eval_sweep.yaml` 的
+  `obfuscation_override`）。已归档 `results/raw/eval_sweep.jsonl` 与
+  `eval_sweep_dtype_fixed.jsonl` 产生于该字段引入之前（继承 ρ=1e-5），**重跑后的
+  基础点与它们不可逐点比较**；部署折衷 ρ=1e-5 的复制点属后续运行。
+- **Wilson 区间**：`accuracy_ci95` 现由统一实现生成（z = 1.959963984540054，
+  见 `fastprove/evaluation/stats.py`）。归档 `osnip_style_bench_fixed*.json`
+  使用 z = 1.959963985，两者相差 ≤1.2e-10（远低于报告精度）；归档数字保持不变，
+  但新记录与旧记录在该字段上不逐位相等。
+- **bf16 门禁**：`results/raw/exact_gate_D1_bf16.json`（2026-08-11）记录的是当时
+  bf16 条件量级（argmax 0.984 / greedy 0.875）；2026-09-20 修复 debug-path dtype
+  后重跑得到 greedy 0.875、argmax 0.9766，与记录同量级但非逐位回归（该工件不参与
+  等价性基线）。exact 门禁仍以 `--precision fp32` 为准。

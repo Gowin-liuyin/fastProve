@@ -169,33 +169,37 @@ basis_block_size。Value 基不使用块划分：`head_dim + value_noise_dim_per
 | `experiment.name` | 实验名 | 计划/record 元数据 |
 | `experiment.seed` | sweep 种子声明 | 描述性；当前无代码读取，运行期用 base 的 `runtime.seed`（`run_accuracy_sweep.py` 的 run record `seed` 字段来自 config） |
 | `experiment.model_id` / `dataset_id` / `source_revision` | 模型与数据身份 | `evaluation/runner.py:342-375` 的 run record |
-| `experiment.output_jsonl` | 默认输出路径（`eval_sweep.jsonl`） | `run_accuracy_sweep.py:321-324` |
-| `experiment.cached_inputs` | 对齐缓存默认路径 | `--dataset-cache` 的默认来源 |
+| `experiment.output_jsonl` | 默认输出路径（`eval_sweep.jsonl`） | `run_accuracy_sweep.py:321-324` || `experiment.cached_inputs` | 对齐缓存默认路径 | `--dataset-cache` 的默认来源 |
 | `experiment.calibration_sample_count` | 校准阶段的样本数（默认 8） | `run_accuracy_sweep.py:261`、`:278-281` |
 | `experiment.full_sample_count` | 全量阶段样本数（默认取 base 的 `evaluation.sample_count`） | `run_accuracy_sweep.py:262`、`:278-281` |
 | `experiment.selection_rule` | 选择规则说明文本 | 描述性；当前无代码读取该 YAML 值（`select_sweep_candidates` 的 manifest 自带 `selection_rule`，`evaluation/selection.py:328`） |
-| `evaluation_override` | 覆盖 `EvaluationConfig` 的字段（未知字段报错） | `evaluation/spec_config.py:33-41` |
+| `evaluation_override` | 覆盖 `EvaluationConfig` 的字段（未知字段报错） | `evaluation/spec_config.py:52-62` |
+| `obfuscation_override` | 覆盖 `ObfuscationConfig` 的字段（未知字段报错）；基础 sweep 显式声明 `rho_noise_bound: 0.0` | `evaluation/spec_config.py:69-79`、`run_accuracy_sweep.py:155-156` |
 | `evaluation_notes` | 长度 24 的动机与「valid_count ≤ k 收零噪声」口径说明 | 描述性 |
 | `sweep.modes` | 四种模式清单（枚举器实际只固定产 plaintext/exact + topk/free） | `evaluation/sweep.py:44-97` |
 | `sweep.tau_max` | 7 个 τ 值 | 同上；幂积出 63 个 topk 点与 7 个 free 点 |
 | `sweep.alpha` | 3 个 α 值（topk 专有） | 同上 |
 | `sweep.preserve_top_k` | 3 个 k 值（topk 专有） | 同上 |
 | `sweep.tau_error` | 统一误差预算（0.10） | 同上 |
-| `execution.run_in_current_prototype_pass` | 过期门标志，**不产生行为**：枚举器不读 `execution`，只在计划元数据里记录 | `run_accuracy_sweep.py:368-369`；`docs/PROBLEMS.md` §3.5 |
+| `execution.run_in_current_prototype_pass` | 基础 sweep 完成标记（2026-09-19 完成后置 `true`）；不影响枚举，只在计划元数据与 `deferred_by_config` 里反映 | `run_accuracy_sweep.py:368-369`；`docs/PROBLEMS.md` §3.5 |
 | `execution.reason` | 上述标志的原因文本 | 描述性 |
 
-`_config_for_spec`（`evaluation/spec_config.py:13-50`）**只替换 attention/evaluation/runtime
-三块**；`obfuscation` 整体继承 `base_config`，这是 §8 待决策项的根因。
+`_config_for_spec`（`evaluation/spec_config.py:28-89`）替换 `attention`/`evaluation`/
+`runtime` 三块，并**显式重置 `obfuscation.rho_noise_bound` 为
+`BASE_SWEEP_RHO_NOISE_BOUND = 0.0`**（其余 obfuscation 字段继承 base，除非
+`obfuscation_override` 另行指定）。这是 §8 的决策落地。
 
-## 8. `eval_sweep.yaml` 的两个待查项（PROBLEMS §3.5）
+## 8. `eval_sweep.yaml` 的基线口径（PROBLEMS §3.5，已决策 2026-09-20）
 
-1. `execution.run_in_current_prototype_pass: false` 是过期门标志：原型 pass 已执行，
-   枚举器不读 `execution`，仅计划元数据记录。
-2. `base_config: configs/tiny_approx.yaml` 使全部 72 个 spec（含 `plaintext`/`exact` 基线点）
-   继承 `rho_noise_bound: 1e-5` 与 `refresh_mode: per_request`；实测分布：
-   plaintext 1、exact 1、topk_preserving 63、free_bounded 7（`docs/PROBLEMS.md` §3.5 表）。
-   exact 正确性仍只对 `configs/tiny_exact.yaml` 成立。**在显式决策前，禁止把按当前配置
-   重跑的 plaintext/exact 点描述为 ρ=0 基线。** 复现命令见 `docs/PROBLEMS.md` §3.5。
+1. `execution.run_in_current_prototype_pass: true` 表示基础 sweep 已于 2026-09-19
+   完成；枚举器不读 `execution`，重跑仍需显式 `--execute-deferred`。
+2. 72 个基础点全部 `rho_noise_bound = 0`：由 `_config_for_spec` 的默认契约强制，
+   并在 `eval_sweep.yaml` 的 `obfuscation_override` 中显式声明（两者由
+   `tests/evaluation/test_sweep_rho_policy.py` 锁定一致）。`refresh_mode` 保持
+   `per_request`（实测不破坏 exact 性，且 `fixed_debug` 不得当隐私路径）。
+   部署折衷 ρ=1e-5 的复制点由重跑后的 selection 候选单独生成，不属于这 72 个基础点。
+3. 已归档 `eval_sweep*.jsonl` 产生于该口径之前（继承 ρ=1e-5），**重跑后不可与之
+   逐点比较**；见 `results/PROVENANCE.md` §7。
 
 ## 9. `augmented_noise_kernel.yaml`（documentation-only）
 
@@ -225,5 +229,6 @@ basis_block_size。Value 基不使用块划分：`head_dim + value_noise_dim_per
 | evaluation 段校验 | `config.py:183-194` |
 | 跨段约束（上下文长度、块整除） | `config.py:207-224` |
 | 通道账本一致性 | `noise_budget.py:274-347` |
-| sweep spec → config | `evaluation/spec_config.py:13-50` |
+| sweep spec → config（含 ρ=0 契约） | `evaluation/spec_config.py:28-89` |
 | sweep 枚举校验 | `evaluation/sweep.py:44-97` |
+| Wilson 区间的权威实现 | `src/fastprove/evaluation/stats.py:43`；`evals/stats.py:19` 仅重导出（PROBLEMS §3.4） |
