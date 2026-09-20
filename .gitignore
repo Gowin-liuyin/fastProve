@@ -23,6 +23,8 @@ results/raw/**/*.pt
 # 白名单：被 results/REPORT.md 与复现说明引用的小体积原始记录必须入库。
 !results/raw/eval_sweep.jsonl
 !results/raw/eval_sweep_dtype_fixed.jsonl
+!results/raw/eval_sweep_rho0.jsonl
+!results/raw/eval_sweep_rho0_calibration.jsonl
 !results/raw/attack_costs.jsonl
 !results/raw/real_scenario_prompts_1500.jsonl
 results/tables/*.csv

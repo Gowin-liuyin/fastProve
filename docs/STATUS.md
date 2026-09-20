@@ -20,6 +20,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 | 包 | `pip install -e .` 可用；裸 `pytest` 可收集 |
 | 模式 | `plaintext` / `exact` / `topk_preserving` / `free_bounded` 四模式均实现 |
 | 扫描 | 72/72 点已落盘（随机 tiny，仅正确性），见 `results/REPORT.md` §2.3 |
+| ρ=0 重跑（2026-09-20） | `results/raw/eval_sweep_rho0.jsonl`（72/72 success；记录自带生效 `obfuscation` ρ=0/per_request）；125 个非性能指标与旧 `eval_sweep*.jsonl` **逐位相同**；校准冒烟见 `eval_sweep_rho0_calibration.jsonl` |
 | 预训练 | 仓库不含 checkpoint；Qwen2 1.5B 本机 artifact 已消失（`checkpoint_bytes = 0`） |
 | 新克隆冒烟（P9） | `git clone` → 68 MB（工作树 6.8 MB；历史仍含 38 篇 PDF，未重写历史）；`venv --system-site-packages` + `pip install -e . --no-deps` 后：pytest、等价性、`design_identity_check.py` 全过；外部目录可 `import fastprove, evals` |
 
@@ -57,15 +58,18 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
   （z = 1.959963984540054），`evals/stats.py` 重导出，benchmark scoring 与
   `evaluation/accuracy.py` 不再各自持有一份；新增
   `tests/evaluation/test_stats_single_source.py`。归档工件的 1e-10 量级差异不改。
-- **§3.5 已决策（2026-09-20，丙的基础口径）**：72 个基础点全部 `rho_noise_bound=0`
-  （`_config_for_spec` 契约 + `configs/eval_sweep.yaml` 显式声明），`refresh_mode`
-  保持 `per_request`（实测不破坏 exact 性，且 `fixed_debug` 不得当隐私路径）；部署
-  折衷 ρ=1e-5 的复制点由后续重跑 + selection 候选单独生成。新增
-  `tests/evaluation/test_sweep_rho_policy.py`；重跑结果与原 `eval_sweep*.jsonl`
-  不可逐点比较（PROVENANCE 已记）。
+- **§3.5 已决策并重跑（2026-09-20，丙的基础口径）**：72 个基础点全部
+  `rho_noise_bound=0`（`_config_for_spec` 契约 + `configs/eval_sweep.yaml` 显式声明），
+  `refresh_mode` 保持 `per_request`（实测不破坏 exact 性，且 `fixed_debug` 不得当隐私
+  路径）；新增 `tests/evaluation/test_sweep_rho_policy.py`。重跑已完成（校准 8 →
+  全量 64）：`results/raw/eval_sweep_rho0.jsonl` 72/72 成功、exact 门禁通过、
+  125 个非性能指标与旧份逐位相同，旧两份保留为历史；部署折衷 ρ=1e-5 的复制点由
+  selection 候选单独生成（待办）。
 - **§3.6 已修复（2026-09-20）**：debug 路径 `clean_update` 右操作数补 `.float()`；
-  bf16 门禁可运行并复现 REPORT §2.1 的 bf16 条件（greedy 0.875），exact 门禁仍在
-  `--precision fp32` 下判定并通过。
+  修复后 bf16 由「不可达的堆栈」变为**可测量的非门禁条件**（greedy 0.875、
+  argmax 0.9766、ppl_rel 2.49e-4），与 `exact_gate_D1_bf16.json` 一贯的
+  deliberately non-gate condition record 处理一致；exact 契约是 documented FP32
+  容差，门禁以 `--precision fp32` 判定并通过。
 - **A 类构造固有泄漏（7 条，不可修）**：最严重的是 `ρ` 泄漏 `‖h‖` 并在 FP32 下
   恢复 layer-0 输入 token（实测 92.5% Qwen2 / 93.4% Llama）；公开基座 embedding 时
   词表置换挡不住明文；Gram 几何、`e ≈ hC` 通道、融合内核假设挡不住 `ρ`。

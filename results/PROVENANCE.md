@@ -26,8 +26,10 @@
 | FP32 exact 硬/软门禁全 PASS（§2.1） | `results/raw/exact_gate_D1.json` | `PYTHONPATH=src:evals python -m evals --base-config configs/tiny_exact.yaml --config evals/configs/P2.yaml --precision fp32 --keys 1 --layers 1,2,3,4 --check-gates --output results/raw/exact_gate_D1.json`（REPORT.md:48-50） | current / 跟踪 / 23,381 B |
 | BF16 独立 condition（§2.2） | `results/raw/exact_gate_D1_bf16.json` | 同上 `--precision bf16`（确切 argv 待考；raw README:24-25） | current（非 exact 门禁）/ 跟踪 / 10,581 B |
 | exact logits 偏差 A4/A5/B2/B3（§2.2 表） | `results/raw/exact_tolerance_A4.json`、`A4_before`、`A5`、`B2`、`B3` | `PYTHONPATH=src python scripts/record_exact_tolerance.py --output results/raw/exact_tolerance_<阶段>.json`（REPORT.md:180、raw README:26-29） | A4_before 为修复前对照；其余 current / 跟踪 / 各约 400 B |
-| 72/72 点 sweep 与 §2.3 两张精度表 | `results/raw/eval_sweep_dtype_fixed.jsonl` | `PYTHONPATH=src python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --execute-deferred`（修 `structured.reduction_compute_dtype_name()` 后重跑） | **current**（72 个 spec 精度指标与旧份逐位相同）/ 跟踪（白名单）/ 923,805 B |
-| 同上（REPORT.md:79、:189 实际引用的文件） | `results/raw/eval_sweep.jsonl` | 同命令（修复前一次运行） | **superseded**：`checkpoint_compute_dtype` 标签错误，见 `docs/PROBLEMS.md` §3.2（:425-446）；按用户决定 ⑥ 不改 `REPORT.md` 的引用 / 跟踪（白名单）/ 923,785 B |
+| 72/72 点 sweep 与 §2.3 两张精度表 | `results/raw/eval_sweep_dtype_fixed.jsonl` | `PYTHONPATH=src python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --execute-deferred`（修 `structured.reduction_compute_dtype_name()` 后重跑） | **superseded（2026-09-20）**：由 ρ=0 重跑取代；72 个 spec 精度指标仍逐位相同 / 跟踪（白名单）/ 923,805 B |
+| ρ=0 口径重跑（**当前规范**） | `results/raw/eval_sweep_rho0.jsonl` | `python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml --output results/raw/eval_sweep_rho0.jsonl --execute-deferred` | **current**（2026-09-20）：记录自带生效 `obfuscation`（ρ=0、per_request）与修正后的 dtype 标签；125 个非性能指标与旧份**逐位相同**，性能类字段为墙钟差异 / 跟踪（白名单）/ 946,527 B |
+| ρ=0 校准阶段检查 | `results/raw/eval_sweep_rho0_calibration.jsonl` | 同命令加 `--calibration-only`（sample_count=8） | **current**：72/72 成功、exact 门禁通过，作为全量重跑前的口径/schema 冒烟 / 跟踪（白名单）/ 831,383 B |
+| 同上（历史，REPORT.md 旧引用） | `results/raw/eval_sweep.jsonl` | 同命令（修复前一次运行） | **superseded（2026-09-20）**：dtype 标签错误（`docs/PROBLEMS.md` §3.2），且被 ρ=0 重跑取代；非性能指标与新规范逐位相同 / 跟踪（白名单）/ 923,785 B |
 | 固定 seed 两次运行 72 个 metric 树逐位相同（§2.3） | 第二遍对照在 `/tmp`，**未入库**（REPORT.md:189） | 同 sweep 命令重跑一遍后逐位比对 | 结论无仓库内原始对照，只有第一遍记录；照实标注 |
 | 性能开销表（§2.4） | `results/raw/overhead_B7_d512.json`、`d1024`、`d2048` | `PYTHONPATH=src python scripts/measure_overhead.py --hidden-size <d> --output results/raw/overhead_B7_d<d>.json`（REPORT.md:181-182） | current / 跟踪 / 1,005–1,300 B 量级 |
 | D2 性能记录（§2.4） | `results/raw/performance_D2.json` | `PYTHONPATH=src python scripts/record_performance_D2.py --output results/raw/performance_D2.json`（REPORT.md:183） | current / 跟踪 / 2,775 B |
@@ -101,9 +103,10 @@
 
 - **sweep 基线口径**：`_config_for_spec` 现在把 72 个基础点的
   `rho_noise_bound` 显式置 0（`configs/eval_sweep.yaml` 的
-  `obfuscation_override`）。已归档 `results/raw/eval_sweep.jsonl` 与
-  `eval_sweep_dtype_fixed.jsonl` 产生于该字段引入之前（继承 ρ=1e-5），**重跑后的
-  基础点与它们不可逐点比较**；部署折衷 ρ=1e-5 的复制点属后续运行。
+  `obfuscation_override`）。**重跑已于 2026-09-20 完成**：`eval_sweep_rho0.jsonl`
+  为当前规范记录，125 个非性能指标与 `eval_sweep.jsonl` / `eval_sweep_dtype_fixed.jsonl`
+  **逐位相同**（性能/时间字段除外）；旧两份保留为历史引用，不再作为规范来源。
+  部署折衷 ρ=1e-5 的复制点属后续运行。
 - **Wilson 区间**：`accuracy_ci95` 现由统一实现生成（z = 1.959963984540054，
   见 `fastprove/evaluation/stats.py`）。归档 `osnip_style_bench_fixed*.json`
   使用 z = 1.959963985，两者相差 ≤1.2e-10（远低于报告精度）；归档数字保持不变，
@@ -111,4 +114,5 @@
 - **bf16 门禁**：`results/raw/exact_gate_D1_bf16.json`（2026-08-11）记录的是当时
   bf16 条件量级（argmax 0.984 / greedy 0.875）；2026-09-20 修复 debug-path dtype
   后重跑得到 greedy 0.875、argmax 0.9766，与记录同量级但非逐位回归（该工件不参与
-  等价性基线）。exact 门禁仍以 `--precision fp32` 为准。
+  等价性基线）。bf16 是**可测量的非门禁条件**（deliberately non-gate condition
+  record，与上述工件同类）；exact 契约是 FP32 容差，门禁以 `--precision fp32` 为准。

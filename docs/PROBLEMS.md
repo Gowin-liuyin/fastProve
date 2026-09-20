@@ -651,8 +651,9 @@ PY
   `obfuscation_override={"rho_noise_bound": 1e-5}` 补一组部署折衷复制点；
   本次结构清理只落实基础口径，不生成/不重跑任何结果。
 - **可比性断点**：已落盘的 `results/raw/eval_sweep*.jsonl` 产生于该字段引入
-  之前（继承 ρ=1e-5），重跑后的基础点不再与它们逐点可比；已登记在
-  `results/PROVENANCE.md`。
+  之前（继承 ρ=1e-5）；2026-09-20 重跑（`eval_sweep_rho0.jsonl`）已完成，**125 个
+  非性能指标与旧份逐位相同**（性能/时间字段除外），旧两份保留为历史引用，规范来源
+  切换为新文件；已登记在 `results/PROVENANCE.md` §7。
 - 测试：`tests/evaluation/test_sweep_rho_policy.py`（72 点全 ρ=0、默认值、
   replica 覆盖、未知键拒绝、YAML 与常量一致、门标志同步）。
 
@@ -715,9 +716,11 @@ python -m evals --check-gates --precision fp32   # HARD/SOFT/ALL: PASS
   一致；FP32 下 `.float()` 是恒等操作，等价性基线未移动（12/12 OK）。
 - bf16 门禁现在可运行，并复现 `results/REPORT.md` §2.1 记录的 bf16 条件量级：
   `lm_head_argmax_match = 0.9765625`、`greedy_sequence_exact_match = 0.875`、
-  `ppl_relative_increase ≈ 2.49e-4`。HARD 仍 FAIL 属 bf16 条件本身（REPORT 已
-  注明 BF16 是独立条件、exact 门禁在 FP32 判定）；`--precision fp32` 仍
-  HARD/SOFT/ALL PASS。runbook 已写明门禁精度取 fp32。
+  `ppl_relative_increase ≈ 2.49e-4`。修复把 bf16 从**不可达的堆栈**变成
+  **可测量的非门禁条件**，这与 `results/raw/exact_gate_D1_bf16.json` 一直作为
+  deliberately non-gate condition record 的处理方式一致；AGENTS.md 的 exact 契约是
+  documented FP32 容差，bf16 从未纳入 exact 契约。`--precision fp32` 仍
+  HARD/SOFT/ALL PASS，runbook 以 fp32 为门禁精度。
 - 该修复只影响 debug 诊断路径，生产 forward（非 debug）不经过该表达式。
 
 ---

@@ -69,16 +69,20 @@ PYTHONPATH=src:evals python -m evals --base-config configs/tiny_exact.yaml \
 | B2（部署 attention） | 6.557e-07 | 3.22e-07 |
 | B3（部署 FFN） | 7.153e-07 | 2.65e-07 |
 
-- BF16 是独立条件，**不是 exact 门禁**：BF16 下 logit 偏差 ~1.3 量级是
-  BF16 舍入本身（`results/raw/exact_gate_D1_bf16.json`：
-  argmax 0.984，greedy 0.875，全部在 FP32 下判定 exact 是否成立）。
+- BF16 是独立条件（deliberately non-gate condition record），**不是 exact 门禁**：
+  BF16 下 logit 偏差 ~1.3 量级是 BF16 舍入本身（`results/raw/exact_gate_D1_bf16.json`：
+  argmax 0.984，greedy 0.875）。修复 debug 路径 dtype 后该条件可测量（重跑
+  argmax 0.9766、greedy 0.875），不再崩溃；exact 契约是 documented FP32 容差，
+  全部在 FP32 下判定是否成立。
 
 ### 2.3 任务精度退化（近似模式，随机 tiny，仅正确性证据）
 
 完整 sweep：72/72 点成功（2 基线 + 63 topk_preserving + 7 free_bounded），
-exact 门禁通过故无 skipped 点（`results/raw/eval_sweep.jsonl`，
+exact 门禁通过故无 skipped 点（当前规范记录 `results/raw/eval_sweep_rho0.jsonl`，
 `configs/eval_sweep.yaml`）。固定 seed 两次运行 72 个 metric 树**逐位
-相同**。
+相同**。2026-09-20 在 ρ=0 基础口径下重跑（`docs/PROBLEMS.md` §3.5）：125 个
+非性能指标与原 `eval_sweep.jsonl` **逐位相同**，性能/时间类字段为墙钟差异；
+旧文件保留为历史引用。
 
 topk_preserving（7 tau × 3 alpha × 3 k 的均值）：
 
@@ -176,7 +180,7 @@ PYTHONPATH=src:evals python -m evals --base-config configs/tiny_exact.yaml \
     --config evals/configs/P2.yaml --precision fp32 --keys 1 --layers 1,2,3,4 \
     --check-gates --output results/raw/exact_gate_D1.json
 PYTHONPATH=src python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml \
-    --execute-deferred                                 # 72 点，写 eval_sweep.jsonl
+    --execute-deferred          # 72 点；当前规范输出 eval_sweep_rho0.jsonl（ρ=0 口径）
 PYTHONPATH=src python scripts/record_exact_tolerance.py --output results/raw/exact_tolerance_B3.json
 PYTHONPATH=src python scripts/measure_overhead.py --hidden-size 1024 \
     --output results/raw/overhead_B7_d1024.json
@@ -186,7 +190,9 @@ PYTHONPATH=src python scripts/record_performance_D2.py --output results/raw/perf
 ## 5. 原始工件
 
 - `results/raw/exact_gate_D1.json` / `exact_gate_D1_bf16.json`
-- `results/raw/eval_sweep.jsonl`（72 条记录；第二遍复现对照在 /tmp，未入库）
+- `results/raw/eval_sweep_rho0.jsonl`（72 条记录，**当前规范**：ρ=0 口径，记录自带生效 `obfuscation`）
+- `results/raw/eval_sweep_rho0_calibration.jsonl`（同口径 sample_count=8 校准检查）
+- `results/raw/eval_sweep.jsonl`（历史：旧口径；非性能指标与新规范逐位相同，性能类为墙钟差异）
 - `results/raw/exact_tolerance_A4{,_before}.json`、`exact_tolerance_A5.json`、
   `exact_tolerance_B2.json`、`exact_tolerance_B3.json`
 - `results/raw/overhead_B7_d{512,1024,2048}.json`

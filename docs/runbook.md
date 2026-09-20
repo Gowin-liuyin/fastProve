@@ -63,10 +63,11 @@ python -m evals --check-gates --precision fp32
 通过判据：输出 `HARD: PASS   SOFT: PASS   ALL: PASS`。
 
 **门禁精度取 `--precision fp32`**：exact 正确性在 FP32 判定，与
-`results/REPORT.md` §2.1 一致。bf16 条件自 2026-09-20 起不再崩溃（原 debug 路径
-dtype 缺陷已修，见 `docs/PROBLEMS.md` §3.6），但它按协议是独立条件：bf16 下 HARD
-门预期 FAIL（`greedy 0.875`、`argmax 0.977`），不得用它判定 exact。P6 打包 `evals`
-之后不再需要 `PYTHONPATH`。
+`results/REPORT.md` §2.1 一致。bf16 自 2026-09-20 起不再崩溃（原 debug 路径 dtype
+缺陷已修，见 `docs/PROBLEMS.md` §3.6），它现在是一个**可测量的非门禁条件**（同
+`exact_gate_D1_bf16.json` 的 deliberately non-gate condition 处理）：实测退化
+greedy 0.875 / argmax 0.9766，不得用它判定 exact。P6 打包 `evals` 之后不再需要
+`PYTHONPATH`。
 
 与 `results/REPORT.md` §2.1 逐字对应的门禁命令（写 `results/raw/exact_gate_D1.json`；
 若要避免覆盖已跟踪工件，先把 `--output` 改到临时路径）：
