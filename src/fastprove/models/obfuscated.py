@@ -653,7 +653,7 @@ class ObfuscatedDecoderBlock(BlockDeploymentMixin, nn.Module):
         clean_update = torch.einsum(
             "bhqd,hdn->bqn",
             attention_debug.clean_output.float(),
-            cast("deployed_attn_out"),
+            cast("deployed_attn_out").float(),
         )
         clean_attention_output = self._debug_unmix(clean_update)[
             ..., : self.config.hidden_size

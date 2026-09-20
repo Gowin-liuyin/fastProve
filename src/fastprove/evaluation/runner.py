@@ -415,6 +415,7 @@ def run_tiny_sweep_spec(
     pretrained_artifact: Optional[Qwen2Artifact] = None,
     dataset_cache_path: Optional[str | Path] = None,
     runtime_override: Optional[Dict[str, Any]] = None,
+    obfuscation_override: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Execute and optionally append one independently traceable tiny run."""
 
@@ -438,6 +439,7 @@ def run_tiny_sweep_spec(
             spec,
             evaluation_override,
             runtime_override,
+            obfuscation_override,
         )
         payload, elapsed = _execute_tiny(
             config=config,

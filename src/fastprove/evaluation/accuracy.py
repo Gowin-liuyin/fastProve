@@ -18,6 +18,7 @@ import torch
 import torch.nn.functional as F
 
 from ..seed import RequestContext, make_generator
+from .stats import relative_increase, wilson_interval
 
 if TYPE_CHECKING:
     from ..codec import TokenCodec
@@ -576,9 +577,6 @@ def _run_pair(
 
     nll_plain = sum_nll_plain / max(n_ce, 1)
     nll_obf = sum_nll_obf / max(n_ce, 1)
-    import math
-
-    from evals.stats import relative_increase, wilson_interval
 
     ppl_plain = float(math.exp(min(nll_plain, 80.0)))
     ppl_obf = float(math.exp(min(nll_obf, 80.0)))

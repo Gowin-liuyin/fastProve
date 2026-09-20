@@ -11,25 +11,22 @@ import torch
 import torch.nn.functional as F
 
 from ...seed import RequestContext
+from ..stats import wilson_interval
 from .tasks import MCExample, apply_chat_template_if_available
 
 
-def _wilson_interval(
-    correct: int, n: int, z: float = 1.959963985
-) -> Tuple[float, float]:
-    """Wilson score interval for a binomial proportion."""
+def _wilson_interval(correct: int, n: int) -> Tuple[float, float]:
+    """Wilson 95% interval bounds.
+
+    Single implementation: ``fastprove.evaluation.stats.wilson_interval``
+    (docs/PROBLEMS.md §3.4). The ``n <= 0`` sentinel is kept because the
+    caller may pass an empty task record.
+    """
 
     if n <= 0:
         return (float("nan"), float("nan"))
-    phat = correct / n
-    denom = 1.0 + z * z / n
-    center = (phat + z * z / (2 * n)) / denom
-    half = (
-        z
-        * math.sqrt(phat * (1.0 - phat) / n + z * z / (4.0 * n * n))
-        / denom
-    )
-    return (max(0.0, center - half), min(1.0, center + half))
+    estimate = wilson_interval(correct, n, level=0.95)
+    return (estimate.ci_low, estimate.ci_high)
 
 
 def _annotate_chance_floor(res: Dict[str, Any]) -> Dict[str, Any]:

@@ -1,7 +1,10 @@
-# Softmax-noise sweep. The base now also carries the deployment 折衷
-# rho_noise_bound; archived results/raw/eval_sweep.jsonl was recorded
-# before that field existed. Exact correctness uses configs/tiny_exact.yaml
-# (rho_noise_bound: 0).
+# Softmax-noise sweep. Every base point runs with rho_noise_bound = 0
+# (enforced by _config_for_spec and recorded here explicitly) so each accuracy
+# delta is attributable to the logit-noise knobs alone. The deployment-fold
+# rho = 1e-5 belongs to separate replica runs selected from the sweep
+# candidates (option 丙 follow-up); it is never inherited from the base
+# config. Archived results/raw/eval_sweep*.jsonl predate this policy and are
+# not pointwise comparable to reruns.
 base_config: configs/tiny_approx.yaml
 experiment:
   name: required-softmax-noise-sweep
@@ -27,6 +30,10 @@ evaluation_notes: >-
   Length 24 provides at least k+1 valid logits for later causal positions when
   preserve_top_k is 16. Earlier rows with valid_count <= k deliberately receive
   zero Top-k-preserving noise and are counted by the zero-noise metric.
+obfuscation_override:
+  # Base-sweep contract: no bounded RMS-scale noise. Replica runs override
+  # this value explicitly instead of relying on the base config.
+  rho_noise_bound: 0.0
 sweep:
   modes:
     - plaintext
@@ -51,5 +58,8 @@ sweep:
     - 16
   tau_error: 0.10
 execution:
-  run_in_current_prototype_pass: false
-  reason: user_requested_implementation_and_plan_before_experiments
+  # The 72/72 base sweep completed on 2026-09-19. Any rerun still requires the
+  # explicit --execute-deferred authorization and follows the rho=0 contract
+  # above (results are not pointwise comparable to the archived jsonl).
+  run_in_current_prototype_pass: true
+  reason: base_sweep_completed_2026_09_19_reruns_require_explicit_authorization

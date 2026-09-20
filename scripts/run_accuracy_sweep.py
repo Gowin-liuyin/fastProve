@@ -161,6 +161,8 @@ def _load_sweep(path: Path) -> Dict[str, Any]:
         raise ValueError("experiment must be a mapping")
     if not isinstance(raw.get("evaluation_override", {}), dict):
         raise ValueError("evaluation_override must be a mapping")
+    if not isinstance(raw.get("obfuscation_override", {}), dict):
+        raise ValueError("obfuscation_override must be a mapping")
     return raw
 
 
@@ -284,6 +286,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("effective sample count must be positive", file=sys.stderr)
         return 2
     effective_evaluation_override = dict(raw.get("evaluation_override") or {})
+    effective_obfuscation_override = dict(raw.get("obfuscation_override") or {})
     effective_evaluation_override["sample_count"] = effective_sample_count
     if args.batch_size is not None:
         effective_evaluation_override["batch_size"] = int(args.batch_size)
@@ -635,6 +638,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 experiment=experiment,
                 evaluation_override=effective_evaluation_override,
                 runtime_override=runtime_override,
+                obfuscation_override=effective_obfuscation_override,
                 output_path=None,
                 pretrained_path=_resolve(args.model_path) if args.model_path else None,
                 pretrained_artifact=pretrained_artifact,
