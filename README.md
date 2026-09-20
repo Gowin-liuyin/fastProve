@@ -19,16 +19,21 @@ Transformer 的四种推理模式：
 ## 当前状态（诚实口径）
 
 - **四种模式均已实现**（`src/fastprove/modes.py:12`），同一套基础权重下可比较。
-- **72/72 点噪声扫描已落盘**：`results/REPORT.md` §2.3 给出完整表格，
-  原始记录 `results/raw/eval_sweep.jsonl`（72 条，随机 tiny 模型，仅正确性证据）；
-  dtype 溯源标签修正版为 `results/raw/eval_sweep_dtype_fixed.jsonl`（精度指标逐位
-  相同；按用户决定 ⑥，`REPORT.md` 的引用保持不变，旧文件仅标记 superseded）。
-- **exact 数学测试全绿**：`python -m pytest tests -q` → **399 passed**；
+- **72/72 点噪声扫描已落盘（ρ=0 基础口径，当前规范）**：`results/REPORT.md` §2.3 给出
+  完整表格，规范原始记录 `results/raw/eval_sweep_rho0.jsonl`（72 条，随机 tiny 模型，
+  仅正确性证据；每条记录自带生效 `obfuscation`）。它在 125 个非性能指标上与旧
+  `eval_sweep.jsonl` / `eval_sweep_dtype_fixed.jsonl` **逐位相同**，后两者标记
+  superseded 仅作历史引用（`docs/PROBLEMS.md` §3.5、`results/PROVENANCE.md` §7）。
+- **部署折衷 ρ=1e-5 的边际代价已实测**：39 个 selection 候选
+  （`results/raw/sweep_selection_rho0.json`）→ `eval_sweep_rho0_replica.jsonl`
+  （39/39 成功），Δtop1 = 0、Δppl ≤ 9.54e-07、ΔJS ≤ 8.63e-11，见 `results/REPORT.md`
+  §6.1 与 `results/raw/rho_replica_marginal.json`。
+- **exact 数学测试全绿**：`python -m pytest tests -q` → **424 passed**；
   FP64 恒等式预言机 `python docs/design_identity_check.py` 13 项全过。
 - **重构等价性已冻结**：`python scripts/verify_refactor_equivalence.py --check`
   必须复现 `results/raw/refactor_baseline_5e19c43ea2b2.json`（12 section、2395 摘要叶子）。
-- **包可安装**：`python -m pip install -e .` 后 `import fastprove` 与裸
-  `pytest` 均可工作（P0/P1 修复）。
+- **包可安装**：`python -m pip install -e .` 后 `import fastprove, evals` 与裸
+  `pytest` 均可工作（P0/P1/P6）。
 - **仓库不包含任何 checkpoint**。`results/raw/pretrained_evaluation_status.json`
   曾记录本机找到的 Qwen2 1.5B artifact，但该目录**现已从本机消失**；
   `results/raw/blocked_stages_s6_s7.json` 记录 `checkpoint_bytes = 0`，S6/S7
@@ -36,9 +41,10 @@ Transformer 的四种推理模式：
   （见 `docs/PROBLEMS.md` §4.1），不入库、不随仓库分发。
 - **`results/REPORT.md` 的端到端数字全部来自随机 tiny 模型**，只能作为正确性证据，
   不能描述为有意义的语言模型精度；预训练评测尚未执行（见 §5 限制）。
-- 已知未决问题：`docs/PROBLEMS.md` §3.4（Wilson 区间两份定义 z 常数不同）、
-  §3.5（sweep 的 plaintext/exact 点继承 `rho_noise_bound: 1e-5` 与
-  `per_request`，不是 ρ=0 基线）。
+- **已知问题状态**（完整清单见 `docs/PROBLEMS.md`）：§3.4 Wilson 两份定义已统一
+  （`fastprove/evaluation/stats.py`）、§3.5 sweep ρ=0 口径已决策并重跑、§3.6 bf16
+  debug 路径 dtype 已修复（bf16 现为可测量的非门禁条件）；**A 类构造固有泄漏
+  （7 条，不可修）与 C 类证据缺口仍开放**，详见各节与 `docs/threat_model.md`。
 
 ## 代码结构
 
@@ -61,7 +67,7 @@ src/fastprove/
 └── evaluation/
     ├── environment.py runtime.py diagnostics.py exact_gate.py
     ├── layer_metrics.py performance.py spec_config.py runner.py
-    ├── metrics.py accuracy.py artifacts.py sweep.py selection.py
+    ├── metrics.py stats.py accuracy.py artifacts.py sweep.py selection.py
     ├── token_cache.py pretrained.py attack_records.py correctness.py
     ├── prompts.py
     ├── benchmarks/{tasks,scoring,bundle}.py
@@ -78,7 +84,7 @@ security,evaluation,cli,pretrained}/`。生产路径、参考路径、侧路实�
 
 ```bash
 python -m pip install -e '.[test]'          # 可编辑安装；3.9 系统 pip 过旧时用 --user --no-build-isolation
-python -m pytest tests -q                   # 399 passed
+python -m pytest tests -q                   # 424 passed
 python scripts/verify_refactor_equivalence.py --check
 python docs/design_identity_check.py        # 13 项 FP64 恒等式
 ```
@@ -92,18 +98,22 @@ python docs/design_identity_check.py        # 13 项 FP64 恒等式
 python scripts/run_correctness.py --execute
 
 # 72 点扫描：默认只列出配置，不跑推理；显式执行需 --execute-deferred
+# 目标文件必须不存在（缓存式新鲜度检查）；重跑请换新文件名后逐位比对
 python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml
 python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml \
-    --output results/raw/eval_sweep.jsonl --execute-deferred
+    --output results/raw/eval_sweep_rho0.jsonl --execute-deferred
+
+# 部署折衷 replica（39 个 selection 候选，ρ=1e-5 边际代价）
+# 完整三步（selection → replica → compare）见 docs/runbook.md §6.1
 
 # 报告器：默认只读检查；--execute 才写表/图/REPORT.md（不跑模型）
 # 注意：当前 --raw 传目录会因 attack_costs.jsonl 等非 run-record JSONL 报错，
 # 请显式指向某个 run-record JSONL。
-python scripts/build_report.py --raw results/raw/eval_sweep_dtype_fixed.jsonl --output results
-python scripts/build_report.py --raw results/raw/eval_sweep_dtype_fixed.jsonl --output results --execute
+python scripts/build_report.py --raw results/raw/eval_sweep_rho0.jsonl --output results
+python scripts/build_report.py --raw results/raw/eval_sweep_rho0.jsonl --output results --execute
 
-# 第二套 harness 的门禁（随机 tiny）
-PYTHONPATH=src:. python -m evals --check-gates
+# 第二套 harness 的门禁（随机 tiny；exact 门禁取 fp32；bf16 为可测量的非门禁条件）
+python -m evals --check-gates --precision fp32
 ```
 
 预训练/数据类命令（`scripts/run_accuracy_sweep.py --model-path ... --dataset-cache ...`、
@@ -115,9 +125,11 @@ checkpoint 缺失而**不可执行**，详见 `results/raw/blocked_stages_s6_s7.
 
 只有指定 attempt 下可验证的成功 run record 才能进入表、图和结论；随机 Tiny 记录
 必须标注 `correctness_only_random_tiny` / `meaningful_lm_evidence: False`。
-已标 superseded 的记录（`eval_sweep.jsonl`、`llama_compare_*`、
-`osnip_style_bench_{smoke,n200}.json`）保留原样、不删数字；引用必须带 caveat。
-`results/raw/` 的逐文件溯源见 [`results/raw/README.md`](results/raw/README.md)。
+已标 superseded 的记录（`eval_sweep.jsonl`、`eval_sweep_dtype_fixed.jsonl`、
+`llama_compare_*`、`osnip_style_bench_{smoke,n200}.json`）保留原样、不删数字；
+引用必须带 caveat。当前规范 sweep 记录是 `eval_sweep_rho0.jsonl`（ρ=0 口径）。
+`results/raw/` 的逐文件溯源见 [`results/raw/README.md`](results/raw/README.md)，
+claim → 工件 → 命令的映射见 [`results/PROVENANCE.md`](results/PROVENANCE.md)。
 
 ## 限制与不声明
 

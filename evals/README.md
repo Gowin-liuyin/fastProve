@@ -24,14 +24,14 @@ From the repository root:
 python3 -m pip install --user --no-build-isolation ".[test,pretrained-lite]"
 
 # Primary production cell (protocol P2) + gate check
-PYTHONPATH=src:. python -m evals.report \
+python -m evals.report \
   --config evals/configs/P2.yaml \
   --keys 5 \
   --ci 0.95 \
   --check-gates
 
 # Fast smoke (1 key, layers 1–4)
-PYTHONPATH=src:. python -m evals.report \
+python -m evals.report \
   --config evals/configs/F1.yaml \
   --keys 1 \
   --layers 1,2,3,4 \
@@ -39,10 +39,19 @@ PYTHONPATH=src:. python -m evals.report \
   --check-gates
 ```
 
+> **精度与门禁的判读**：`configs/P2.yaml` 的 `precision: bf16` 是生产条件记录，
+> 不是 exact 门禁。bf16 下的硬门（LM-head argmax 0.9766、greedy 0.875）按定义不可
+> 达 1.0，属可测量的 bf16 舍入退化（`results/raw/exact_gate_D1_bf16.json` 的处理
+> 方式；2026-09-20 修掉 debug 路径 dtype 崩溃后重新可测，见 `docs/PROBLEMS.md`
+> §3.6）。exact 正确性一律在 FP32 下判定，门禁命令用
+> `--precision fp32`（`results/REPORT.md` §2.1）。
+>
+> `evals` 已随 `pip install -e .` 打包（P6a），不再需要 `PYTHONPATH=src:.`。
+
 JSON dump:
 
 ```bash
-PYTHONPATH=src:. python -m evals.report \
+python -m evals.report \
   --config evals/configs/P2.yaml \
   --keys 3 \
   --check-gates \
@@ -52,7 +61,7 @@ PYTHONPATH=src:. python -m evals.report \
 Full F0–P3 matrix (slow):
 
 ```bash
-PYTHONPATH=src:. python -m evals.report --all-conditions --keys 3 --check-gates
+python -m evals.report --all-conditions --keys 3 --check-gates
 ```
 
 ---
@@ -163,7 +172,7 @@ evals/
   conditions.py          # F0–P3 matrix + Δ_* helpers
   keys.py                # ≥3 independent master keys
   thresholds.py          # §7 gates
-  stats.py               # Wilson, McNemar, paired/stratified bootstrap
+  stats.py               # McNemar/bootstrap；Wilson 权威实现见 fastprove/evaluation/stats.py（本模块重导出）
   model_factory.py       # plain / structural / full builders
   metrics_common.py
   layer1_operator_equiv.py

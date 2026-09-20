@@ -175,12 +175,12 @@ decode +48.0%；TTFT（prefill 代理）25.9ms vs 19.3ms；TPOT 9.7ms vs
 
 ```bash
 python docs/design_identity_check.py                 # 13 项恒等式
-python -m pytest -q                                  # 当时 297 passed（P7 重组后当前为 399 passed）
+python -m pytest -q                                  # 当时 297 passed（当前 424 passed）
 PYTHONPATH=src:evals python -m evals --base-config configs/tiny_exact.yaml \
     --config evals/configs/P2.yaml --precision fp32 --keys 1 --layers 1,2,3,4 \
     --check-gates --output results/raw/exact_gate_D1.json
 PYTHONPATH=src python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml \
-    --execute-deferred          # 72 点；当前规范输出 eval_sweep_rho0.jsonl（ρ=0 口径）
+    --execute-deferred          # 72 点；当前规范输出 eval_sweep_rho0.jsonl（ρ=0 口径，目标须为新文件）
 PYTHONPATH=src python scripts/record_exact_tolerance.py --output results/raw/exact_tolerance_B3.json
 PYTHONPATH=src python scripts/measure_overhead.py --hidden-size 1024 \
     --output results/raw/overhead_B7_d1024.json

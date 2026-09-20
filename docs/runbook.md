@@ -21,7 +21,7 @@ python -m pip install -e '.[test]'   # 或 --user --no-build-isolation（旧 pip
 python -m pytest tests -q
 ```
 
-通过判据：`399 passed`（P7 重组后计数；目录见 `tests/`）。
+通过判据：`424 passed`（P7 重组 399 + 后续修复/replica 测试；目录见 `tests/`）。
 
 ## 2. 重构等价性基线
 
@@ -90,6 +90,10 @@ python scripts/run_accuracy_sweep.py --config configs/eval_sweep.yaml \
 口径：基础 sweep 全部 ρ=0（`_config_for_spec` 契约 + `configs/eval_sweep.yaml`
 显式声明，见 `docs/PROBLEMS.md` §3.5），每条记录自带生效 `obfuscation` 字段。
 
+注意：`--output` 目标必须是**尚不存在**的文件（新鲜度检查会拒绝覆盖已跟踪记录）。
+重跑验证用新文件名，然后与 `results/raw/eval_sweep_rho0.jsonl` 比较 125 个非性能
+指标（应逐位相同）。
+
 ### 6.1 部署折衷 replica（ρ=1e-5，39 个候选）
 
 ```bash
@@ -104,14 +108,15 @@ python scripts/compare_rho_replica.py --base results/raw/eval_sweep_rho0.jsonl \
 ```
 
 通过判据：39/39 success、exact 门禁通过；边际代价表见 `results/REPORT.md` §6.1。
+同样要求 `--output` 指向新文件（`require_fresh_jsonl_destination`）。
 
 ## 7. 报告器
 
 ```bash
 # 只读检查（不写文件）。注意：--raw 传目录会被 attack_costs.jsonl 等非 run-record
 # JSONL 拒绝，需显式指向 run-record 文件。
-python scripts/build_report.py --raw results/raw/eval_sweep_dtype_fixed.jsonl --output results
-python scripts/build_report.py --raw results/raw/eval_sweep_dtype_fixed.jsonl --output results --execute
+python scripts/build_report.py --raw results/raw/eval_sweep_rho0.jsonl --output results
+python scripts/build_report.py --raw results/raw/eval_sweep_rho0.jsonl --output results --execute
 ```
 
 通过判据：只读模式打印 `record_count: 72`、`status_counts.success: 72`；

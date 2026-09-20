@@ -528,3 +528,18 @@ P0 目标是在任何结构改动前冻结可验证基线。
   `_obfuscated_performance_metrics` 共同骨架参数化（计划 §P4 末项）：两者含实测计时副作用，
   收益低于门禁风险，本次未合并，行为保持不变。
 - plain/obfuscated 的 greedy 循环平行结构说明：移入 P8 文档。
+
+## P5–P9 与后续修复/重跑（2026-09-20）
+
+`implementation_notes.md` 于 P4 之后不再逐阶段记录；P5–P9 的执行、每步门禁与提交
+hash、以及 §3.4/§3.5/§3.6 的修复与重跑证据，统一维护在 `docs/STATUS.md`。本处只留
+指针与最终数字，避免两处漂移：
+
+- P5 scripts 库化（3 个脚本入 `fastprove`）、P6 `evals` 打包化 + 指标逐位一致、
+  P7 测试重组（8 子目录 + conftest + 两个验收缺口）、P8 文档重建、P9 新克隆冒烟；
+- §3.4 Wilson 统一到 `fastprove/evaluation/stats.py`；§3.5 sweep 基础口径 ρ=0 并
+  完成重跑（125/125 非性能指标逐位相同）与 39 点 replica（Δtop1=0、Δppl≤9.54e-07、
+  ΔJS≤8.63e-11）；§3.6 bf16 debug dtype 修复；
+- 当前门：`pytest -q` 424 passed、等价性 12/12、evals exact 门禁（fp32）
+  HARD/SOFT/ALL PASS；
+- 仍开放：S6/S7 被 checkpoint 缺失阻塞；performance 参数化延后（见 STATUS §6）。

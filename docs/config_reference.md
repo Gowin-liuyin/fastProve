@@ -169,7 +169,8 @@ basis_block_size。Value 基不使用块划分：`head_dim + value_noise_dim_per
 | `experiment.name` | 实验名 | 计划/record 元数据 |
 | `experiment.seed` | sweep 种子声明 | 描述性；当前无代码读取，运行期用 base 的 `runtime.seed`（`run_accuracy_sweep.py` 的 run record `seed` 字段来自 config） |
 | `experiment.model_id` / `dataset_id` / `source_revision` | 模型与数据身份 | `evaluation/runner.py:342-375` 的 run record |
-| `experiment.output_jsonl` | 默认输出路径（`eval_sweep.jsonl`） | `run_accuracy_sweep.py:321-324` || `experiment.cached_inputs` | 对齐缓存默认路径 | `--dataset-cache` 的默认来源 |
+| `experiment.output_jsonl` | 默认输出路径（`eval_sweep.jsonl`）；规范运行用 `--output` 显式指向新文件（见 §8） | `run_accuracy_sweep.py:321-324` |
+| `experiment.cached_inputs` | 对齐缓存默认路径 | `--dataset-cache` 的默认来源 |
 | `experiment.calibration_sample_count` | 校准阶段的样本数（默认 8） | `run_accuracy_sweep.py:261`、`:278-281` |
 | `experiment.full_sample_count` | 全量阶段样本数（默认取 base 的 `evaluation.sample_count`） | `run_accuracy_sweep.py:262`、`:278-281` |
 | `experiment.selection_rule` | 选择规则说明文本 | 描述性；当前无代码读取该 YAML 值（`select_sweep_candidates` 的 manifest 自带 `selection_rule`，`evaluation/selection.py:328`） |

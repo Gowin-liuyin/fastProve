@@ -13,7 +13,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 
 | 维度 | 事实 |
 |---|---|
-| 测试 | `python -m pytest tests -q` → **417 passed**（P7 重组 399 + §3.5/§3.4 新增测试） |
+| 测试 | `python -m pytest tests -q` → **424 passed**（P7 重组 399 + §3.4/§3.5 与 replica 新增测试） |
 | 等价性 | `python scripts/verify_refactor_equivalence.py --check` → 12 section 与 `results/raw/refactor_baseline_5e19c43ea2b2.json` 逐位一致 |
 | 数学预言机 | `python docs/design_identity_check.py` → 13 项 FP64 恒等式全过 |
 | 环境 | Python 3.13.12 / PyTorch 2.11.0 / NumPy 2.4.4；macOS arm64；CPU + MPS，无 CUDA |
@@ -25,7 +25,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 | 预训练 | 仓库不含 checkpoint；Qwen2 1.5B 本机 artifact 已消失（`checkpoint_bytes = 0`） |
 | 新克隆冒烟（P9） | `git clone` → 68 MB（工作树 6.8 MB；历史仍含 38 篇 PDF，未重写历史）；`venv --system-site-packages` + `pip install -e . --no-deps` 后：pytest、等价性、`design_identity_check.py` 全过；外部目录可 `import fastprove, evals` |
 
-## 2. P0–P7 重构提交（`git log --oneline`）
+## 2. P0–P9 重构提交与后续修复（`git log --oneline`）
 
 | 提交 | 阶段 | 内容 |
 |---|---|---|
@@ -41,8 +41,13 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 | `f4a1c96` | P4 | 记录去重结果与性能测量延期 |
 | `57548fc`–`ee4e038` | P5a–P5c | scripts 库化（sweep record builders、pretrained compare、osnip benchmarks） |
 | `165b1f4`–`2bae50a` | P6a–P6b | `evals/` 打包化、指标定义对齐（逐位一致测试） |
-| `566be17` | P8 | 文档重建（生命周期标注、归档、as-built 文档、链接检查器） |
 | `cd6cc04` | P7 | 测试重组（8 个子目录 + `conftest.py`）、补齐两个验收缺口 |
+| `566be17` | P8 | 文档重建（生命周期标注、归档、as-built 文档、链接检查器） |
+| `919202b` | P9 | 新克隆冒烟；发现并登记 bf16 debug dtype 缺陷 |
+| `d962863`–`c3b6c30` | 修复 | §3.4 Wilson 统一、§3.5 ρ=0 决策、§3.6 bf16 修复 + 文档 |
+| `9f750b6` | 审计 | run record 写入生效 `obfuscation` |
+| `a776450` | 重跑 | ρ=0 基础 sweep（校准 8 → 全量 64），125/125 非性能指标逐位相同 |
+| `be213e7`–`426d452` | replica | `--rho-replica` 机制 + compare 脚本；39 候选 ρ=1e-5 边际代价入 REPORT §6.1 |
 
 更早的 S0–S5 双通道重构为 `5e19c43`（等价性基线的对照点）。
 
@@ -90,12 +95,14 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
 
 ## 6. 下一步
 
-1. **P9 新克隆冒烟**（唯一硬证据）：`git clone` 到临时目录 → `pip install -e .` →
-   `pytest` → 按 `docs/runbook.md` 执行只读检查；
-2. P8 剩余文档：config_reference（配置参考）、scripts_index（脚本索引）、
-   results/PROVENANCE（claim→工件映射）（CLEANUP_PLAN §8.3）；
-3. 两个 §3 待决策项按显式授权单独处理（任一选择都会改动已记录工件，不得静默统一）；
-4. 若获得 checkpoint 与授权：执行 S6/S7 与标准 causal-LM 评测，替换随机 tiny 证据。
+1. **S6/S7 仍阻塞**：本机无 checkpoint（`results/raw/blocked_stages_s6_s7.json`，
+   `checkpoint_bytes = 0`）；这是数据/算力问题，不是工程问题；
+2. **item 4（延后，已记录）**：`evaluation/performance.py` 两个性能测量函数共同骨架
+   参数化——两者含实测计时副作用，收益低于门禁风险；
+3. 可选：用 `eval_sweep_rho0.jsonl` 重新生成 `results/tables/summary.csv` 与
+   `results/figures/*.png`（当前 REPORT 表格数字与新记录逐位一致，故未强制重生成；
+   CSV/PNG 默认不入库）；
+4. 若获得 checkpoint 与授权：执行标准 causal-LM 评测，替换随机 tiny 证据。
 
 ## 7. 本次文档重建发现的代码/文档不一致（登记，未改代码）
 
@@ -103,7 +110,7 @@ raw / figures 重写，并新建本文件与 [`docs/runbook.md`](runbook.md)。
    `run record missing fields`：目录里的 `attack_costs.jsonl` 与
    `real_scenario_prompts_1500.jsonl` 不是 run record，而报告器对目录下所有
    `*.jsonl` 做 schema 校验。可用的形式是显式指向某个 run-record JSONL
-   （如 `--raw results/raw/eval_sweep_dtype_fixed.jsonl`）。README 已按可用形式改写。
+   （如 `--raw results/raw/eval_sweep_rho0.jsonl`）。README 已按可用形式改写。
 2. `docs/mathematics.md`（旧版）与 AGENTS.md 的 \(M=\Pi DB\) 描述单侧排列，而
    as-built 实现是 \(M=\Pi_1DB\Pi_2\)（`src/fastprove/structured.py:1`、`:153`）；
    新数学文档已按实现描述并登记该差异。

@@ -94,6 +94,7 @@ src/fastprove/
     ├── spec_config.py           # sweep spec → PrototypeConfig 解析
     ├── runner.py                # tiny 评测执行原语（run_tiny_sweep_spec）
     ├── metrics.py               # 显式数值正确性/Softmax 诊断
+    ├── stats.py                 # 区间/退化统计的权威实现（Wilson 等，P8/P9 §3.4）
     ├── accuracy.py              # teacher-forced / greedy 对齐精度
     ├── artifacts.py             # run record schema 与 JSONL 写入
     ├── sweep.py                 # 72 点枚举（enumerate_sweep_specs）
@@ -188,10 +189,14 @@ L4 部署写手与第二套 harness
   与 `evals = ["configs/*.yaml"]`），`PYTHONPATH=src:.` 的隐式要求不再是唯一路径。
 - **指标定义**：P6b 新增逐位一致测试 `tests/evaluation/test_evals_metric_parity.py`，让
   `evals/metrics_common.py` 单向复用 `fastprove.evaluation.metrics`。
-- **已知例外（未统一，见 `docs/PROBLEMS.md` §3.4）**：Wilson 区间仍有两份实现——
-  `evals/stats.py:47`（`z = 1.959963984540054`，查表于 `evals/stats.py:112`）与
-  `src/fastprove/evaluation/benchmarks/scoring.py:18`（默认 `z = 1.959963985`）。
-  在显式决策前**禁止**假设两者逐位一致，也禁止在重构里静默统一。
+- **统计定义（§3.4 已统一）**：Wilson 区间的权威实现是
+  `src/fastprove/evaluation/stats.py:43`（z 表值 `1.959963984540054`）；
+  `evals/stats.py:19` 只重导出，`benchmarks/scoring.py::_wilson_interval` 委托同一实现，
+  `evaluation/accuracy.py` 不再反向 import evals。归档工件的 1e-10 量级差异记录在
+  `results/PROVENANCE.md` §7，不改旧数字。
+- **run record 审计字段**：`runner.run_tiny_sweep_spec` 在每条成功记录的
+  `config.obfuscation` 写入生效值（含 `rho_noise_bound`），因此记录的 ρ 口径不再依赖
+  base config 推断（`docs/PROBLEMS.md` §3.5）。
 
 ## 4. 三处「平行但不合并」的结构
 

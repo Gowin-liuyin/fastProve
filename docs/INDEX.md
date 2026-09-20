@@ -24,7 +24,7 @@
 | `docs/CLEANUP_PLAN.md` | CURRENT（草案，待决策项见 §10） | 2026-09-19 | 代码结构梳理与文档重建计划；P8a/P8b 已执行，P9 待做 |
 | `docs/architecture.md` | CURRENT | 2026-09-20 | 生产路径 / 参考路径 / 侧路实验三分表、as-built 模块地图与依赖方向 |
 | `docs/config_reference.md` | CURRENT | 2026-09-20 | 四个 YAML 的键语义、取值域与校验来源（P8b 新建） |
-| `docs/scripts_index.md` | CURRENT | 2026-09-20 | `scripts/` 28 个脚本与归档脚本的用途、调用、产物、引用（P8b 新建） |
+| `docs/scripts_index.md` | CURRENT | 2026-09-20 | `scripts/` 29 个脚本与归档脚本的用途、调用、产物、引用（P8b 新建，P8/P9 后续更新） |
 | `results/PROVENANCE.md` | CURRENT | 2026-09-20 | claim → raw 工件 → 生成命令映射，标注 current/superseded（P8b 新建） |
 | `docs/runbook.md` | CURRENT | 2026-09-20 | 一页式验证阶梯与阻塞步骤（P8b 新建） |
 | `docs/STATUS.md` | CURRENT | 2026-09-20 | P0–P7 重构进度、未决问题、阻塞与下一步（P8b 新建） |
@@ -43,7 +43,7 @@
 | `docs/literature-review/reports/evaluation_protocol_fastProve.md` | CURRENT | 2026-08-01 | 实验验收的权威评测方案 |
 | `docs/literature-review/reports/plaintext_vs_obfuscated_accuracy_survey.md` | CURRENT（第 8 节通用骨架已被上述评测方案取代） | 2026-08-01 | 明文/混淆精度文献综述 |
 | `evals/README.md` | CURRENT | 2026-09-19 | `evals/` 第二套评测 harness 的使用说明与数据口径 |
-| `results/REPORT.md` | CURRENT | 2026-08-11 | 阶段 A–D 实测结果报告（随机 tiny 正确性证据） |
+| `results/REPORT.md` | CURRENT | 2026-09-20 | 阶段 A–D 实测结果报告（随机 tiny 正确性证据）；§2.3 ρ=0 重跑说明与 §6.1 replica 边际代价为 2026-09-20 增补 |
 | `results/raw/README.md` | CURRENT | 2026-09-20 | `results/raw/` 实际目录盘点与逐文件溯源 |
 | `results/figures/README.md` | CURRENT | 2026-09-20 | `results/figures/` 已跟踪图形清单与口径警告 |
 | `results/tables/README.md` | CURRENT | 2026-09-19 | `results/tables/` 的生成规则 |

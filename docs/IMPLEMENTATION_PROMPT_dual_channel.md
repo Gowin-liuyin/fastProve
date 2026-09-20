@@ -717,7 +717,8 @@ S4 的攻击样本阈值从 $d+r+1$ 实测抬到 $N+1$；`noise_budget.json` 正
 4. **测试规模与布局已变。** P7 把测试移入
    `tests/{math,layers,models,deployment,security,evaluation,cli,pretrained}/`，
    现有 48 个 `test_*.py`（`tests/` 下合计 59 个 `.py`），
-   `python -m pytest tests -q` 为 **399 passed**；上文「当前 40 个测试文件」已过期。
+   `python -m pytest tests -q` 为 **424 passed**（2026-09-20；含 §3.4/§3.5 与 replica
+   测试）；上文「当前 40 个测试文件」已过期。
 5. **S6/S7 状态。** 两阶段均未执行，阻塞记录在
    `results/raw/blocked_stages_s6_s7.json`；S6 的
    `scripts/verify_token_recovery_candidate_rescoring.py` 与 S7 的
