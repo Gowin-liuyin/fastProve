@@ -14,11 +14,12 @@ import pytest
 import yaml
 
 from fastprove.config import load_config
+from fastprove.evaluation.runner import run_tiny_sweep_spec
 from fastprove.evaluation.spec_config import (
     BASE_SWEEP_RHO_NOISE_BOUND,
     _config_for_spec,
 )
-from fastprove.evaluation.sweep import enumerate_sweep_specs
+from fastprove.evaluation.sweep import SweepSpec, enumerate_sweep_specs
 
 ROOT = Path(__file__).resolve().parents[2]
 SWEEP_CONFIG = ROOT / "configs" / "eval_sweep.yaml"
@@ -94,3 +95,60 @@ def test_gate_flag_is_synced_with_completed_base_sweep() -> None:
     execution = raw["execution"]
     assert execution["run_in_current_prototype_pass"] is True
     assert "completed" in execution["reason"]
+
+
+def test_run_record_carries_the_resolved_rho() -> None:
+    """Auditability: the record must state the effective rho, not the base's."""
+
+    spec = SweepSpec(
+        run_id="rho-audit",
+        mode="free_bounded",
+        tau_max=0.03,
+        tau_error=0.10,
+        alpha=None,
+        preserve_top_k=None,
+    )
+    experiment = {
+        "seed": 20260731,
+        "model_id": "fastprove-random-tiny-correctness-only",
+        "dataset_id": "deterministic-synthetic-token-sequences",
+    }
+    override = {
+        "sample_count": 2,
+        "batch_size": 2,
+        "sequence_length": 6,
+        "generation_tokens": 1,
+        "warmup_runs": 0,
+        "timed_runs": 1,
+    }
+    base = ROOT / "configs" / "tiny_approx.yaml"
+
+    base_record = run_tiny_sweep_spec(
+        base_config_path=base,
+        spec=spec,
+        experiment=dict(experiment),
+        evaluation_override=dict(override),
+    )
+    assert base_record["status"] == "success"
+    recorded = base_record["config"]["obfuscation"]
+    assert recorded["rho_noise_bound"] == 0.0
+    assert recorded["refresh_mode"] == "per_request"
+
+    replica_record = run_tiny_sweep_spec(
+        base_config_path=base,
+        spec=SweepSpec(
+            run_id="rho-audit-replica",
+            mode="free_bounded",
+            tau_max=0.03,
+            tau_error=0.10,
+            alpha=None,
+            preserve_top_k=None,
+        ),
+        experiment=dict(experiment),
+        evaluation_override=dict(override),
+        obfuscation_override={"rho_noise_bound": 1.0e-5},
+    )
+    assert replica_record["status"] == "success"
+    assert (
+        replica_record["config"]["obfuscation"]["rho_noise_bound"] == 1.0e-5
+    )

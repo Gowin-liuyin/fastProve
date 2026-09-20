@@ -488,6 +488,10 @@ def run_tiny_sweep_spec(
                 ),
                 "runtime": asdict(config.runtime),
                 "evaluation": asdict(config.evaluation),
+                # Effective obfuscation after the sweep contract/overrides, so
+                # a run record can never silently disagree with the resolved
+                # rho policy (docs/PROBLEMS.md §3.5).
+                "obfuscation": asdict(config.obfuscation),
                 # Layer/Softmax diagnostics are intentionally captured through
                 # the explicitly gated debug API for research metrics.  The
                 # timed performance path below still calls production forward.
