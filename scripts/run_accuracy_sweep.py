@@ -7,6 +7,7 @@ import argparse
 import json
 import shlex
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
 
@@ -87,6 +88,17 @@ def _parser() -> argparse.ArgumentParser:
         "--calibration-only",
         action="store_true",
         help="Run every point on calibration_sample_count instead of full_sample_count",
+    )
+    parser.add_argument(
+        "--rho-replica",
+        type=float,
+        default=None,
+        help=(
+            "Run deployment-fold replica points with this rho_noise_bound "
+            "(e.g. 1e-5) for the specs listed by --spec-ids-file. Run IDs get "
+            "a -rho<value> suffix and --output must be explicit so the base "
+            "sweep record is never overwritten."
+        ),
     )
     parser.add_argument(
         "--sample-count",
@@ -257,6 +269,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     # any user/manifest ordering before constructing expected_run_ids so that
     # approximate points cannot be skipped before the exact baseline runs.
     specs = _order_specs_for_exact_gate(specs)
+    rho_replica_suffix: Optional[str] = None
+    if args.rho_replica is not None:
+        if args.output is None:
+            print(
+                "--rho-replica requires an explicit --output so the base "
+                "sweep record is never overwritten",
+                file=sys.stderr,
+            )
+            return 2
+        rho_replica_suffix = "-rho%g" % args.rho_replica
+        specs = [
+            replace(spec, run_id=spec.run_id + rho_replica_suffix)
+            for spec in specs
+        ]
     base_config_path = _project_path(raw["base_config"])
     base_config = load_config(base_config_path)
     experiment_section = raw["experiment"]
@@ -287,6 +313,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     effective_evaluation_override = dict(raw.get("evaluation_override") or {})
     effective_obfuscation_override = dict(raw.get("obfuscation_override") or {})
+    if args.rho_replica is not None:
+        effective_obfuscation_override["rho_noise_bound"] = float(
+            args.rho_replica
+        )
     effective_evaluation_override["sample_count"] = effective_sample_count
     if args.batch_size is not None:
         effective_evaluation_override["batch_size"] = int(args.batch_size)
@@ -357,6 +387,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         planned_command += f" --activation-dtype {shlex.quote(args.activation_dtype)}"
     if selected_spec_ids_file is not None:
         planned_command += f" --spec-ids-file {shlex.quote(str(selected_spec_ids_file))}"
+    if args.rho_replica is not None:
+        planned_command += f" --rho-replica {args.rho_replica:g}"
     if args.accept_nonstandard_caption:
         planned_command += " --accept-nonstandard-caption"
     planned_command += " --execute-deferred"
@@ -402,6 +434,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                         if selected_spec_ids_file is not None
                         else None
                     ),
+                    "rho_replica_bound": args.rho_replica,
+                    "rho_replica_suffix": rho_replica_suffix,
                     "specs": spec_payloads,
                     "evidence_scope": (
                         (
