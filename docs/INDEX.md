@@ -140,3 +140,9 @@
   `> 旧框架，禁止复活：生产路径是 D = d；不得引用 expanded_concat/expanded_full/P̂/a/B_comp。`
 - 文档内相对链接用 `python scripts/check_doc_links.py` 检查（纯文档工具，不参与
   等价性门禁）。
+
+## AloePri 独立子项目
+
+- [使用说明](../Aloepri/README.md)：从 `Aloepri/` 安装、运行及检查。
+- [本轮修复与验证](../Aloepri/docs/audit_fixes_20261019.md)：具体修复、已有验证与尚未完成的实验。
+- [攻击实验条件](../Aloepri/docs/security_attack_protocol.md)：实际算法、训练配对条件和指标分母。

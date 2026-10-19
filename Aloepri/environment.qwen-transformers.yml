@@ -1,0 +1,12 @@
+name: aloepri-audit
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - numpy==2.4.6
+      - torch==2.13.0
+      - transformers==5.19.0
+      - safetensors==0.8.0
+      - pytest==9.1.1

@@ -160,3 +160,7 @@ claim → 工件 → 命令的映射见 [`results/PROVENANCE.md`](results/PROVEN
 - [`docs/architecture.md`](docs/architecture.md)：生产/参考/侧路三分表
 - [`docs/PROBLEMS.md`](docs/PROBLEMS.md)：全部已知问题与不得声明的内容
 - [`results/REPORT.md`](results/REPORT.md)：阶段 A–D 实测结果（随机 tiny）
+
+## AloePri 复现代码
+
+[Aloepri/README.md](Aloepri/README.md) 说明修正后的 AloePri 研究实现、模型导出和攻击评测。运行前先进入 `Aloepri/`，使用该目录自己的依赖与测试配置。修复记录和测试范围见 [Aloepri/docs/audit_fixes_20261019.md](Aloepri/docs/audit_fixes_20261019.md)。

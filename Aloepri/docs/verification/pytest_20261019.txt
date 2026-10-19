@@ -1,0 +1,13 @@
+........................................................................ [ 34%]
+.............................................................s......ssss [ 68%]
+ss..sssssssssssssssssss............s...s............s....s.ss....        [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_integration.py:11: 未提供本地实验材料：model/Qwen2.5-0.5B-Instruct/config.json
+SKIPPED [6] tests\test_mainline_docs_history.py: 独立项目未包含原仓库的docs/history和阶段文档，历史文档检查未执行
+SKIPPED [19] tests\test_qwen_paper_consistent_docs.py: 独立项目未包含原仓库的docs/history和阶段文档，历史文档检查未执行
+SKIPPED [1] tests\test_security_qwen_ima_redesign.py: 未提供本地实验材料：model/Qwen2.5-0.5B-Instruct/config.json, artifacts/stage_j_qwen_redesign
+SKIPPED [1] tests\test_security_qwen_isa_redesign.py: 未提供本地实验材料：model/Qwen2.5-0.5B-Instruct/config.json, artifacts/stage_j_qwen_redesign
+SKIPPED [1] tests\test_security_qwen_summary.py:70: 独立项目未包含原仓库的docs/history和阶段文档，历史文档检查未执行
+SKIPPED [1] tests\test_security_qwen_vma_analysis.py:73: 未提供本地实验材料：model/Qwen2.5-0.5B-Instruct/config.json, artifacts/stage_j_full_square
+SKIPPED [2] tests\test_security_qwen_vma_redesign.py: 未提供本地实验材料：model/Qwen2.5-0.5B-Instruct/config.json, artifacts/stage_j_qwen_redesign
+177 passed, 32 skipped in 29.47s
