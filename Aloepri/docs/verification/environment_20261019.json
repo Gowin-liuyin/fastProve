@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-19",
+  "source_baseline_commit": "a1df42e58807d65f6de25e5ba05237ed8d6cd5e2",
+  "source_repository": "https://github.com/XidianNSS/Aloepri",
+  "environment": {
+    "python": "3.13.13",
+    "torch": "2.13.0+cu126",
+    "transformers": "5.19.0",
+    "cuda_runtime": "12.6",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU"
+  },
+  "test_result": {
+    "passed": 177,
+    "skipped": 32,
+    "failed": 0,
+    "seconds": 29.47
+  },
+  "skip_reasons": {
+    "historical_repository_documents_unavailable": 26,
+    "pretrained_models_or_old_artifacts_unavailable": 6
+  },
+  "actually_executed_devices": [
+    "cpu",
+    "cuda"
+  ],
+  "actually_executed_dtypes": [
+    "float32",
+    "float16",
+    "bfloat16"
+  ],
+  "scope": "Random tiny models and implementation checks; no full pretrained task, privacy or cluster evaluation.",
+  "validation_location": "Source AloePri project before copying to this independent subdirectory; fastProve original tests not rerun."
+}
